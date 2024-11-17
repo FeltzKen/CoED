@@ -1,0 +1,84 @@
+# =============== #
+# Unity generated #
+# =============== #
+
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Aa]ssets/sprites/
+[Aa]ssets/settings/
+[Aa]ssets/scenes/
+[Aa]ssets/TextMesh Pro/
+[Aa]ssets/audio/
+[Pp]roject[Ss]ettings/
+[Pp]ackages/
+.plastic/plastic.changes
+.plastic/plastic.selector
+.plastic/plastic.wktree
+.plastic/plastic.workspace
+[.]vs/
+[.]vscode/
+*.conf
+MemoryCaptures/
+*.pidb
+*.suo
+*.user
+*.userprefs
+*.unityproj
+*.dll
+*.exe
+*.pdf
+*.mid
+*.meta
+*.midi
+*.tmp
+*.bak
+*.old
+*.orig
+*.manifest
+*.rsuser
+*.user
+*.userosscache
+*.sln.docstates
+*.sln.ide
+.vsconfig
+
+# ============ #
+# OS generated #
+# ============ #
+
+.DS_Store
+.DS_Store?
+._*  
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# =============== #
+# Visual Studio   #
+# =============== #
+
+.vs/
+*.csproj
+*.app
+*.app/*
+*.pidb
+*.unityproj
+*.sln
+*.suo
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# =============== #
+# Explicitly Include Scripts Folder #
+# =============== #
+
+![Aa]ssets/Scripts/
