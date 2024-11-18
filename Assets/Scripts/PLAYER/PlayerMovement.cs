@@ -1,4 +1,3 @@
-// PlayerMovement.cs
 using UnityEngine;
 using UnityEngine.UI;
 using YourGameNamespace;
@@ -8,15 +7,14 @@ namespace YourGameNamespace
     public class PlayerMovement : MonoBehaviour
     {
         [Header("Movement Settings")]
-        [SerializeField] private float moveDelay = 0.2f;         // Delay between moves
-        [SerializeField] private float staminaCostPerRun = 2f;   // Stamina cost for running
+        [SerializeField] private float moveDelay = 0.2f; // Delay between moves
+        [SerializeField] private float staminaCostPerRun = 2f; // Stamina cost for running
 
         [Header("UI Elements")]
-        [SerializeField] private Slider staminaBar;              // UI slider for stamina
+        [SerializeField] private Slider staminaBar; // UI slider for stamina
 
         private PlayerStats playerStats;
         private PlayerManager playerManager;
-        private TurnManager turnManager;
         private float moveCooldown;
 
         private void Start()
@@ -24,7 +22,6 @@ namespace YourGameNamespace
             // Initialize references
             playerStats = PlayerStats.Instance;
             playerManager = PlayerManager.Instance;
-            turnManager = TurnManager.Instance;
 
             UpdateStaminaUI();
         }

@@ -8,6 +8,8 @@ namespace YourGameNamespace
     {
         [Header("Health Settings")]
         [SerializeField]
+        private int maxHealth = 100; // Maximum health of the enemy
+        public int currentHealth {get; set;} // Current health of the enemy
         private StatusEffectManager statusEffectManager; // Manages enemy status effects
         private FloatingTextManager floatingTextManager; // Manages floating text displays for feedback
         public bool IsVisible = false; // Tracks if the enemy is visible (not covered by fog)
@@ -49,6 +51,9 @@ namespace YourGameNamespace
                 Debug.LogError("Enemy: StatusEffectManager component missing.");
                 return;
             }
+
+            // Set initial health
+            currentHealth = maxHealth;
         }
 
         private void DropLoot()

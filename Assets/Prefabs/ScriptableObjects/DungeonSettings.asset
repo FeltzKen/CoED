@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0af146ccd027a3d4082f3331626ce896, type: 3}
+  m_Name: DungeonSettings
+  m_EditorClassIdentifier: 
+  dungeonSizeRange: {x: 200, y: 200}
+  maxFloors: 5
+  seed: 3423
+  roomSizeRange: {x: 5, y: 5}
+  maxBSPIterations: 3
+  carvingIterationsMin: 1
+  carvingIterationsMax: 4
+  connectionChance: 0.13
+  minCorridorWidth: 2
+  maxCorridorWidth: 3
+  maxSegmentLength: 5
+  straightCorridorChance: 0.3
+  triggerTilePrefab: {fileID: 5594940870504256869, guid: 04caad6111fe60d4e8f0ec112e8577c6, type: 3}
+  numberOfTriggerTiles: 100
+  spawningRoomPrefab: {fileID: 6665827154481512502, guid: 8384ad92a2cf19c46a78d81282f9729a, type: 3}
+  stairsUpPrefab: {fileID: 1638260800072365795, guid: 6c82c2d46b3613b4a89b278b9901da4d, type: 3}
+  stairsDownPrefab: {fileID: 926577741634186297, guid: 619db7b191317044e995e508dedd5224, type: 3}
+  strongEnemyPrefab: {fileID: 3198391839532095026, guid: 04a11b60e34b443448123f1b3fb662f3, type: 3}
+  spawnEffectPrefab: {fileID: 4985454231279368892, guid: aed4c3bbbee4901408f729fded73a077, type: 3}
+  floorTile: {fileID: 11400000, guid: 03be7fcaf47d358479a9533b8c9f0226, type: 2}
+  corridorTile: {fileID: 11400000, guid: 54b9c63592104b04594888f98e402aad, type: 2}
+  wallTile: {fileID: 11400000, guid: 2f4e23419adb2fe4eaa7001eb1968d07, type: 2}
+  enemyPrefab: {fileID: 3198391839532095026, guid: e63b6f03d1c9eba448e1a722c613b4e6, type: 3}
+  numberOfEnemiesPerFloor: 5

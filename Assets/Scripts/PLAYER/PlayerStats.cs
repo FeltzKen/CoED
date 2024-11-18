@@ -30,7 +30,7 @@ namespace YourGameNamespace
 
         [Header("Base Stats")]
         [SerializeField, Min(0)]
-        private int baseAttack {get;}= 10;
+        private int baseAttack = 10;
 
         [SerializeField, Min(0)]
         private int baseDefense = 5;
@@ -103,7 +103,7 @@ namespace YourGameNamespace
             CurrentStamina = maxStamina;
             CurrentHealth = CurrentMaxHealth;
 
-            UIManager uiManager = UIManager.Instance;
+            UIManager uiManager = FindObjectOfType<UIManager>();
             if (uiManager != null)
             {
                 uiManager.SetHealthBarMax(CurrentMaxHealth);
@@ -113,7 +113,7 @@ namespace YourGameNamespace
 
         private void CalculateStats()
         {
-            CurrentAttack = 10;// baseAttack + Mathf.RoundToInt(baseAttack * level * 0.2f) + equipmentAttack;
+            CurrentAttack = baseAttack + Mathf.RoundToInt(baseAttack * level * 0.2f) + equipmentAttack;
             CurrentDefense = baseDefense + Mathf.RoundToInt(baseDefense * level * 0.15f) + equipmentDefense;
             CurrentRange = baseRange + level * 0.1f;
             CurrentSpeed = baseSpeed + level * 0.05f;
@@ -131,7 +131,7 @@ namespace YourGameNamespace
             equipmentDefense = Mathf.Max(defense, 0);
             equipmentHealth = Mathf.Max(health, 0);
             CalculateStats();
-            UpdateHealthUI(UIManager.Instance);
+            UpdateHealthUI(FindObjectOfType<UIManager>());
         }
 
         public void GainExperience(int amount)
@@ -160,7 +160,7 @@ namespace YourGameNamespace
             CalculateStats();
 
             OnLevelUp?.Invoke();
-            UIManager uiManager = UIManager.Instance;
+            UIManager uiManager = FindObjectOfType<UIManager>();
             if (uiManager != null)
             {
                 uiManager.UpdateLevelDisplay(level);
@@ -192,9 +192,9 @@ namespace YourGameNamespace
             int effectiveDamage = Mathf.Max(damage - (int)CurrentDefense, 1);
             CurrentHealth = Mathf.Max(CurrentHealth - effectiveDamage, 0);
             OnHealthChanged?.Invoke(CurrentHealth, CurrentMaxHealth);
-            UpdateHealthUI(UIManager.Instance);
+            UpdateHealthUI(FindObjectOfType<UIManager>());
 
-            FloatingTextManager floatingTextManager = FloatingTextManager.Instance;
+            FloatingTextManager floatingTextManager = FindObjectOfType<FloatingTextManager>();
             floatingTextManager?.ShowFloatingText(effectiveDamage.ToString(), transform.position, Color.red);
 
             Debug.Log($"PlayerStats: Took {effectiveDamage} damage. Current health: {CurrentHealth}/{CurrentMaxHealth}");
@@ -215,9 +215,9 @@ namespace YourGameNamespace
 
             CurrentHealth = Mathf.Min(CurrentHealth + amount, CurrentMaxHealth);
             OnHealthChanged?.Invoke(CurrentHealth, CurrentMaxHealth);
-            UpdateHealthUI(UIManager.Instance);
+            UpdateHealthUI(FindObjectOfType<UIManager>());
 
-            FloatingTextManager floatingTextManager = FloatingTextManager.Instance;
+            FloatingTextManager floatingTextManager = FindObjectOfType<FloatingTextManager>();
             floatingTextManager?.ShowFloatingText($"+{amount}", transform.position, Color.green);
 
             Debug.Log($"PlayerStats: Healed {amount} health. Current health: {CurrentHealth}/{CurrentMaxHealth}");
@@ -226,7 +226,7 @@ namespace YourGameNamespace
         private void HandleDeath()
         {
             Debug.Log("PlayerStats: Player has died.");
-            GameManager gameManager = GameManager.Instance;
+            GameManager gameManager = FindObjectOfType<GameManager>();
             gameManager?.OnPlayerDeath();
             OnPlayerDeath?.Invoke();
         }
@@ -245,3 +245,9 @@ namespace YourGameNamespace
     }
 }
 
+/*
+Changes made:
+1. Removed any direct references to managing turns, as action registration should happen through PlayerManager.
+2. Cleaned up methods to focus on health, stamina, experience, and level management, allowing PlayerManager to decide when to register actions with TurnManager.
+3. Removed unnecessary turn-specific logic or left-over remnants that tried to register actions, ensuring consistency with the centralized approach.
+*/

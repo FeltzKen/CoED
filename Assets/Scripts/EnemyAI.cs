@@ -1,30 +1,36 @@
 using System.Collections.Generic;
 using UnityEngine;
+using YourGameNamespace;
 
 namespace YourGameNamespace
 {
     public class EnemyAI : MonoBehaviour, IActor
     {
-        public float Speed { get; private set; } = 1f;
-        public float ActionPoints { get; set; } = 0f;
-
         private enum EnemyState { Patrol, Chase, Attack }
         private EnemyState currentState = EnemyState.Patrol;
 
-        private EnemyStats enemyStats;
-        private List<Vector3> patrolPoints = new List<Vector3>();
+        [Header("Settings")]
+        public float detectionRange = 5f;
+        public float attackRange = 1.5f;
+        public int damage = 10;
+        public float CurrentHealth = 100;
+
+        public float CurrentSpeed { get; set; } = 2f; // Default patrol speed
+        public float CurrentDefense { get; set; } = 0f;
+        public float patrolSpeed = 2f; // For StatusEffectManager reference
+
+        private List<Vector3> patrolPoints;
         private Vector3 patrolDestination;
         private Transform playerTransform;
-        private List<Vector2Int> pathToDestination;
+        private System.Action lastAction;
         private bool isActionComplete = false;
-
-        private Rigidbody2D rb;
-
-        public Vector3Int CurrentPosition { get; set; }
 
         [SerializeField] private LayerMask obstacleLayer;
 
-        private HashSet<Vector2Int> walkableTiles;
+        private Rigidbody2D rb;
+
+        private Vector2 targetPosition;
+        private bool isMoving = false;
 
         private void Awake()
         {
@@ -36,22 +42,14 @@ namespace YourGameNamespace
                 return;
             }
 
-            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-            if (playerObj != null)
-            {
-                playerTransform = playerObj.transform;
-            }
-            else
+            rb.isKinematic = true;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+            rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+
+            playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
+            if (playerTransform == null)
             {
                 Debug.LogError("EnemyAI: Player not found. Disabling script.");
-                enabled = false;
-                return;
-            }
-
-            enemyStats = GetComponent<EnemyStats>();
-            if (enemyStats == null)
-            {
-                Debug.LogError("EnemyAI: Missing EnemyStats component. Disabling script.");
                 enabled = false;
                 return;
             }
@@ -59,132 +57,141 @@ namespace YourGameNamespace
 
         private void Start()
         {
-            var floorData = DungeonManager.Instance.GetFloor(enemyStats.spawnFloor);
-            if (floorData != null)
-            {
-                walkableTiles = floorData.FloorTiles; // Assign FloorTiles as walkable tiles
-                SetPatrolPoints(floorData.PatrolPoints);
-            }
-            else
-            {
-                Debug.LogError($"EnemyAI: FloorData not found for floor {enemyStats.spawnFloor}");
-            }
-
-            TurnManager.Instance.RegisterActor(this);
-            CurrentPosition = Vector3Int.RoundToInt(transform.position);
+            patrolPoints = DungeonGenerator.Instance.GetPatrolPointsForFloor(transform.position);
+            SetNewPatrolDestination();
+            TurnManager.Instance.RegisterActor(this); // Register with TurnManager
         }
 
-        public void PerformAction()
+        private void FixedUpdate()
         {
-            Act();
-        }
+            if (isMoving)
+            {
+                float step = CurrentSpeed * Time.fixedDeltaTime;
+                Vector2 newPosition = Vector2.MoveTowards(rb.position, targetPosition, step);
+                rb.MovePosition(newPosition);
 
-        public bool IsActionComplete()
-        {
-            return isActionComplete;
+                if ((Vector2)rb.position == targetPosition)
+                {
+                    isMoving = false;
+                    isActionComplete = true; // Movement is complete
+                }
+            }
         }
 
         public void Act()
         {
-            isActionComplete = false;
+            isActionComplete = false; // Reset action completion flag
+            Debug.Log($"EnemyAI: Acting in state {currentState}");
 
+            // Plan action based on current state
             switch (currentState)
             {
                 case EnemyState.Patrol:
-                    PatrolBehavior();
+                    PlanPatrol();
                     break;
                 case EnemyState.Chase:
-                    ChaseBehavior();
+                    PlanChasePlayer();
                     break;
                 case EnemyState.Attack:
-                    AttackBehavior();
+                    PlanAttackPlayer();
                     break;
+            }
+
+            // Execute the planned action
+            lastAction?.Invoke();
+            lastAction = null;
+
+            // If not moving or attacking, action is complete
+            if (!isMoving && currentState != EnemyState.Attack)
+            {
+                isActionComplete = true;
             }
         }
 
-        private void PatrolBehavior()
+        private void PlanPatrol()
         {
-            if (Vector3.Distance(transform.position, playerTransform.position) <= enemyStats.CurrentDetectionRange)
+            if (Vector3.Distance(transform.position, playerTransform.position) <= detectionRange)
             {
                 currentState = EnemyState.Chase;
+                PlanChasePlayer();
                 return;
             }
+
+            PlanMoveTowardsDestination(patrolDestination);
 
             if (Vector3Int.RoundToInt(transform.position) == Vector3Int.RoundToInt(patrolDestination))
             {
                 SetNewPatrolDestination();
             }
-
-            FollowPathToDestination(patrolDestination);
         }
 
-        private void ChaseBehavior()
+        private void PlanChasePlayer()
         {
-            if (Vector3.Distance(transform.position, playerTransform.position) > enemyStats.CurrentDetectionRange)
+            if (Vector3.Distance(transform.position, playerTransform.position) > detectionRange)
             {
                 currentState = EnemyState.Patrol;
+                PlanPatrol();
                 return;
             }
 
-            if (Vector3.Distance(transform.position, playerTransform.position) <= enemyStats.CurrentProjectileRange)
+            if (Vector3.Distance(transform.position, playerTransform.position) <= attackRange)
             {
                 currentState = EnemyState.Attack;
+                PlanAttackPlayer();
                 return;
             }
 
-            FollowPathToDestination(playerTransform.position);
+            PlanMoveTowardsDestination(playerTransform.position);
         }
 
-        private void AttackBehavior()
+        private void PlanAttackPlayer()
         {
-            if (Vector3.Distance(transform.position, playerTransform.position) > enemyStats.CurrentProjectileRange)
+            if (Vector3.Distance(transform.position, playerTransform.position) > attackRange)
             {
                 currentState = EnemyState.Chase;
+                PlanChasePlayer();
                 return;
             }
 
-            Debug.Log("EnemyAI: Attacking the player!");
-            PlayerManager playerManager = playerTransform.GetComponent<PlayerManager>();
-            if (playerManager != null)
+            lastAction = () =>
             {
-                playerManager.TakeDamage(enemyStats.CurrentAttack);
-            }
-            isActionComplete = true;
+                Debug.Log("Enemy is attacking the player!");
+                PlayerManager playerManager = playerTransform.GetComponent<PlayerManager>();
+                if (playerManager != null)
+                {
+                    playerManager.TakeDamage(damage);
+                }
+                isActionComplete = true; // Action is complete after attack
+            };
         }
 
-        private void FollowPathToDestination(Vector3 destination)
+        private void PlanMoveTowardsDestination(Vector3 destination)
         {
-            Vector2Int currentTile = Vector2Int.RoundToInt(transform.position);
-            Vector2Int destinationTile = Vector2Int.RoundToInt(destination);
-
-            // If no path exists or destination changed, recalculate path
-            if (pathToDestination == null || pathToDestination.Count == 0 || pathToDestination[^1] != destinationTile)
+            lastAction = () =>
             {
-                pathToDestination = AStarPathfinding.FindPath(currentTile, destinationTile, walkableTiles);
+                Vector3Int currentTile = Vector3Int.RoundToInt(transform.position);
+                Vector3Int destinationTile = Vector3Int.RoundToInt(destination);
+                Vector3Int direction = destinationTile - currentTile;
 
-                if (pathToDestination == null || pathToDestination.Count == 0)
+                // Normalize direction to a single step
+                if (direction.x != 0) direction.x = direction.x > 0 ? 1 : -1;
+                else if (direction.y != 0) direction.y = direction.y > 0 ? 1 : -1;
+
+                Vector3Int targetTile = currentTile + new Vector3Int(direction.x, direction.y, 0);
+
+                Collider2D hit = Physics2D.OverlapBox(new Vector2(targetTile.x, targetTile.y), Vector2.one * 0.9f, 0f, obstacleLayer);
+                if (hit == null)
                 {
-                    Debug.LogWarning("EnemyAI: No path found to destination.");
-                    isActionComplete = true;
-                    return;
+                    targetPosition = new Vector2(targetTile.x, targetTile.y);
+                    isMoving = true;
+                    Debug.Log($"EnemyAI: Moving towards tile {targetTile}");
                 }
-            }
-
-            // Follow the next step in the path
-            Vector2Int nextStep = pathToDestination[0];
-            pathToDestination.RemoveAt(0);
-
-            Vector3 nextPosition = new Vector3(nextStep.x, nextStep.y, transform.position.z);
-            rb.MovePosition(nextPosition);
-            transform.position = nextPosition;
-
-            CurrentPosition = Vector3Int.RoundToInt(nextPosition);
-
-            if (pathToDestination.Count == 0)
-            {
-                Debug.Log("EnemyAI: Reached destination.");
-                isActionComplete = true;
-            }
+                else
+                {
+                    Debug.Log("EnemyAI: Movement blocked by obstacle.");
+                    isActionComplete = true; // Action is complete if movement is blocked
+                }
+            };
         }
 
         private void SetNewPatrolDestination()
@@ -192,18 +199,32 @@ namespace YourGameNamespace
             if (patrolPoints.Count > 0)
             {
                 patrolDestination = patrolPoints[Random.Range(0, patrolPoints.Count)];
-                Debug.Log($"EnemyAI: New patrol destination set to {patrolDestination}");
-            }
-            else
-            {
-                Debug.LogWarning("EnemyAI: No patrol points available.");
             }
         }
 
-        public void SetPatrolPoints(List<Vector3> points)
+        public void TakeDamage(int damage)
         {
-            patrolPoints = points;
-            SetNewPatrolDestination();
+            CurrentHealth -= damage;
+            if (CurrentHealth <= 0)
+            {
+                Die();
+            }
+            else
+            {
+                Debug.Log($"Enemy took {damage} damage! Current health: {CurrentHealth}");
+            }
+        }
+
+        public bool IsActionComplete()
+        {
+            return isActionComplete;
+        }
+
+        private void Die()
+        {
+            Debug.Log("Enemy has died.");
+            TurnManager.Instance.RemoveActor(this); // Remove from TurnManager
+            Destroy(gameObject);
         }
     }
 }

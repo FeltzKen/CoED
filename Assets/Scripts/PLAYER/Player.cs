@@ -112,8 +112,15 @@ namespace YourGameNamespace
         }
         private void OnCollisionEnter2D(Collision2D collision)
         {
-        //Debug.Log("player collison detected.");
+        Debug.Log("player collison detected.");
         }
 
     }
 }
+
+/*
+Changes made:
+1. Retained references to essential components like `PlayerStats`, `PlayerCombat`, `PlayerMagic`, etc.
+2. Removed any direct turn management or action registration. All actions are now expected to flow through PlayerManager.
+3. Focused on providing utility methods for interacting with components, without handling turn or action-related logic directly.
+*/

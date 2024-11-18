@@ -63,17 +63,17 @@ namespace YourGameNamespace
             {
                 if (enemyCollider.CompareTag("Enemy"))
                 {
-                    EnemyStats enemyStats = enemyCollider.GetComponent<EnemyStats>();
-                    if (enemyStats != null)
+                    EnemyAI enemyAI = enemyCollider.GetComponent<EnemyAI>();
+                    if (enemyAI != null)
                     {
-                        int damageDealt = (int)Mathf.Max(playerStats.CurrentAttack - enemyStats.CurrentDefense, 1);
-                        enemyStats.TakeDamage(damageDealt);
-                        Debug.Log($"PlayerCombat: Melee attacked {enemyStats.name} for {damageDealt} damage.");
+                        int damageDealt = (int)Mathf.Max(playerStats.CurrentAttack - enemyAI.CurrentDefense, 1);
+                        enemyAI.TakeDamage(damageDealt);
+                        Debug.Log($"PlayerCombat: Melee attacked {enemyAI.name} for {damageDealt} damage.");
                         hitAny = true;
 
                         // Apply status effect to enemy using the constructor
                         StatusEffect stunEffect = new StatusEffect("Stun", 3f, 0f, null);
-                        enemyStats.GetComponent<StatusEffectManager>()?.AddStatusEffect(stunEffect);
+                        enemyAI.GetComponent<StatusEffectManager>()?.AddStatusEffect(stunEffect);
                     }
                 }
             }
@@ -116,3 +116,9 @@ namespace YourGameNamespace
     }
 }
 
+/*
+Changes made:
+1. Removed the `CanAct()` method since it was a leftover from when this script implemented `IActor`. Action eligibility is now checked directly within input methods.
+2. Removed any direct interaction with turn management. Turn registration is now solely handled by `PlayerManager`.
+3. Kept cooldown checks and health conditions as internal checks before executing actions to ensure consistency without unnecessary redundancy.
+*/

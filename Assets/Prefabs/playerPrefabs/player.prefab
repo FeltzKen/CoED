@@ -362,7 +362,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ee4eca13461748448151d2c8a23eb47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rb: {fileID: 0}
+  rb: {fileID: 3467289398806818614}
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 5504

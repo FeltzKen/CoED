@@ -72,6 +72,20 @@ namespace YourGameNamespace
                 }
                 gameObject.SetActive(false);
             }
+            else if (!isEnemyProjectile && collision.CompareTag("Enemy"))
+            {
+                EnemyAI enemyAI = collision.GetComponent<EnemyAI>();
+                if (enemyAI != null)
+                {
+                    enemyAI.TakeDamage(damage); // Fix variable name from enemyCombat to enemyAI
+                    Debug.Log($"Projectile: Enemy hit for {damage} damage.");
+                }
+                else
+                {
+                    Debug.LogWarning("Projectile: EnemyAI component missing on Enemy.");
+                }
+                gameObject.SetActive(false);
+            }
             else if (collision.CompareTag("Obstacle") || collision.CompareTag("Wall"))
             {
                 Debug.Log("Projectile: Hit an obstacle and is disabled.");

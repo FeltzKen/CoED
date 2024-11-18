@@ -1,6 +1,6 @@
-// PlayerManager.cs
 using UnityEngine;
 using System.Collections;
+
 using YourGameNamespace;
 
 namespace YourGameNamespace
@@ -8,21 +8,21 @@ namespace YourGameNamespace
     public class PlayerManager : MonoBehaviour, IActor
     {
         public static PlayerManager Instance { get; private set; }
-        public Vector3Int CurrentPosition { get; set; } // Player's current grid position
+        public Vector3Int CurrentPosition { get; private set; } // Player's current grid position
 
         private PlayerStats playerStats;
         private PlayerCombat playerCombat;
         private PlayerMagic playerMagic;
         private TurnManager turnManager;
-        public Rigidbody2D rb;
+        private Rigidbody2D rb;
 
         private System.Action lastAction; // Stores the last planned action
         private bool isActionComplete = false;
 
-        [SerializeField] public LayerMask obstacleLayer; // Layer for obstacles
-
-        public float Speed { get; private set; } = 5f; // Player speed
-        public float ActionPoints { get; set; } = 0f;   // Accumulated action points
+        // Declared variables
+        private Vector2 targetPosition;
+        private bool isMoving = false;
+        [SerializeField] private LayerMask obstacleLayer; // Layer for obstacles
 
         private bool actionSelected = false;
 
@@ -57,12 +57,24 @@ namespace YourGameNamespace
             CurrentPosition = new Vector3Int(Mathf.RoundToInt(playerPosition.x), Mathf.RoundToInt(playerPosition.y), 0);
 
             // Configure Rigidbody2D for kinematic movement
-            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb.isKinematic = true;
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             rb.interpolation = RigidbodyInterpolation2D.Interpolate;
 
             turnManager.RegisterActor(this);
             Debug.Log("PlayerManager: Registered actor with TurnManager.");
+        }
+
+        private void FixedUpdate()
+        {
+            // Handle movement during the physics update cycle
+            if (isMoving)
+            {
+                rb.MovePosition(targetPosition);
+                isMoving = false;
+
+                isActionComplete = true; // Movement is complete
+            }
         }
 
         private void ValidateComponents()
@@ -75,71 +87,25 @@ namespace YourGameNamespace
             }
         }
 
-        public void PerformAction()
-        {
-            Act();
-        }
-
-        public bool IsActionComplete()
-        {
-            return isActionComplete;
-        }
-
         public void CommitMoveAction(Vector2Int targetDirection)
         {
-            // Calculate the target tile
-            Vector3Int targetTile = CurrentPosition + new Vector3Int(targetDirection.x, targetDirection.y, 0);
-            Collider2D hit = Physics2D.OverlapBox(new Vector2(targetTile.x, targetTile.y), Vector2.one * 0.9f, 0, obstacleLayer);
+            // Calculate the target position
+            Vector2 currentPos = rb.position;
+            targetPosition = currentPos + (Vector2)targetDirection;
 
-            // Check if the tile is reserved
-            if (TurnManager.Instance.IsTileReserved(targetTile))
+            // Check for obstacles before moving
+            if (!Physics2D.OverlapBox(targetPosition, Vector2.one * 0.9f, 0, obstacleLayer))
             {
-                Debug.Log("PlayerManager: Target tile is reserved. Movement blocked.");
-                isActionComplete = true; // Skip the turn
-                return;
-            }
-
-            if (hit != null)
-            {
-                if (hit.CompareTag("Enemy"))
-                {
-                    Debug.Log("PlayerManager: Collided with an enemy. Triggering attack.");
-                    // Trigger attack on enemy
-                    EnemyStats enemy = hit.GetComponent<EnemyStats>();
-                    if (enemy != null)
-                    {
-                        enemy.TakeDamage(playerStats.CurrentAttack);
-                    }
-                }
-                else
-                {
-                    Debug.Log("PlayerManager: Movement blocked by an obstacle.");
-                }
-
-                isActionComplete = true; // End turn even if movement fails
-                return;
-            }
-
-            // Reserve the target tile
-            if (TurnManager.Instance.ReserveTile(targetTile, this))
-            {
-                // Release the current tile reservation
-                TurnManager.Instance.ReleaseTile(CurrentPosition);
-
-                // Snap to the target position
-                rb.position = (Vector3)targetTile;       // Update Rigidbody position
-                transform.position = rb.position;        // Synchronize the transform
-
-                // Update the current tile position
-                CurrentPosition = targetTile;
-                Debug.Log($"PlayerManager: Moved to {CurrentPosition}");
-
-                isActionComplete = true; // Movement is complete
+                isMoving = true;
+                CurrentPosition = new Vector3Int(Mathf.RoundToInt(targetPosition.x), Mathf.RoundToInt(targetPosition.y), 0);
+                Debug.Log($"PlayerManager: Committed move action to {CurrentPosition}");
+                actionSelected = true; // Action has been selected
             }
             else
             {
-                Debug.Log("PlayerManager: Unable to reserve target tile. Skipping turn.");
-                isActionComplete = true; // Skip the turn
+                Debug.Log("Move blocked by obstacle.");
+                isActionComplete = true; // No movement possible, action is complete
+                actionSelected = true; // Action selection is complete
             }
         }
 
@@ -156,7 +122,6 @@ namespace YourGameNamespace
                 {
                     playerCombat.AttemptRangedAttack(targetPosition);
                 }
-                isActionComplete = true;
             };
             actionSelected = true; // Action has been selected
         }
@@ -170,7 +135,6 @@ namespace YourGameNamespace
                 {
                     playerMagic.CastMagicAction(targetPosition, spellCost, spellDamage);
                 }
-                isActionComplete = true;
             };
             actionSelected = true; // Action has been selected
         }
@@ -178,7 +142,7 @@ namespace YourGameNamespace
         public void Act()
         {
             isActionComplete = false; // Reset action completion flag
-            actionSelected = false;   // Reset action selected flag
+            actionSelected = false; // Reset action selected flag
 
             Debug.Log("PlayerManager: It's the player's turn.");
 
@@ -194,13 +158,19 @@ namespace YourGameNamespace
             // Wait until the player has selected an action
             yield return new WaitUntil(() => actionSelected);
 
-            if (lastAction != null)
+            if (isMoving)
+            {
+                // Movement will be processed in FixedUpdate
+                Debug.Log("PlayerManager: Movement action will be executed in FixedUpdate.");
+                // isActionComplete will be set to true after movement is complete
+            }
+            else if (lastAction != null)
             {
                 // Execute the planned action
                 lastAction.Invoke();
                 lastAction = null;
                 Debug.Log("PlayerManager: Executed planned action.");
-                // isActionComplete is set within the action
+                isActionComplete = true; // Action is complete
             }
             else
             {
@@ -214,30 +184,26 @@ namespace YourGameNamespace
             // Implement UI display logic here
             // For example, enable action buttons or wait for player input
         }
-
-        public void UpdateCurrentTilePosition() // DO NOT REMOVE!!!!
+                public void UpdateCurrentTilePosition()// DO NOT REMOVE!!!!
         {
-            Vector3 position = rb.position;
+            Vector3 position = transform.position;
             CurrentPosition = new Vector3Int(Mathf.RoundToInt(position.x), Mathf.RoundToInt(position.y), 0);
             Debug.Log($"PlayerManager: Updated current position to {CurrentPosition}");
         }
-
-        public void CommitSpecialAction(System.Action specialAction) // DO NOT REMOVE!!!!
+        public void CommitSpecialAction(System.Action specialAction)// DO NOT REMOVE!!!!
         {
             lastAction = specialAction;
-            Debug.Log("PlayerManager: Registered special action.");
+            Debug.Log("PlayerManager: Registered action with TurnManager.");
         }
-
         public void TakeDamage(int damage)
         {
             // Apply damage to the player
             playerStats.TakeDamage(damage);
         }
 
-        public void ClearLastAction()
+        public bool IsActionComplete()
         {
-            lastAction = null;
-            Debug.Log("PlayerManager: Cleared the last planned action.");
+            return isActionComplete;
         }
     }
 }
