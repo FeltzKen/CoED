@@ -19,7 +19,7 @@ namespace YourGameNamespace
             new Dictionary<StatusEffect, GameObject>();
 
         private PlayerStats playerStats;
-        private EnemyAI enemyAI; // apply effects for enemy combat
+        private EnemyStats enemyStats; // apply effects for enemy combat
 
         // private EnemyPatrolChase enemyPatrolChase; // apply effects to enemy chase speed
         private FloatingTextManager floatingTextManager;
@@ -27,7 +27,7 @@ namespace YourGameNamespace
         private void Awake()
         {
             playerStats = GetComponent<PlayerStats>();
-            enemyAI = GetComponent<EnemyAI>();
+            enemyStats = GetComponent<EnemyStats>();
             floatingTextManager = FloatingTextManager.Instance;
         }
 
@@ -57,9 +57,9 @@ namespace YourGameNamespace
                             Color.red
                         );
                     }
-                    else if (enemyAI != null)
+                    else if (enemyStats != null)
                     {
-                        enemyAI.TakeDamage(damage);
+                        enemyStats.TakeDamage(damage);
                         floatingTextManager?.ShowFloatingText(
                             damage.ToString(),
                             transform.position,
@@ -74,9 +74,9 @@ namespace YourGameNamespace
                     {
                         playerStats.CurrentSpeed += effect.SpeedModifier * deltaTime; // Ensure CurrentSpeed is float
                     }
-                    else if (enemyAI != null)
+                    else if (enemyStats != null)
                     {
-                        enemyAI.patrolSpeed += effect.SpeedModifier * deltaTime; // Ensure patrolSpeed has public setter
+                        enemyStats.CurrentSpeed += effect.SpeedModifier * deltaTime; // Ensure patrolSpeed has public setter
                     }
                 }
 
@@ -86,9 +86,9 @@ namespace YourGameNamespace
                     {
                         /*73*/playerStats.CurrentDefense += effect.DefenseModifier * deltaTime; // Ensure CurrentDefense is float
                     }
-                    else if (enemyAI != null)
+                    else if (enemyStats != null)
                     {
-                        /*77*/enemyAI.CurrentDefense += effect.DefenseModifier * deltaTime; // Ensure CurrentDefense is float
+                        /*77*/enemyStats.CurrentDefense += effect.DefenseModifier * deltaTime; // Ensure CurrentDefense is float
                     }
                 }
             }

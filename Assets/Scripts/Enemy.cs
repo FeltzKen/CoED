@@ -43,7 +43,7 @@ namespace YourGameNamespace
         {
             // Initialize necessary components
             statusEffectManager = GetComponent<StatusEffectManager>();
-            floatingTextManager = FindObjectOfType<FloatingTextManager>();
+            floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
 
             // Check for required components
             if (statusEffectManager == null)

@@ -58,7 +58,7 @@ namespace YourGameNamespace
 
         public void OnDrag(PointerEventData eventData)
         {
-            Canvas canvas = GameObject.FindObjectOfType<Canvas>();
+            Canvas canvas = GameObject.FindAnyObjectByType<Canvas>();
             //rectTransform.anchoredPosition += 1;// eventData.delta / canvas.GetCanvasScaleFactor();
         }
 

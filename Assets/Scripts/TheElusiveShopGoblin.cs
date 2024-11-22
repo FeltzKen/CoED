@@ -77,7 +77,7 @@ namespace YourGameNamespace
         {
             if (fogOfWar == null)
             {
-                fogOfWar = FindObjectOfType<FogOfWar>();
+                fogOfWar = FindAnyObjectByType<FogOfWar>();
                 if (fogOfWar == null)
                 {
                     Debug.LogError("ShopGoblin: FogOfWar component not found in the scene.");
@@ -85,7 +85,7 @@ namespace YourGameNamespace
             }
             if (playerInventory == null)
             {
-                playerInventory = FindObjectOfType<Inventory>();
+                playerInventory = FindAnyObjectByType<Inventory>();
                 if (playerInventory == null)
                 {
                     Debug.LogError("ShopGoblin: Player Inventory not found in the scene.");

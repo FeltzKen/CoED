@@ -27,7 +27,7 @@ namespace YourGameNamespace
         {
             playerStats = GetComponent<PlayerStats>();
             playerMagic = GetComponent<PlayerMagic>();
-            projectileManager = FindObjectOfType<ProjectileManager>();
+            projectileManager = FindAnyObjectByType<ProjectileManager>();
             playerManager = PlayerManager.Instance;
 
             if (playerStats == null || playerMagic == null || projectileManager == null || playerManager == null)
@@ -63,17 +63,17 @@ namespace YourGameNamespace
             {
                 if (enemyCollider.CompareTag("Enemy"))
                 {
-                    EnemyAI enemyAI = enemyCollider.GetComponent<EnemyAI>();
-                    if (enemyAI != null)
+                    EnemyStats enemyStats = enemyCollider.GetComponent<EnemyStats>();
+                    if (enemyStats != null)
                     {
-                        int damageDealt = (int)Mathf.Max(playerStats.CurrentAttack - enemyAI.CurrentDefense, 1);
-                        enemyAI.TakeDamage(damageDealt);
-                        Debug.Log($"PlayerCombat: Melee attacked {enemyAI.name} for {damageDealt} damage.");
+                        int damageDealt = (int)Mathf.Max(playerStats.CurrentAttack - enemyStats.CurrentDefense, 1);
+                        enemyStats.TakeDamage(damageDealt);
+                        Debug.Log($"PlayerCombat: Melee attacked {enemyStats.name} for {damageDealt} damage.");
                         hitAny = true;
 
                         // Apply status effect to enemy using the constructor
                         StatusEffect stunEffect = new StatusEffect("Stun", 3f, 0f, null);
-                        enemyAI.GetComponent<StatusEffectManager>()?.AddStatusEffect(stunEffect);
+                        enemyStats.GetComponent<StatusEffectManager>()?.AddStatusEffect(stunEffect);
                     }
                 }
             }

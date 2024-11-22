@@ -28,30 +28,33 @@ namespace YourGameNamespace
         }
 
         // Creates walls around the combined floor tiles of a floor
-public void CreateWalls(FloorData floor, Transform floorParent)
-{
-    HashSet<Vector2Int> wallPositions = new HashSet<Vector2Int>();
-
-    // Directions to check around each floor tile for potential walls
-    Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
-
-    foreach (Vector2Int floorTile in floor.FloorTiles)
-    {
-        foreach (Vector2Int dir in directions)
+        public void CreateWalls(FloorData floor, Transform floorParent)
         {
-            Vector2Int neighbor = floorTile + dir;
+            HashSet<Vector2Int> wallPositions = new HashSet<Vector2Int>();
 
-            // Only add a wall if this tile is not already a floor tile
-            if (!floor.FloorTiles.Contains(neighbor) && !wallPositions.Contains(neighbor))
+            // Directions to check around each floor tile for potential walls
+            Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+
+            foreach (Vector3Int floorTile in floor.FloorTiles) // Looping through Vector3Int
             {
-                wallPositions.Add(neighbor);
+                foreach (Vector2Int dir in directions)
+                {
+                    // Create a neighbor position as Vector2Int
+                    Vector2Int neighbor = new Vector2Int(floorTile.x + dir.x, floorTile.y + dir.y);
 
-                Vector3 wallPosition = new Vector3(neighbor.x, neighbor.y, 0);
-                Instantiate(wallPrefab, wallPosition, Quaternion.identity, floorParent);
+                    // Only add a wall if this tile is not already a floor tile and not in wall positions
+                    if (!floor.FloorTiles.Contains(new Vector3Int(neighbor.x, neighbor.y, 0)) && !wallPositions.Contains(neighbor))
+                    {
+                        wallPositions.Add(neighbor);
+
+                        // Instantiate wall at the neighbor position
+                        Vector3 wallPosition = new Vector3(neighbor.x, neighbor.y, 0);
+                        Instantiate(wallPrefab, wallPosition, Quaternion.identity, floorParent);
+                    }
+                }
             }
         }
-    }
-}
+
 
     }
 }

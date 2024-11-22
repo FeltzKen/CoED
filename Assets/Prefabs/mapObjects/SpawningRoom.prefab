@@ -5492,8 +5492,29 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5594940870504256869, guid: facb07947277c8f4ea34be499bcc7a3f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2719114394992684407}
   m_SourcePrefab: {fileID: 100100000, guid: facb07947277c8f4ea34be499bcc7a3f, type: 3}
+--- !u!1 &1782713953530720170 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5594940870504256869, guid: facb07947277c8f4ea34be499bcc7a3f, type: 3}
+  m_PrefabInstance: {fileID: 6131723397449398991}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2719114394992684407
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1782713953530720170}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4376909b9e015848958c68b35cecc44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  warningMessage: There is no turning back now!!!!
 --- !u!4 &3112560941853213829 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 9091158369938882122, guid: facb07947277c8f4ea34be499bcc7a3f, type: 3}

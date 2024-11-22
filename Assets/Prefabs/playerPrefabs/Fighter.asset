@@ -9,10 +9,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 04ffb16f0d9fb7242891ad071b10f466, type: 3}
-  m_Name: FloorConfig
+  m_Script: {fileID: 11500000, guid: c0b20b2c644a9cd4492a052a5c18a7a9, type: 3}
+  m_Name: Fighter
   m_EditorClassIdentifier: 
-  floorNumber: 0
-  floorSize: {x: 0, y: 0}
-  maxEnemies: 0
-  maxRooms: 0
+  ClassName: 
+  CharacterSprite: {fileID: 0}
+  BaseHealth: 0
+  BaseStrength: 0
+  BaseMagic: 0
+  BaseDefense: 0
+  BaseSpeed: 5
+  BaseMana: 100
+  BaseCriticalChance: 0.05
+  SpecialAbilityDescription: 

@@ -1,5 +1,5 @@
 using UnityEngine;
-
+using YourGameNamespace;
 namespace YourGameNamespace
 {
     // Represents an item that can be held in the player's inventory.
@@ -16,32 +16,21 @@ namespace YourGameNamespace
         private Sprite icon;
 
         [SerializeField]
-        private EquipmentSlot equipmentSlot = EquipmentSlot.None;
-
-        [SerializeField]
         private int attackBoost = 0;
 
         [SerializeField]
         private int defenseBoost = 0;
+        [SerializeField]
+        private int speedBoost = 0;
 
         [SerializeField]
         private int healthBoost = 0;
-
-        // Properties to indicate enchantment and curse status.
-        public bool IsEnchanted { get; set; }
-        public bool IsCursed { get; set; }
-
-        private const float enchantmentChance = 0.1f; // 10% chance to be enchanted
-        private const float curseChance = 0.1f; // 10% chance to be cursed
 
         // Gets the name of the item.
         public string ItemName => itemName;
 
         // Gets the icon sprite of the item.
         public Sprite Icon => icon;
-
-        // Gets the equipment slot assigned to the item.
-        public EquipmentSlot EquipmentSlot => equipmentSlot;
 
         // Gets the attack boost provided by the item.
         public int AttackBoost => attackBoost;
@@ -55,28 +44,13 @@ namespace YourGameNamespace
         // Method to initialize the item, setting enchantment or curse status based on chance.
         public void InitializeItem()
         {
-            IsEnchanted = Random.value < enchantmentChance;
-            IsCursed = !IsEnchanted && Random.value < curseChance; // Only assign curse if not enchanted
+            //IsEnchanted = Random.value < enchantmentChance;
+            //IsCursed = !IsEnchanted && Random.value < curseChance; // Only assign curse if not enchanted
 
-            Debug.Log($"{itemName} initialized: Enchanted = {IsEnchanted}, Cursed = {IsCursed}");
+           // Debug.Log($"{itemName} initialized: Enchanted = {IsEnchanted}, Cursed = {IsCursed}");
         }
 
-        public void RemoveCurse()
-        {
-            IsCursed = false;
-        }
     }
 
-    // Defines the possible equipment slots for items.
-    public enum EquipmentSlot
-    {
-        None, // Represents items that are not equippable
-        Head,
-        Chest,
-        Legs,
-        Waist,
-        Weapon,
-        Shield,
-        Boots,
-    }
+
 }

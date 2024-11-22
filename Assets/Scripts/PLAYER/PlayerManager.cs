@@ -25,6 +25,8 @@ namespace YourGameNamespace
         [SerializeField] private LayerMask obstacleLayer; // Layer for obstacles
 
         private bool actionSelected = false;
+public float Speed { get; private set; } = 5.0f; // Example speed value
+public float ActionPoints { get; set; } = 0; // Initialize action points
 
         private void Awake()
         {
@@ -57,7 +59,7 @@ namespace YourGameNamespace
             CurrentPosition = new Vector3Int(Mathf.RoundToInt(playerPosition.x), Mathf.RoundToInt(playerPosition.y), 0);
 
             // Configure Rigidbody2D for kinematic movement
-            rb.isKinematic = true;
+            rb.bodyType = RigidbodyType2D.Kinematic;
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             rb.interpolation = RigidbodyInterpolation2D.Interpolate;
 
@@ -86,28 +88,52 @@ namespace YourGameNamespace
                 enabled = false;
             }
         }
-
         public void CommitMoveAction(Vector2Int targetDirection)
         {
-            // Calculate the target position
             Vector2 currentPos = rb.position;
-            targetPosition = currentPos + (Vector2)targetDirection;
+            targetPosition = new Vector2Int(
+                Mathf.RoundToInt(CurrentPosition.x + targetDirection.x),
+                Mathf.RoundToInt(CurrentPosition.y + targetDirection.y)
+            );
+                CurrentPosition = new Vector3Int(Mathf.RoundToInt(targetPosition.x), Mathf.RoundToInt(targetPosition.y), 0);
+                rb.MovePosition(new Vector2(CurrentPosition.x, CurrentPosition.y)); // Update Rigidbody position
 
-            // Check for obstacles before moving
+            // Check for obstacles
             if (!Physics2D.OverlapBox(targetPosition, Vector2.one * 0.9f, 0, obstacleLayer))
             {
                 isMoving = true;
                 CurrentPosition = new Vector3Int(Mathf.RoundToInt(targetPosition.x), Mathf.RoundToInt(targetPosition.y), 0);
                 Debug.Log($"PlayerManager: Committed move action to {CurrentPosition}");
-                actionSelected = true; // Action has been selected
+                actionSelected = true;
             }
             else
             {
-                Debug.Log("Move blocked by obstacle.");
-                isActionComplete = true; // No movement possible, action is complete
-                actionSelected = true; // Action selection is complete
+                isActionComplete = true;
+                actionSelected = true;
+            }
+            Collider2D hit = Physics2D.OverlapBox(targetPosition, Vector2.one * 0.9f, 0, obstacleLayer);
+
+            if (hit != null)
+            {
+                Debug.Log($"Blocked by: {hit.name} on layer {LayerMask.LayerToName(hit.gameObject.layer)}");
+            }
+            else
+            {
+                Debug.Log("No obstacles detected.");
+            }
+
+        }
+        public void PerformAction()
+        {
+            if (lastAction != null)
+            {
+                lastAction.Invoke(); // Execute the planned action
+                lastAction = null; // Clear the action after execution
+                isActionComplete = true;
+                Debug.Log("PlayerManager: Performed action.");
             }
         }
+
 
         public void CommitCombatAction(bool isMelee, Vector3 targetPosition)
         {
@@ -139,16 +165,25 @@ namespace YourGameNamespace
             actionSelected = true; // Action has been selected
         }
 
-        public void Act()
-        {
-            isActionComplete = false; // Reset action completion flag
-            actionSelected = false; // Reset action selected flag
+public void Act()
+{
+    isActionComplete = false; // Reset flag
+    actionSelected = false; // Reset selection
 
-            Debug.Log("PlayerManager: It's the player's turn.");
+    Debug.Log("PlayerManager: It's the player's turn.");
 
-            // Start the coroutine to handle the player's turn
-            StartCoroutine(HandlePlayerTurn());
-        }
+    // If there's a pre-planned action, perform it
+    if (lastAction != null)
+    {
+        PerformAction();
+    }
+    else
+    {
+        // Start the coroutine for player input
+        StartCoroutine(HandlePlayerTurn());
+    }
+}
+
 
         private IEnumerator HandlePlayerTurn()
         {
@@ -201,9 +236,10 @@ namespace YourGameNamespace
             playerStats.TakeDamage(damage);
         }
 
-        public bool IsActionComplete()
-        {
-            return isActionComplete;
-        }
+public bool IsActionComplete()
+{
+    return isActionComplete && !isMoving;
+}
+
     }
 }

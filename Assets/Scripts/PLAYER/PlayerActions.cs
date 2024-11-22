@@ -36,7 +36,7 @@ namespace YourGameNamespace
             playerStats = GetComponent<PlayerStats>();
             playerMagic = GetComponent<PlayerMagic>();
             playerInventory = GetComponent<Inventory>();
-            floatingTextManager = FindObjectOfType<FloatingTextManager>();
+            floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
             playerManager = PlayerManager.Instance;
 
             ValidateComponents();

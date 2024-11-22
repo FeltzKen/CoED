@@ -83,8 +83,8 @@ namespace YourGameNamespace
                 if (itemComponent != null)
                 {
                     itemComponent.InitializeItem();
-                    Debug.Log(
-                        $"ItemSpawner: Spawned item '{itemComponent.ItemName}' at {position} with Enchanted={itemComponent.IsEnchanted}, Cursed={itemComponent.IsCursed}"
+                    Debug.Log(""
+                      //  $"ItemSpawner: Spawned item '{itemComponent.ItemName}' at {position} with Enchanted={itemComponent.IsEnchanted}, Cursed={itemComponent.IsCursed}"
                     );
                 }
                 else

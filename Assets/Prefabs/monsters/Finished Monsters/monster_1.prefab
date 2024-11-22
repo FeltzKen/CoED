@@ -180,9 +180,10 @@ GameObject:
   - component: {fileID: 5405996234022275639}
   - component: {fileID: 3984977953762216121}
   - component: {fileID: 5710572630327944031}
-  - component: {fileID: -4582126688079974059}
+  - component: {fileID: 1501273931103638685}
+  - component: {fileID: -1987303044018690111}
   m_Layer: 8
-  m_Name: monster1 1
+  m_Name: monster_1
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -280,7 +281,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 1
-  m_Sprite: {fileID: -1818894132, guid: 518246f17b3f89041a1989dda10f6aa4, type: 3}
+  m_Sprite: {fileID: -136597058, guid: 518246f17b3f89041a1989dda10f6aa4, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -363,7 +364,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f96c446ab19ac8148a70147fb636cfa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  statusEffectManager: {fileID: 0}
+  maxHealth: 100
   IsVisible: 1
   possibleDrops: []
   baseDropRate: 0.3
@@ -401,7 +402,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   statusEffectContainer: {fileID: 0}
   statusEffectIconPrefab: {fileID: 0}
---- !u!114 &-4582126688079974059
+--- !u!114 &1501273931103638685
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -410,24 +411,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 3198391839532095026}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bcf4425c5c509a54f99f5a4659dd3621, type: 3}
+  m_Script: {fileID: 11500000, guid: 66c66ad519254d04eb681265b2d04d56, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 200
   baseDefense: 7
-  baseAttackRange: 1
-  baseSpeed: 7
-  moey: 0
-  <CurrentAttack>k__BackingField: 0
-  <CurrentMagic>k__BackingField: 0
-  <CurrentHealth>k__BackingField: 0
-  <CurrentDefense>k__BackingField: 0
-  <CurrentAttackRange>k__BackingField: 0
-  <CurrentProjectileRange>k__BackingField: 0
-  <CurrentDetectionRange>k__BackingField: 0
-  <CurrentSpeed>k__BackingField: 0
-  <CurrentFireRate>k__BackingField: 0
-  spawnFloor: 0
+  baseProjectileRange: 4
+  baseDetectionRange: 5
+  baseFireRate: 5
+  baseSpeed: 3
+--- !u!114 &-1987303044018690111
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3198391839532095026}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be1d200934ac2524ca60ce2629f4c542, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  autoValidateOnStart: 1
+  detailedLogs: 1
 --- !u!1 &6040042245667524606
 GameObject:
   m_ObjectHideFlags: 0

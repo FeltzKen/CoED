@@ -7,20 +7,21 @@ namespace YourGameNamespace
     public class PlayerMovement : MonoBehaviour
     {
         [Header("Movement Settings")]
-        [SerializeField] private float moveDelay = 0.2f; // Delay between moves
-        [SerializeField] private float staminaCostPerRun = 2f; // Stamina cost for running
-
-        [Header("UI Elements")]
-        [SerializeField] private Slider staminaBar; // UI slider for stamina
+        [SerializeField] private float moveSpeed = 5f;
+        [SerializeField] private float staminaCostPerRun = 2f;
+        [SerializeField] private LayerMask obstacleLayer;
+        [SerializeField] private float moveDelay = 0.2f;
+        [SerializeField] private Slider staminaBar;
 
         private PlayerStats playerStats;
-        private PlayerManager playerManager;
+        public Vector2Int currentTilePosition;
         private float moveCooldown;
+        private PlayerManager playerManager;
 
         private void Start()
         {
-            // Initialize references
             playerStats = PlayerStats.Instance;
+            currentTilePosition = Vector2Int.RoundToInt(transform.position);
             playerManager = PlayerManager.Instance;
 
             UpdateStaminaUI();
@@ -33,12 +34,10 @@ namespace YourGameNamespace
 
         private void HandleMovementInput()
         {
-            // Prevent movement if cooldown is active
             if (Time.time < moveCooldown) return;
 
             Vector2Int direction = Vector2Int.zero;
 
-            // Get movement direction from input
             if (Input.GetKey(KeyCode.UpArrow)) direction += Vector2Int.up;
             if (Input.GetKey(KeyCode.DownArrow)) direction += Vector2Int.down;
             if (Input.GetKey(KeyCode.LeftArrow)) direction += Vector2Int.left;
@@ -46,37 +45,66 @@ namespace YourGameNamespace
 
             if (direction != Vector2Int.zero)
             {
-                // Check for running input and available stamina
+                // Handle two-tile movement with left shift key
                 bool isRunning = Input.GetKey(KeyCode.LeftShift) && playerStats.CurrentStamina >= staminaCostPerRun;
                 Vector2Int targetDirection = isRunning ? direction * 2 : direction;
 
-                // Deduct stamina if running
-                if (isRunning)
+                // Check for collisions if moving two tiles, fallback to single tile if blocked
+                if (isRunning && !IsTwoTileMovePossible(direction))
                 {
-                    DeductStamina(staminaCostPerRun);
+                    targetDirection = direction;
                 }
 
-                // Commit move action through PlayerManager
-                playerManager.CommitMoveAction(targetDirection);
-                moveCooldown = Time.time + moveDelay;
+                if (IsMovePossible(targetDirection))
+                {
+                    if (isRunning)
+                    {
+                        DeductStamina(staminaCostPerRun);
+                    }
+                    playerManager.CommitMoveAction(targetDirection);
+                    moveCooldown = Time.time + moveDelay;
+                }
             }
         }
 
-        private void DeductStamina(float amount)
+        private bool IsMovePossible(Vector2Int direction)
         {
-            // Deduct stamina and update UI
-            playerStats.CurrentStamina = Mathf.Max(playerStats.CurrentStamina - amount, 0);
-            UpdateStaminaUI();
-            Debug.Log($"PlayerMovement: Deducted {amount} stamina. Current stamina: {playerStats.CurrentStamina}");
+            Vector2Int targetTile = currentTilePosition + direction;
+            Vector2 targetPosition = new Vector2(targetTile.x, targetTile.y);
+            return IsTileWalkable(targetPosition);
+        }
+
+        private bool IsTwoTileMovePossible(Vector2Int direction)
+        {
+            Vector2Int firstTile = currentTilePosition + direction;
+            Vector2Int secondTile = firstTile + direction;
+
+            // Check if both tiles are walkable
+            return IsTileWalkable(new Vector2(firstTile.x, firstTile.y)) &&
+                   IsTileWalkable(new Vector2(secondTile.x, secondTile.y));
+        }
+
+
+        private bool IsTileWalkable(Vector2 position)
+        {
+            Collider2D hitCollider = Physics2D.OverlapBox(position, Vector2.one * 0.5f, 0f, obstacleLayer);
+            return hitCollider == null;
         }
 
         private void UpdateStaminaUI()
         {
-            // Update the stamina UI slider
             if (staminaBar != null)
             {
                 staminaBar.value = playerStats.CurrentStamina;
             }
         }
+
+        private void DeductStamina(float amount)
+        {
+            playerStats.CurrentStamina = Mathf.Max(playerStats.CurrentStamina - amount, 0);
+            UpdateStaminaUI();
+            Debug.Log($"PlayerMovement: Deducted {amount} stamina. Current stamina: {playerStats.CurrentStamina}");
+        }
     }
 }
+

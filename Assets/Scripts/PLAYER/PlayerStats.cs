@@ -103,7 +103,7 @@ namespace YourGameNamespace
             CurrentStamina = maxStamina;
             CurrentHealth = CurrentMaxHealth;
 
-            UIManager uiManager = FindObjectOfType<UIManager>();
+            UIManager uiManager = FindAnyObjectByType<UIManager>();
             if (uiManager != null)
             {
                 uiManager.SetHealthBarMax(CurrentMaxHealth);
@@ -131,7 +131,7 @@ namespace YourGameNamespace
             equipmentDefense = Mathf.Max(defense, 0);
             equipmentHealth = Mathf.Max(health, 0);
             CalculateStats();
-            UpdateHealthUI(FindObjectOfType<UIManager>());
+            UpdateHealthUI(FindAnyObjectByType<UIManager>());
         }
 
         public void GainExperience(int amount)
@@ -160,7 +160,7 @@ namespace YourGameNamespace
             CalculateStats();
 
             OnLevelUp?.Invoke();
-            UIManager uiManager = FindObjectOfType<UIManager>();
+            UIManager uiManager = FindAnyObjectByType<UIManager>();
             if (uiManager != null)
             {
                 uiManager.UpdateLevelDisplay(level);
@@ -192,9 +192,9 @@ namespace YourGameNamespace
             int effectiveDamage = Mathf.Max(damage - (int)CurrentDefense, 1);
             CurrentHealth = Mathf.Max(CurrentHealth - effectiveDamage, 0);
             OnHealthChanged?.Invoke(CurrentHealth, CurrentMaxHealth);
-            UpdateHealthUI(FindObjectOfType<UIManager>());
+            UpdateHealthUI(FindAnyObjectByType<UIManager>());
 
-            FloatingTextManager floatingTextManager = FindObjectOfType<FloatingTextManager>();
+            FloatingTextManager floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
             floatingTextManager?.ShowFloatingText(effectiveDamage.ToString(), transform.position, Color.red);
 
             Debug.Log($"PlayerStats: Took {effectiveDamage} damage. Current health: {CurrentHealth}/{CurrentMaxHealth}");
@@ -215,9 +215,9 @@ namespace YourGameNamespace
 
             CurrentHealth = Mathf.Min(CurrentHealth + amount, CurrentMaxHealth);
             OnHealthChanged?.Invoke(CurrentHealth, CurrentMaxHealth);
-            UpdateHealthUI(FindObjectOfType<UIManager>());
+            UpdateHealthUI(FindAnyObjectByType<UIManager>());
 
-            FloatingTextManager floatingTextManager = FindObjectOfType<FloatingTextManager>();
+            FloatingTextManager floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
             floatingTextManager?.ShowFloatingText($"+{amount}", transform.position, Color.green);
 
             Debug.Log($"PlayerStats: Healed {amount} health. Current health: {CurrentHealth}/{CurrentMaxHealth}");
@@ -226,7 +226,7 @@ namespace YourGameNamespace
         private void HandleDeath()
         {
             Debug.Log("PlayerStats: Player has died.");
-            GameManager gameManager = FindObjectOfType<GameManager>();
+            GameManager gameManager = FindAnyObjectByType<GameManager>();
             gameManager?.OnPlayerDeath();
             OnPlayerDeath?.Invoke();
         }

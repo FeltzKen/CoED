@@ -8,18 +8,18 @@ namespace YourGameNamespace
     public static class CurseRemover
     {
         /// Attempts to remove the curse from the given item.
-        public static void UseOnItem(Item item)
+        public static void UseOnEquipment(Equipment equipment)
         {
-            if (item == null)
+            if (equipment == null)
             {
                 Debug.LogWarning("CurseRemover: Attempted to use on a null item.");
                 return;
             }
 
-            if (item.IsCursed)
+            if (equipment.IsCursed)
             {
-                item.RemoveCurse();
-                Debug.Log($"{item.ItemName} has been uncursed.");
+                equipment.RemoveCurse();
+                Debug.Log($"{equipment.equipmentName} has been uncursed.");
 
                 // Optionally, we could invoke some UI or status update here.
                 // For example: UIManager.Instance?.UpdateInventoryDisplay();

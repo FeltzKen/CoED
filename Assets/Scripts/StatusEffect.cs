@@ -79,12 +79,12 @@ namespace YourGameNamespace
             }
             else if (target is Enemy enemy) // Change to Enemy
             {
-                EnemyAI enemyAI = enemy.GetComponent<EnemyAI>(); // Access the EnemyAI component for stats
+                EnemyStats enemyStats = enemy.GetComponent<EnemyStats>(); // Access the EnemyAI component for stats
 
-                if (enemyAI != null) // Ensure it's not null
+                if (enemyStats != null) // Ensure it's not null
                 {
-                    enemyAI.CurrentSpeed += speedModifier; // Modify the enemy's current speed
-                    enemyAI.CurrentDefense += defenseModifier; // Modify the enemy's current defense
+                    enemyStats.CurrentSpeed += speedModifier; // Modify the enemy's current speed
+                    enemyStats.CurrentDefense += defenseModifier; // Modify the enemy's current defense
                 }
             }
         }

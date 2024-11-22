@@ -180,9 +180,9 @@ GameObject:
   - component: {fileID: 5405996234022275639}
   - component: {fileID: 3984977953762216121}
   - component: {fileID: 5710572630327944031}
-  - component: {fileID: -4582126688079974059}
+  - component: {fileID: 499285718735250053}
   m_Layer: 8
-  m_Name: monster1
+  m_Name: monster_2
   m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -280,7 +280,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 1
-  m_Sprite: {fileID: -136597058, guid: 518246f17b3f89041a1989dda10f6aa4, type: 3}
+  m_Sprite: {fileID: -1818894132, guid: 518246f17b3f89041a1989dda10f6aa4, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -401,7 +401,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   statusEffectContainer: {fileID: 0}
   statusEffectIconPrefab: {fileID: 0}
---- !u!114 &-4582126688079974059
+--- !u!114 &499285718735250053
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -410,15 +410,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 3198391839532095026}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bcf4425c5c509a54f99f5a4659dd3621, type: 3}
+  m_Script: {fileID: 11500000, guid: 66c66ad519254d04eb681265b2d04d56, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 100
-  baseDefense: 5
-  baseAttackRange: 1
+  baseDefense: 9
+  baseProjectileRange: 6
+  baseDetectionRange: 6
+  baseFireRate: 6
   baseSpeed: 5
-  moey: 0
-  spawnFloor: 0
 --- !u!1 &6040042245667524606
 GameObject:
   m_ObjectHideFlags: 0

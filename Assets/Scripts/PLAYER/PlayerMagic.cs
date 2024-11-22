@@ -38,8 +38,8 @@ namespace YourGameNamespace
 
         private void Start()
         {
-            uiManager = FindObjectOfType<UIManager>();
-            projectileManager = projectileManager ?? FindObjectOfType<ProjectileManager>();
+            uiManager = FindAnyObjectByType<UIManager>();
+            projectileManager = projectileManager ?? FindAnyObjectByType<ProjectileManager>();
             playerManager = PlayerManager.Instance;
 
             if (projectileManager == null)

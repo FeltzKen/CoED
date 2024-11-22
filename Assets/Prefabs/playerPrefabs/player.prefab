@@ -122,7 +122,7 @@ GameObject:
   - component: {fileID: 8182549918890610233}
   - component: {fileID: 7276005580750806224}
   - component: {fileID: 5833244433419089174}
-  m_Layer: 12
+  m_Layer: 3
   m_Name: player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -290,7 +290,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8948494598534906761}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3ccc51f20c80bc948a8cd85c75e2aa47, type: 3}
   m_Name: 
@@ -325,7 +325,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8948494598534906761}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1623fb5dd22a2744e81fa3cd4fd88bc2, type: 3}
   m_Name: 
@@ -362,10 +362,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ee4eca13461748448151d2c8a23eb47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rb: {fileID: 3467289398806818614}
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 5504
+    m_Bits: 1408
 --- !u!114 &8182549918890610233
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -378,9 +377,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2bd989f80db80ab47b31e116e841cc0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveDelay: 0.2
+  moveSpeed: 5
   staminaCostPerRun: 2
+  obstacleLayer:
+    serializedVersion: 2
+    m_Bits: 1408
+  moveDelay: 0.2
   staminaBar: {fileID: 8034618581357456614, guid: 4e03e51d2d01fab4aa3632a729ecb472, type: 3}
+  currentTilePosition: {x: 0, y: 0}
 --- !u!114 &7276005580750806224
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -413,6 +417,7 @@ MonoBehaviour:
   experienceToNextLevel: 100
   maxLevel: 50
   maxHealth: 100
+  baseAttack: 10
   baseDefense: 5
   baseMagic: 5
   baseRange: 5

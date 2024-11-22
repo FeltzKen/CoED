@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3332312882382132616}
   - component: {fileID: 5599094189648900399}
   m_Layer: 0
-  m_Name: Particle System
+  m_Name: SpawnEffect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

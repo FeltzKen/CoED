@@ -10,6 +10,7 @@ namespace YourGameNamespace
         private DungeonGeneratorMethods methods;
 
 
+
 private void OnTriggerEnter2D(Collider2D other)
 {
     if (other.CompareTag("Player"))
@@ -27,7 +28,7 @@ private void OnTriggerEnter2D(Collider2D other)
         {            
 
             
-            if (DungeonGenerator.Instance.spawningRoomInstance != null)
+            if (gameObject != null)
             {
                 Destroy(DungeonGenerator.Instance.spawningRoomInstance);
             }

@@ -1,15 +1,16 @@
-using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
-using System.Linq;
-using UnityEngine.Tilemaps; // Add this at the top
 using YourGameNamespace;
+using UnityEngine.Tilemaps;
+using System.Collections.Generic;
+
 namespace YourGameNamespace
 {
     public class DungeonGeneratorMethods
     {        
         
-        private DungeonGenerator dungeonGenerator;
+        [SerializeField] private DungeonGenerator dungeonGenerator; // Assign via Inspector
         public HashSet<Vector2Int> floorTiles  = new HashSet<Vector2Int>();
 
         public DungeonGeneratorMethods(DungeonGenerator generator)
@@ -17,6 +18,7 @@ namespace YourGameNamespace
             dungeonGenerator = generator;
 
         }
+
         public Vector3 GetRandomFloorTile()
         {
             // Select a random floor tile position from the HashSet
@@ -169,14 +171,20 @@ namespace YourGameNamespace
             }
         }
 
-        // Helper function to create a corridor between two rooms
-        private void CreateCorridorBetweenRooms(Room roomA, Room roomB, FloorData floor, int minCorridorWidth, int maxCorridorWidth, int maxSegmentLength, float straightCorridorChance)
-        {
-            HashSet<Vector2Int> corridorTiles = new HashSet<Vector2Int>(
-                GenerateCorridorTiles(GetRandomWallPosition(roomA), GetRandomWallPosition(roomB), minCorridorWidth, maxCorridorWidth, maxSegmentLength, straightCorridorChance)
-            );
-            floor.AddCorridor(corridorTiles, roomA, roomB);
-        }
+// Helper function to create a corridor between two rooms
+private void CreateCorridorBetweenRooms(Room roomA, Room roomB, FloorData floor, int minCorridorWidth, int maxCorridorWidth, int maxSegmentLength, float straightCorridorChance)
+{
+    HashSet<Vector2Int> corridorTiles2D = new HashSet<Vector2Int>(
+        GenerateCorridorTiles(GetRandomWallPosition(roomA), GetRandomWallPosition(roomB), minCorridorWidth, maxCorridorWidth, maxSegmentLength, straightCorridorChance)
+    );
+
+    HashSet<Vector3Int> corridorTiles3D = new HashSet<Vector3Int>(
+        corridorTiles2D.Select(tile => new Vector3Int(tile.x, tile.y, 0))
+    );
+
+    floor.AddCorridor(corridorTiles3D, roomA, roomB);
+}
+
 
 
         public void RenderRoom(Room room, Tilemap tilemap, TileBase tile)
@@ -198,7 +206,7 @@ namespace YourGameNamespace
     }
 }
 
-        public void RenderCorridor(HashSet<Vector2Int> corridor, Tilemap tilemap, TileBase corridorTile)
+        public void RenderCorridor(HashSet<Vector3Int> corridor, Tilemap tilemap, TileBase corridorTile)
 {
     foreach (Vector2Int tilePos in corridor)
     {
@@ -207,23 +215,26 @@ namespace YourGameNamespace
     }
 }
 
-        public void CreateWallsForFloor(HashSet<Vector2Int> floorTiles, Tilemap wallTilemap, TileBase wallTile)
-{
-    Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
-
-    foreach (Vector2Int tile in floorTiles)
-    {
-        foreach (Vector2Int dir in directions)
+        public void CreateWallsForFloor(HashSet<Vector3Int> floorTiles, Tilemap wallTilemap, TileBase wallTile)
         {
-            Vector2Int neighbor = tile + dir;
-            if (!floorTiles.Contains(neighbor)) // Only add walls where there is no floor tile
+            Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+
+            foreach (Vector3Int tile in floorTiles)
             {
-                Vector3Int wallPosition = new Vector3Int(neighbor.x, neighbor.y, 0);
-                wallTilemap.SetTile(wallPosition, wallTile); // Place the wall tile on the Tilemap
+                foreach (Vector2Int dir in directions)
+                {
+                    Vector2Int neighbor2D = new Vector2Int(tile.x + dir.x, tile.y + dir.y);
+                    Vector3Int neighbor3D = new Vector3Int(neighbor2D.x, neighbor2D.y, 0);
+
+                    if (!floorTiles.Contains(neighbor3D)) // Only add walls where there is no floor tile
+                    {
+                        Vector3Int wallPosition = new Vector3Int(neighbor3D.x, neighbor3D.y, 0);
+                        wallTilemap.SetTile(wallPosition, wallTile); // Place the wall tile on the Tilemap
+                    }
+                }
             }
         }
-    }
-}
+
 
         public class DisjointSet
         {
@@ -345,35 +356,46 @@ namespace YourGameNamespace
         private Vector2Int AlignStairsOnNextFloor(FloorData nextFloor, Vector2Int targetPosition)
         {
             // Check if target position is within the existing walkable tiles of the next floor
-            if (!nextFloor.FloorTiles.Contains(targetPosition))
+            Vector3Int targetPosition3D = new Vector3Int(targetPosition.x, targetPosition.y, 0);
+
+            if (!nextFloor.FloorTiles.Contains(targetPosition3D))
             {
                 // Option 1: Make the target position walkable by adding a floor tile
-                // nextFloor.FloorTiles.Add(targetPosition);
+                // nextFloor.FloorTiles.Add(targetPosition3D);
 
                 // Option 2: Or find the nearest walkable tile if you want to avoid creating a new floor tile
-                 targetPosition = FindNearestWalkableTile(nextFloor, targetPosition);
+                targetPosition = FindNearestWalkableTile(nextFloor, targetPosition);
             }
 
             return targetPosition;
         }
 
-        // Retrieves a random walkable position within rooms or corridors of the specified floor
-        private Vector2Int GetRandomWalkablePosition(FloorData floor)
-        {
-            Room randomRoom = floor.Rooms[Random.Range(0, floor.Rooms.Count)];
-            return randomRoom.FloorTiles.ElementAt(Random.Range(0, randomRoom.FloorTiles.Count));
-        }
 
-        // Helper method to find the nearest walkable tile if needed (Optional)
-        private Vector2Int FindNearestWalkableTile(FloorData floor, Vector2Int position)
-        {
-            foreach (Vector2Int tile in floor.FloorTiles.OrderBy(t => Vector2Int.Distance(t, position)))
-            {
-                if (floor.FloorTiles.Contains(tile))
-                    return tile;
-            }
-            return position; // Fallback if no walkable tile found
-        }
+
+        // Retrieves a random walkable position within rooms or corridors of the specified floor
+private Vector2Int GetRandomWalkablePosition(FloorData floor)
+{
+    Room randomRoom = floor.Rooms[Random.Range(0, floor.Rooms.Count)];
+    
+    // Convert Vector3Int to Vector2Int when returning
+    Vector2Int randomTile = randomRoom.FloorTiles.ElementAt(Random.Range(0, randomRoom.FloorTiles.Count));
+    return new Vector2Int(randomTile.x, randomTile.y);
+}
+
+// Helper method to find the nearest walkable tile if needed (Optional)
+private Vector2Int FindNearestWalkableTile(FloorData floor, Vector2Int position)
+{
+    // Convert floor.FloorTiles (Vector3Int) to Vector2Int for comparison
+    foreach (Vector3Int tile in floor.FloorTiles.OrderBy(t => Vector2Int.Distance(new Vector2Int(t.x, t.y), position)))
+    {
+        Vector2Int tile2D = new Vector2Int(tile.x, tile.y);
+
+        if (floor.FloorTiles.Contains(new Vector3Int(tile2D.x, tile2D.y, 0)))
+            return tile2D;
+    }
+    return position; // Fallback if no walkable tile found
+}
+
 
 
         private Transform GetFloorParent(FloorData floor)

@@ -74,10 +74,10 @@ namespace YourGameNamespace
             }
             else if (!isEnemyProjectile && collision.CompareTag("Enemy"))
             {
-                EnemyAI enemyAI = collision.GetComponent<EnemyAI>();
-                if (enemyAI != null)
+                EnemyStats enemyStats = collision.GetComponent<EnemyStats>();
+                if (enemyStats != null)
                 {
-                    enemyAI.TakeDamage(damage); // Fix variable name from enemyCombat to enemyAI
+                    enemyStats.TakeDamage(damage); // Fix variable name from enemyCombat to enemyAI
                     Debug.Log($"Projectile: Enemy hit for {damage} damage.");
                 }
                 else

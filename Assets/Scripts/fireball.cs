@@ -56,10 +56,10 @@ private void OnTriggerEnter2D(Collider2D other)
         }
 
         // Check for enemy health component and apply damage
-        EnemyAI enemyAI = other.GetComponent<EnemyAI>();
-        if (enemyAI != null)
+        EnemyStats enemyStats = other.GetComponent<EnemyStats>();
+        if (enemyStats != null)
         {
-            enemyAI.TakeDamage(damage);
+            enemyStats.TakeDamage(damage);
         }
 
         // Destroy the fireball on collision
