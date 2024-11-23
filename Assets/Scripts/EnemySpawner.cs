@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using YourGameNamespace;
 namespace YourGameNamespace
 {
-    public class EnemySpawner
+    public class EnemySpawner : MonoBehaviour
     {
-        private DungeonSettings dungeonSettings;
+        [SerializeField] private DungeonSettings dungeonSettings;
         private Dictionary<int, Transform> enemyParents = new Dictionary<int, Transform>();
         private Transform playerTransform;
         private EnemyAI enemyAI;
@@ -82,37 +82,71 @@ public IEnumerator SpawnEnemiesForAllFloorsAsync()
 }
 
 
-        private IEnumerator SpawnEnemiesForFloor(FloorData floorData, Transform enemyParent)
+private IEnumerator SpawnEnemiesForFloor(FloorData floorData, Transform enemyParent)
+{
+    if (floorData.PatrolPoints.Count == 0)
+    {
+        Debug.LogError($"No patrol points available for Floor {floorData.FloorNumber}. Cannot spawn enemies.");
+        yield break;
+    }
+
+    int enemyCount = Mathf.Min(floorData.PatrolPoints.Count, GetDynamicEnemyCount(floorData.FloorNumber));
+    List<Vector3> spawnPositions = floorData.PatrolPoints.Take(enemyCount).ToList();
+
+    foreach (var position in spawnPositions)
+    {
+        if (!IsValidSpawnPosition(position))
+            continue;
+
+        // Snap position to whole numbers
+        Vector3 snappedPosition = new Vector3(
+            Mathf.Round(position.x),
+            Mathf.Round(position.y),
+            position.z
+        );
+
+        yield return PlaySpawnEffect(snappedPosition);
+
+        // Spawn the enemy
+        GameObject enemyPrefab = dungeonSettings.enemyPrefabs[Random.Range(0, dungeonSettings.enemyPrefabs.Count)];
+        GameObject enemy = Object.Instantiate(enemyPrefab, snappedPosition, Quaternion.identity, enemyParent);
+
+        // Set the spawn floor and patrol points for the enemy
+        var enemyStats = enemy.GetComponent<EnemyStats>();
+        if (enemyStats != null)
         {
-            if (floorData.PatrolPoints.Count == 0)
-            {
-                Debug.LogError($"No patrol points available for Floor {floorData.FloorNumber}. Cannot spawn enemies.");
-                yield break;
-            }
+            enemyStats.spawnFloor = floorData.FloorNumber; // Set the spawn floor
+            Debug.Log($"EnemySpawner: Set spawnFloor to {floorData.FloorNumber} for spawned enemy.");
+        }
+        
+        var enemyAI = enemy.GetComponent<EnemyAI>();
+        if (enemyAI != null)
+        {
+            // Convert the walkable tiles from Vector3Int to Vector2Int
+            HashSet<Vector3Int> walkableTiles3D = floorData.GetWalkableTiles();
+            HashSet<Vector2Int> walkableTiles2D = new HashSet<Vector2Int>(
+                walkableTiles3D.Select(tile => new Vector2Int(tile.x, tile.y))
+            );
+            enemyAI.SetWalkableTiles(walkableTiles2D);
 
-            int enemyCount = Mathf.Min(floorData.PatrolPoints.Count, dungeonSettings.numberOfEnemiesPerFloor);
-            List<Vector3> spawnPositions = floorData.PatrolPoints.Take(enemyCount).ToList();
+            // Assign patrol points as well
+            var selectedPatrolPoints = floorData.PatrolPoints
+                .OrderBy(_ => Random.value)
+                .Take(7)
+                .Select(p => new Vector2Int(Mathf.RoundToInt(p.x), Mathf.RoundToInt(p.y)))
+                .ToList();
+            enemyAI.SetPatrolPoints(selectedPatrolPoints);
 
-            foreach (var position in spawnPositions)
-            {
-                if (!IsValidSpawnPosition(position))
-                    continue;
-
-                yield return PlaySpawnEffect(position);
-
-                GameObject enemyPrefab = GetEnemyPrefabForFloor(floorData.FloorNumber);
-                if (enemyPrefab == null)
-                    continue;
-
-                GameObject enemy = Instantiate(enemyPrefab, position, Quaternion.identity, enemyParent);
-                InitializeEnemy(enemy, floorData);
-
-                Debug.Log($"Spawned enemy at {position} on Floor {floorData.FloorNumber}.");
-                yield return null; // Avoid freezing
-            }
+            Debug.Log($"EnemySpawner: Assigned walkable tiles and {selectedPatrolPoints.Count} patrol points to enemy on Floor {floorData.FloorNumber}.");
         }
 
-        
+
+        InitializeEnemy(enemy, floorData);
+        Debug.Log($"Spawned enemy at snapped position {snappedPosition} on Floor {floorData.FloorNumber}.");
+        yield return null; // Avoid freezing
+    }
+}
+
         private int GetDynamicEnemyCount(int floorNumber)
         {
             // Adjust enemy count dynamically based on floor number or difficulty
@@ -221,8 +255,8 @@ public IEnumerator SpawnEnemiesForAllFloorsAsync()
             EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
             if (enemyAI != null)
             {
-                enemyAI.SetPatrolPoints(floorData.PatrolPoints.Select(p => new Vector2Int(Mathf.RoundToInt(p.x), Mathf.RoundToInt(p.y))));
-                Debug.Log($"Assigned {floorData.PatrolPoints.Count} shared patrol points to enemy on Floor {floorData.FloorNumber}.");
+               // enemyAI.SetPatrolPoints(floorData.PatrolPoints.Select(p => new Vector2Int(Mathf.RoundToInt(p.x), Mathf.RoundToInt(p.y))));
+               // Debug.Log($"Assigned {floorData.PatrolPoints.Count} shared patrol points to enemy on Floor {floorData.FloorNumber}.");
             }
         }
 
@@ -261,8 +295,9 @@ public IEnumerator SpawnEnemiesForAllFloorsAsync()
                 Vector3 ambushPosition = playerTransform.position + new Vector3(Random.Range(-3f, 3f), Random.Range(-3f, 3f), 0);
                 if (IsValidSpawnPosition(ambushPosition))
                 {
-                    GameObject enemy = Object.Instantiate(dungeonSettings.enemyPrefabs, ambushPosition, Quaternion.identity, enemyParent);
-                    InitializeEnemy(enemy, floorData);
+ GameObject randomEnemyPrefab = dungeonSettings.enemyPrefabs[Random.Range(0, dungeonSettings.enemyPrefabs.Count)];
+GameObject enemy = Object.Instantiate(randomEnemyPrefab, ambushPosition, Quaternion.identity, enemyParent);
+
                 }
             }
 

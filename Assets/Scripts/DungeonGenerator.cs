@@ -63,6 +63,7 @@ namespace YourGameNamespace
         // List to hold data for each floor
         private List<FloorData> floors = new List<FloorData>();
         private Dictionary<int, List<Vector3>> floorPatrolPoints = new Dictionary<int, List<Vector3>>(); // Store patrol points for each floor
+        private Dictionary<int, HashSet<Vector2Int>> walkableTilesByFloor = new Dictionary<int, HashSet<Vector2Int>>();
 
         
         public bool IsDungeonGenerated { get; private set; } = false;
@@ -92,7 +93,7 @@ namespace YourGameNamespace
                 if (dungeonParent.scene.name != "DontDestroyOnLoad")
                 {
                     DontDestroyOnLoad(dungeonParent);
-                    Debug.Log($"{dungeonParent.name} added to the Do Not Destroy list.");
+                    // // Debug.Log($"{dungeonParent.name} added to the Do Not Destroy list.");
                 }
                 else
                 {
@@ -135,17 +136,14 @@ namespace YourGameNamespace
             }
         }
 
-private IEnumerator GenerateDungeonCoroutine()
-{
-    yield return GenerateDungeon();
-    Debug.Log("Dungeon generation completed.");
+        private IEnumerator GenerateDungeonCoroutine()
+        {
+            yield return GenerateDungeon();
+            // // Debug.Log("Dungeon generation completed.");
 
-    yield return StartCoroutine(InitializeDependencies());
-    yield return StartCoroutine(enemySpawner.SpawnEnemiesForAllFloorsAsync());
-}
-
-
-
+            yield return StartCoroutine(InitializeDependencies());
+            yield return StartCoroutine(enemySpawner.SpawnEnemiesForAllFloorsAsync());
+        }
 
         private IEnumerator GenerateDungeon()
         {
@@ -156,7 +154,7 @@ private IEnumerator GenerateDungeonCoroutine()
                 // Create a container for each floor
                 GameObject floorObj = new GameObject($"Floor_{floorNum}");
                 floorObj.transform.parent = dungeonParent.transform;
-                Debug.Log($"Floor {floorNum} added to floorObjects.");
+                // // Debug.Log($"Floor {floorNum} added to floorObjects.");
                 floorObjects.Add(floorObj);
 
                 
@@ -198,19 +196,42 @@ private IEnumerator GenerateDungeonCoroutine()
                 methods.CreateWallsForFloor(floor.FloorTiles, wallTilemap, wallTile);
 
                 // Log floor summary
-                Debug.Log($"Floor {floorNum} generated with {floor.Rooms.Count} rooms and {floor.Corridors.Count} corridors.");
+                // // Debug.Log($"Floor {floorNum} generated with {floor.Rooms.Count} rooms and {floor.Corridors.Count} corridors.");
 
                 yield return null; 
 
                 floor.GeneratePatrolPoints(50); // Generate shared patrol points
                 DungeonManager.Instance.AddFloor(floor, floorObj.transform);
                 // Validate patrol points
-                Debug.Log($"Floor {floorNum} patrol points: {string.Join(", ", floor.PatrolPoints)}");
+                // // Debug.Log($"Floor {floorNum} patrol points: {string.Join(", ", floor.PatrolPoints)}");
                 // Add the floor transform to the dictionary
                 if (!DungeonManager.Instance.FloorTransforms.ContainsKey(floorNum))
                 {
                     DungeonManager.Instance.FloorTransforms[floorNum] = floorObj.transform;
                 }
+
+                HashSet<Vector2Int> walkableTiles = new HashSet<Vector2Int>();
+
+                // Extract floor tiles
+                foreach (var position in floorTilemap.cellBounds.allPositionsWithin)
+                {
+                    if (floorTilemap.HasTile(position))
+                    {
+                        walkableTiles.Add(new Vector2Int(position.x, position.y));
+                    }
+                }
+
+                // Extract corridor tiles
+                foreach (var position in corridorTilemap.cellBounds.allPositionsWithin)
+                {
+                    if (corridorTilemap.HasTile(position))
+                    {
+                        walkableTiles.Add(new Vector2Int(position.x, position.y));
+                    }
+                }
+
+                walkableTilesByFloor[floorNum] = walkableTiles;
+
                 
             }
 
@@ -245,7 +266,7 @@ private IEnumerator GenerateDungeonCoroutine()
                 Vector3 spawnPosition = new Vector3(0, 0, 0); // Adjust this position as needed
                 spawningRoomInstance = Instantiate(spawningRoomPrefab, spawnPosition, Quaternion.identity);
                 spawningRoomInstance.transform.parent = dungeonParent.transform;
-              //  Debug.Log("DungeonGenerator: Spawning room instantiated.");
+              //  // // Debug.Log("DungeonGenerator: Spawning room instantiated.");
             }
             else
             {
@@ -253,100 +274,25 @@ private IEnumerator GenerateDungeonCoroutine()
             }
         }
 
-        /// <summary>
-        /// Validates and logs the integrity of FloorData for all floors.
-        /// </summary>
-        public void ValidateFloorData()
-        {
-            if (floors == null || floors.Count == 0)
-            {
-                Debug.LogError("No floor data available. Ensure the dungeon is generated before validating.");
-                return;
-            }
+public void TransportPlayerToDungeon(GameObject player)
+{
+    PlayerMovement playerMovement = player.GetComponent<PlayerMovement>();
 
-            foreach (FloorData floor in floors)
-            {
-                Debug.Log($"Validating Floor {floor.FloorNumber}...");
+    if (walkableTilesByFloor.ContainsKey(1) && walkableTilesByFloor[1].Count > 0)
+    {
+        // Get a random tile from the walkable tiles of the first floor
+        Vector2Int randomTile = walkableTilesByFloor[1].OrderBy(t => Random.value).First();
+        Vector3 exitPosition = new Vector3(randomTile.x, randomTile.y, 0);
+        // Update logical position and align physical position
+        playerMovement.UpdateCurrentTilePosition(exitPosition);
+        // Update the camera to follow the new player position
+        Camera.main.GetComponent<CameraController>().SetPlayerTransform(player.transform);
+    }
 
-                // Validate floor tiles
-                if (floor.FloorTiles == null || floor.FloorTiles.Count == 0)
-                {
-                    Debug.LogError($"Floor {floor.FloorNumber}: No floor tiles found.");
-                }
-                else
-                {
-                    Debug.Log($"Floor {floor.FloorNumber}: {floor.FloorTiles.Count} floor tiles.");
-                }
+    // Show the first floor (assuming this is a visual effect or animation)
+    StartCoroutine(ShowFloor(1));
+}
 
-                // Validate rooms
-                if (floor.Rooms == null || floor.Rooms.Count == 0)
-                {
-                    Debug.LogWarning($"Floor {floor.FloorNumber}: No rooms found.");
-                }
-                else
-                {
-                    Debug.Log($"Floor {floor.FloorNumber}: {floor.Rooms.Count} rooms.");
-                }
-
-                // Validate corridors
-                if (floor.Corridors == null || floor.Corridors.Count == 0)
-                {
-                    Debug.LogWarning($"Floor {floor.FloorNumber}: No corridors found.");
-                }
-                else
-                {
-                    Debug.Log($"Floor {floor.FloorNumber}: {floor.Corridors.Count} corridors.");
-                }
-
-                // Validate patrol points
-                if (floor.PatrolPoints == null || floor.PatrolPoints.Count == 0)
-                {
-                    Debug.LogWarning($"Floor {floor.FloorNumber}: No patrol points assigned.");
-                }
-                else
-                {
-                    Debug.Log($"Floor {floor.FloorNumber}: {floor.PatrolPoints.Count} patrol points.");
-                }
-
-                // Validate tilemaps
-                if (floor.FloorTilemap == null)
-                {
-                    Debug.LogWarning($"Floor {floor.FloorNumber}: Floor tilemap is null.");
-                }
-                if (floor.CorridorTilemap == null)
-                {
-                    Debug.LogWarning($"Floor {floor.FloorNumber}: Corridor tilemap is null.");
-                }
-                if (floor.WallTilemap == null)
-                {
-                    Debug.LogWarning($"Floor {floor.FloorNumber}: Wall tilemap is null.");
-                }
-
-                // Log summary of connections
-                if (floor.Connections == null || floor.Connections.Count == 0)
-                {
-                    Debug.LogWarning($"Floor {floor.FloorNumber}: No connections between rooms.");
-                }
-                else
-                {
-                    Debug.Log($"Floor {floor.FloorNumber}: {floor.Connections.Count} room connections.");
-                }
-            }
-
-            Debug.Log("Floor data validation completed.");
-        }
-
-
-        public void TransportPlayerToDungeon(GameObject player)
-        {
-            Vector3 exitPosition = GetExitPoint();
-            player.transform.position = exitPosition;
-            player.GetComponent<Rigidbody2D>().MovePosition(exitPosition); // Update Rigidbody position
-            player.GetComponent<PlayerManager>().UpdateCurrentTilePosition(); // Updated line
-            Camera.main.GetComponent<CameraController>().SetPlayerTransform(player.transform);
-            StartCoroutine(ShowFloor(1));
-            Debug.Log("Player transported to dungeon.");
-        }
 
 
         private IEnumerator ShowFloor(int floorNumber)

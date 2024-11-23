@@ -280,7 +280,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 1
-  m_Sprite: {fileID: -1818894132, guid: 518246f17b3f89041a1989dda10f6aa4, type: 3}
+  m_Sprite: {fileID: -392251437, guid: 518246f17b3f89041a1989dda10f6aa4, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -304,7 +304,7 @@ CapsuleCollider2D:
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 72
+    m_Bits: 0
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -363,15 +363,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f96c446ab19ac8148a70147fb636cfa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 100
+  maxHealth: 350
   IsVisible: 1
-  possibleDrops: []
-  baseDropRate: 0.3
+  possibleDrops:
+  - {fileID: 0}
+  baseDropRate: 1
   dropRateDecreaseFactor: 0.5
   moneyPrefab: {fileID: 0}
-  minMoneyAmount: 1
-  maxMoneyAmount: 20
-  moneyDropRate: 0.5
+  minMoneyAmount: 50
+  maxMoneyAmount: 150
+  moneyDropRate: 1
 --- !u!114 &3984977953762216121
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -413,11 +414,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66c66ad519254d04eb681265b2d04d56, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baseDefense: 9
-  baseProjectileRange: 6
-  baseDetectionRange: 6
-  baseFireRate: 6
-  baseSpeed: 5
+  baseDefense: 25
+  baseProjectileRange: 8
+  baseDetectionRange: 9
+  baseFireRate: 8
+  baseSpeed: 7
 --- !u!1 &6040042245667524606
 GameObject:
   m_ObjectHideFlags: 0

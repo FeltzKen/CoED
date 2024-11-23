@@ -245,7 +245,7 @@ CapsuleCollider2D:
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 5888
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -362,9 +362,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ee4eca13461748448151d2c8a23eb47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  obstacleLayer:
-    serializedVersion: 2
-    m_Bits: 1408
 --- !u!114 &8182549918890610233
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -381,7 +378,7 @@ MonoBehaviour:
   staminaCostPerRun: 2
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 1408
+    m_Bits: 384
   moveDelay: 0.2
   staminaBar: {fileID: 8034618581357456614, guid: 4e03e51d2d01fab4aa3632a729ecb472, type: 3}
   currentTilePosition: {x: 0, y: 0}

@@ -5,7 +5,7 @@ using YourGameNamespace;
 
 namespace YourGameNamespace
 {
-    public class SpellSlot : MonoBehaviour, IDropHandler
+    public class SpellSlot : MonoBehaviour//, IDropHandler
     {
         [Header("Slot Settings")]
         [SerializeField]
@@ -68,7 +68,7 @@ namespace YourGameNamespace
             return assignedSpell;
         }
 
-        public void OnDrop(PointerEventData eventData)
+     /*   public void OnDrop(PointerEventData eventData)
         {
             SpellDragHandler dragHandler = eventData.pointerDrag?.GetComponent<SpellDragHandler>();
             if (dragHandler != null)
@@ -86,7 +86,7 @@ namespace YourGameNamespace
                 }
             }
         }
-
+*/
         public void StartCooldown()
         {
             if (assignedSpell != null)

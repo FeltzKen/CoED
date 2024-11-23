@@ -20,7 +20,7 @@ namespace YourGameNamespace
             {
                 Instance = this;
                 DontDestroyOnLoad(gameObject);
-                Debug.Log("DungeonManager initialized.");
+                // // Debug.Log("DungeonManager initialized.");
             }
             else
             {
@@ -43,7 +43,7 @@ namespace YourGameNamespace
             {
                 floors[floor.FloorNumber] = floor;
                 FloorTransforms[floor.FloorNumber] = floorTransform;
-                Debug.Log($"Added Floor_{floor.FloorNumber} with Transform {floorTransform.name}.");
+                // // Debug.Log($"Added Floor_{floor.FloorNumber} with Transform {floorTransform.name}.");
             }
             else
             {

@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections;
-
 using YourGameNamespace;
 
 namespace YourGameNamespace
@@ -9,24 +8,16 @@ namespace YourGameNamespace
     {
         public static PlayerManager Instance { get; private set; }
         public Vector3Int CurrentPosition { get; private set; } // Player's current grid position
+        public float Speed { get; private set; } = 5.0f; // Example speed value
+        public float ActionPoints { get; set; } = 0; // Initialize action points
 
         private PlayerStats playerStats;
         private PlayerCombat playerCombat;
         private PlayerMagic playerMagic;
         private TurnManager turnManager;
-        private Rigidbody2D rb;
-
         private System.Action lastAction; // Stores the last planned action
         private bool isActionComplete = false;
-
-        // Declared variables
-        private Vector2 targetPosition;
-        private bool isMoving = false;
-        [SerializeField] private LayerMask obstacleLayer; // Layer for obstacles
-
         private bool actionSelected = false;
-public float Speed { get; private set; } = 5.0f; // Example speed value
-public float ActionPoints { get; set; } = 0; // Initialize action points
 
         private void Awake()
         {
@@ -47,7 +38,6 @@ public float ActionPoints { get; set; } = 0; // Initialize action points
             playerCombat = GetComponent<PlayerCombat>();
             playerMagic = GetComponent<PlayerMagic>();
             turnManager = TurnManager.Instance;
-            rb = GetComponent<Rigidbody2D>();
 
             ValidateComponents();
         }
@@ -57,26 +47,8 @@ public float ActionPoints { get; set; } = 0; // Initialize action points
             // Initialize player's grid position
             Vector3 playerPosition = transform.position;
             CurrentPosition = new Vector3Int(Mathf.RoundToInt(playerPosition.x), Mathf.RoundToInt(playerPosition.y), 0);
-
-            // Configure Rigidbody2D for kinematic movement
-            rb.bodyType = RigidbodyType2D.Kinematic;
-            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-            rb.interpolation = RigidbodyInterpolation2D.Interpolate;
-
             turnManager.RegisterActor(this);
             Debug.Log("PlayerManager: Registered actor with TurnManager.");
-        }
-
-        private void FixedUpdate()
-        {
-            // Handle movement during the physics update cycle
-            if (isMoving)
-            {
-                rb.MovePosition(targetPosition);
-                isMoving = false;
-
-                isActionComplete = true; // Movement is complete
-            }
         }
 
         private void ValidateComponents()
@@ -88,52 +60,44 @@ public float ActionPoints { get; set; } = 0; // Initialize action points
                 enabled = false;
             }
         }
-        public void CommitMoveAction(Vector2Int targetDirection)
+
+        public void Act()
         {
-            Vector2 currentPos = rb.position;
-            targetPosition = new Vector2Int(
-                Mathf.RoundToInt(CurrentPosition.x + targetDirection.x),
-                Mathf.RoundToInt(CurrentPosition.y + targetDirection.y)
-            );
-                CurrentPosition = new Vector3Int(Mathf.RoundToInt(targetPosition.x), Mathf.RoundToInt(targetPosition.y), 0);
-                rb.MovePosition(new Vector2(CurrentPosition.x, CurrentPosition.y)); // Update Rigidbody position
+            isActionComplete = false;
+            actionSelected = false;
+            Debug.Log("PlayerManager: It's the player's turn.");
 
-            // Check for obstacles
-            if (!Physics2D.OverlapBox(targetPosition, Vector2.one * 0.9f, 0, obstacleLayer))
-            {
-                isMoving = true;
-                CurrentPosition = new Vector3Int(Mathf.RoundToInt(targetPosition.x), Mathf.RoundToInt(targetPosition.y), 0);
-                Debug.Log($"PlayerManager: Committed move action to {CurrentPosition}");
-                actionSelected = true;
-            }
-            else
-            {
-                isActionComplete = true;
-                actionSelected = true;
-            }
-            Collider2D hit = Physics2D.OverlapBox(targetPosition, Vector2.one * 0.9f, 0, obstacleLayer);
-
-            if (hit != null)
-            {
-                Debug.Log($"Blocked by: {hit.name} on layer {LayerMask.LayerToName(hit.gameObject.layer)}");
-            }
-            else
-            {
-                Debug.Log("No obstacles detected.");
-            }
-
-        }
-        public void PerformAction()
-        {
+            // If there's a pre-planned action, perform it
             if (lastAction != null)
             {
-                lastAction.Invoke(); // Execute the planned action
-                lastAction = null; // Clear the action after execution
-                isActionComplete = true;
-                Debug.Log("PlayerManager: Performed action.");
+                PerformLastAction();
+            }
+            else
+            {
+                PlayerMovement.Instance.HandlePlayerTurn();
             }
         }
 
+        public void PerformAction()
+        {
+            // Perform action through PlayerMovement or combat/magic classes
+            if (lastAction != null)
+            {
+                PerformLastAction();
+            }
+            else
+            {
+                Debug.LogWarning("PlayerManager: No action has been planned.");
+            }
+        }
+
+        private void PerformLastAction()
+        {
+            lastAction.Invoke(); // Execute the planned action
+            lastAction = null; // Clear the action after execution
+            isActionComplete = true;
+            Debug.Log("PlayerManager: Performed action.");
+        }
 
         public void CommitCombatAction(bool isMelee, Vector3 targetPosition)
         {
@@ -143,10 +107,12 @@ public float ActionPoints { get; set; } = 0; // Initialize action points
                 if (isMelee)
                 {
                     playerCombat.PerformMeleeAttack();
+                    Debug.Log("PlayerManager: Committed melee attack action.");
                 }
                 else
                 {
                     playerCombat.AttemptRangedAttack(targetPosition);
+                    Debug.Log("PlayerManager: Committed ranged attack action.");
                 }
             };
             actionSelected = true; // Action has been selected
@@ -160,86 +126,34 @@ public float ActionPoints { get; set; } = 0; // Initialize action points
                 if (playerMagic.HasEnoughMagic(spellCost))
                 {
                     playerMagic.CastMagicAction(targetPosition, spellCost, spellDamage);
+                    Debug.Log($"PlayerManager: Cast magic at {targetPosition} with cost {spellCost} and damage {spellDamage}.");
+                }
+                else
+                {
+                    Debug.LogWarning("PlayerManager: Not enough magic to cast the spell.");
                 }
             };
             actionSelected = true; // Action has been selected
         }
 
-public void Act()
-{
-    isActionComplete = false; // Reset flag
-    actionSelected = false; // Reset selection
 
-    Debug.Log("PlayerManager: It's the player's turn.");
-
-    // If there's a pre-planned action, perform it
-    if (lastAction != null)
-    {
-        PerformAction();
-    }
-    else
-    {
-        // Start the coroutine for player input
-        StartCoroutine(HandlePlayerTurn());
-    }
-}
-
-
-        private IEnumerator HandlePlayerTurn()
-        {
-            // Show UI or prompt for player action
-            ShowPlayerActionUI();
-
-            // Wait until the player has selected an action
-            yield return new WaitUntil(() => actionSelected);
-
-            if (isMoving)
-            {
-                // Movement will be processed in FixedUpdate
-                Debug.Log("PlayerManager: Movement action will be executed in FixedUpdate.");
-                // isActionComplete will be set to true after movement is complete
-            }
-            else if (lastAction != null)
-            {
-                // Execute the planned action
-                lastAction.Invoke();
-                lastAction = null;
-                Debug.Log("PlayerManager: Executed planned action.");
-                isActionComplete = true; // Action is complete
-            }
-            else
-            {
-                Debug.Log("PlayerManager: No action to perform.");
-                isActionComplete = true; // No action to perform
-            }
-        }
-
-        private void ShowPlayerActionUI()
-        {
-            // Implement UI display logic here
-            // For example, enable action buttons or wait for player input
-        }
-                public void UpdateCurrentTilePosition()// DO NOT REMOVE!!!!
-        {
-            Vector3 position = transform.position;
-            CurrentPosition = new Vector3Int(Mathf.RoundToInt(position.x), Mathf.RoundToInt(position.y), 0);
-            Debug.Log($"PlayerManager: Updated current position to {CurrentPosition}");
-        }
-        public void CommitSpecialAction(System.Action specialAction)// DO NOT REMOVE!!!!
+        public void CommitSpecialAction(System.Action specialAction)
         {
             lastAction = specialAction;
-            Debug.Log("PlayerManager: Registered action with TurnManager.");
+            actionSelected = true;
+            Debug.Log("PlayerManager: Committed special action.");
         }
+
         public void TakeDamage(int damage)
         {
             // Apply damage to the player
             playerStats.TakeDamage(damage);
+            Debug.Log($"PlayerManager: Player took {damage} damage.");
         }
 
-public bool IsActionComplete()
-{
-    return isActionComplete && !isMoving;
-}
-
+        public bool IsActionComplete()
+        {
+            return isActionComplete;
+        }
     }
 }

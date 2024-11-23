@@ -127,7 +127,7 @@ namespace YourGameNamespace
         {
             // Return true if the tilePosition is in the floorTiles set
     bool isFloor = floorTiles.Contains(position);
-    //Debug.Log($"Checking tile position {position}: IsFloor = {isFloor}");
+    //// // Debug.Log($"Checking tile position {position}: IsFloor = {isFloor}");
     return isFloor;       
      }
 
@@ -372,28 +372,28 @@ private void CreateCorridorBetweenRooms(Room roomA, Room roomB, FloorData floor,
 
 
 
-        // Retrieves a random walkable position within rooms or corridors of the specified floor
-private Vector2Int GetRandomWalkablePosition(FloorData floor)
-{
-    Room randomRoom = floor.Rooms[Random.Range(0, floor.Rooms.Count)];
-    
-    // Convert Vector3Int to Vector2Int when returning
-    Vector2Int randomTile = randomRoom.FloorTiles.ElementAt(Random.Range(0, randomRoom.FloorTiles.Count));
-    return new Vector2Int(randomTile.x, randomTile.y);
-}
+                // Retrieves a random walkable position within rooms or corridors of the specified floor
+        private Vector2Int GetRandomWalkablePosition(FloorData floor)
+        {
+            Room randomRoom = floor.Rooms[Random.Range(0, floor.Rooms.Count)];
+            
+            // Convert Vector3Int to Vector2Int when returning
+            Vector2Int randomTile = randomRoom.FloorTiles.ElementAt(Random.Range(0, randomRoom.FloorTiles.Count));
+            return new Vector2Int(randomTile.x, randomTile.y);
+        }
 
-// Helper method to find the nearest walkable tile if needed (Optional)
-private Vector2Int FindNearestWalkableTile(FloorData floor, Vector2Int position)
-{
-    // Convert floor.FloorTiles (Vector3Int) to Vector2Int for comparison
-    foreach (Vector3Int tile in floor.FloorTiles.OrderBy(t => Vector2Int.Distance(new Vector2Int(t.x, t.y), position)))
-    {
-        Vector2Int tile2D = new Vector2Int(tile.x, tile.y);
+        // Helper method to find the nearest walkable tile if needed (Optional)
+        private Vector2Int FindNearestWalkableTile(FloorData floor, Vector2Int position)
+        {
+            // Convert floor.FloorTiles (Vector3Int) to Vector2Int for comparison
+            foreach (Vector3Int tile in floor.FloorTiles.OrderBy(t => Vector2Int.Distance(new Vector2Int(t.x, t.y), position)))
+            {
+                Vector2Int tile2D = new Vector2Int(tile.x, tile.y);
 
-        if (floor.FloorTiles.Contains(new Vector3Int(tile2D.x, tile2D.y, 0)))
-            return tile2D;
-    }
-    return position; // Fallback if no walkable tile found
+                if (floor.FloorTiles.Contains(new Vector3Int(tile2D.x, tile2D.y, 0)))
+                    return tile2D;
+            }
+            return position; // Fallback if no walkable tile found
 }
 
 

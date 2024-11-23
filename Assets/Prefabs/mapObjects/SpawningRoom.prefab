@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 917525817787000686}
   - component: {fileID: 7280756475972190892}
   - component: {fileID: 7858996496911188919}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: ExitWarningTrigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -447,6 +447,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2248818349184005786}
     m_Modifications:
+    - target: {fileID: -8476141259302039436, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
+      propertyPath: m_Size.x
+      value: 0.9
+      objectReference: {fileID: 0}
     - target: {fileID: 2323995706495141794, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
       propertyPath: m_Name
       value: wallTile_24
@@ -1439,6 +1443,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2248818349184005786}
     m_Modifications:
+    - target: {fileID: -8476141259302039436, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
+      propertyPath: m_Size.x
+      value: 0.9
+      objectReference: {fileID: 0}
     - target: {fileID: 2323995706495141794, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
       propertyPath: m_Name
       value: wallTile_33
@@ -3785,6 +3793,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2248818349184005786}
     m_Modifications:
+    - target: {fileID: -8476141259302039436, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
+      propertyPath: m_Size.x
+      value: 0.9
+      objectReference: {fileID: 0}
     - target: {fileID: 2323995706495141794, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
       propertyPath: m_Name
       value: wallTile_40
@@ -4545,6 +4557,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2248818349184005786}
     m_Modifications:
+    - target: {fileID: -8476141259302039436, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
+      propertyPath: m_Size.x
+      value: 0.9
+      objectReference: {fileID: 0}
     - target: {fileID: 2323995706495141794, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
       propertyPath: m_Name
       value: wallTile_38
@@ -4933,6 +4949,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2248818349184005786}
     m_Modifications:
+    - target: {fileID: -8476141259302039436, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
+      propertyPath: m_Size.x
+      value: 0.9
+      objectReference: {fileID: 0}
     - target: {fileID: 2323995706495141794, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
       propertyPath: m_Name
       value: wallTile_37
@@ -5061,6 +5081,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2248818349184005786}
     m_Modifications:
+    - target: {fileID: -8476141259302039436, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
+      propertyPath: m_Size.x
+      value: 0.9
+      objectReference: {fileID: 0}
     - target: {fileID: 2323995706495141794, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
       propertyPath: m_Name
       value: wallTile_34
@@ -5449,6 +5473,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: ExitTrigger
       objectReference: {fileID: 0}
+    - target: {fileID: 5594940870504256869, guid: facb07947277c8f4ea34be499bcc7a3f, type: 3}
+      propertyPath: m_Layer
+      value: 12
+      objectReference: {fileID: 0}
     - target: {fileID: 9091158369938882122, guid: facb07947277c8f4ea34be499bcc7a3f, type: 3}
       propertyPath: m_LocalPosition.x
       value: -4
@@ -5590,6 +5618,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2248818349184005786}
     m_Modifications:
+    - target: {fileID: -8476141259302039436, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
+      propertyPath: m_Size.x
+      value: 0.9
+      objectReference: {fileID: 0}
     - target: {fileID: 2323995706495141794, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
       propertyPath: m_Name
       value: wallTile_36
@@ -7292,6 +7324,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2248818349184005786}
     m_Modifications:
+    - target: {fileID: -8476141259302039436, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
+      propertyPath: m_Size.x
+      value: 0.9
+      objectReference: {fileID: 0}
     - target: {fileID: 2323995706495141794, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
       propertyPath: m_Name
       value: wallTile_39
@@ -7486,6 +7522,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2248818349184005786}
     m_Modifications:
+    - target: {fileID: -8476141259302039436, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
+      propertyPath: m_Size.x
+      value: 0.9
+      objectReference: {fileID: 0}
     - target: {fileID: 2323995706495141794, guid: 07d54d3da76fc584391aaabe69b0ecab, type: 3}
       propertyPath: m_Name
       value: wallTile_35

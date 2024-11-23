@@ -18,12 +18,17 @@ public class AStarPathfinding
         }
     }
 
+    // Include diagonal directions
     private static readonly Vector2Int[] Directions =
     {
         Vector2Int.up,
         Vector2Int.down,
         Vector2Int.left,
         Vector2Int.right,
+        new Vector2Int(1, 1),   // Diagonal: Up-Right
+        new Vector2Int(1, -1),  // Diagonal: Down-Right
+        new Vector2Int(-1, 1),  // Diagonal: Up-Left
+        new Vector2Int(-1, -1)  // Diagonal: Down-Left
     };
 
     public static List<Vector2Int> FindPath(
@@ -65,8 +70,9 @@ public class AStarPathfinding
                     continue;
                 }
 
-                // Calculate the G-cost for the neighbor
-                float tentativeGCost = currentNode.GCost + 1; // Assuming uniform cost of 1 per tile
+                // Calculate the movement cost (diagonal = 1.4, straight = 1)
+                float movementCost = (direction.x != 0 && direction.y != 0) ? 1.4f : 1f;
+                float tentativeGCost = currentNode.GCost + movementCost;
 
                 if (!openList.ContainsKey(neighborPos))
                 {
@@ -95,7 +101,8 @@ public class AStarPathfinding
 
     private static float Heuristic(Vector2Int a, Vector2Int b)
     {
-        return Vector2Int.Distance(a, b); // Euclidean distance (can use Manhattan distance for grid paths)
+        // Manhattan Distance
+        return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
     }
 
     private static Node GetLowestFNode(Dictionary<Vector2Int, Node> openList)

@@ -139,6 +139,22 @@ namespace YourGameNamespace
             Debug.Log($"Generated {PatrolPoints.Count} patrol points for Floor {FloorNumber}: {string.Join(", ", PatrolPoints)}");
         }
 
+        public HashSet<Vector3Int> GetWalkableTiles()
+        {
+            var walkableTiles = new HashSet<Vector3Int>(FloorTiles);
+            if (CorridorTilemap != null)
+            {
+                foreach (var position in CorridorTilemap.cellBounds.allPositionsWithin)
+                {
+                    if (CorridorTilemap.HasTile(position))
+                    {
+                        walkableTiles.Add(new Vector3Int(position.x, position.y, 0));
+                    }
+                }
+            }
+            return walkableTiles;
+        }
+
 
 
         /// <summary>
