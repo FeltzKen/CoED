@@ -1,9 +1,9 @@
 // TurnManager.cs
 using System.Collections.Generic;
 using UnityEngine;
-using YourGameNamespace;
+using CoED;
 
-namespace YourGameNamespace
+namespace CoED
 {
     public class TurnManager : MonoBehaviour
     {

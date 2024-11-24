@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using YourGameNamespace;
+using CoED;
 
-namespace YourGameNamespace
+namespace CoED
 {
     public class FogOfWarManager : MonoBehaviour
     {

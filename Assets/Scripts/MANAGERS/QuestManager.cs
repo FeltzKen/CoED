@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using YourGameNamespace;
+using CoED;
 
-namespace YourGameNamespace
+namespace CoED
 {
     public class QuestManager : MonoBehaviour
     {

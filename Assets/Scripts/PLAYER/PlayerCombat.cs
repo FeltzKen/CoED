@@ -1,8 +1,8 @@
 using System.Collections;
 using UnityEngine;
-using YourGameNamespace;
+using CoED;
 
-namespace YourGameNamespace
+namespace CoED
 {
     // Handles the player's combat actions, including melee and ranged attacks, and integrates with the turn system.
     public class PlayerCombat : MonoBehaviour

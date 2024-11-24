@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using YourGameNamespace;
+using CoED;
 
-namespace YourGameNamespace
+namespace CoED
 {
     public class StatusEffectManager : MonoBehaviour
     {

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace YourGameNamespace
+namespace CoED
 {
     [CreateAssetMenu(fileName = "New Spell", menuName = "Magic/Spell")]
     public class Spell : ScriptableObject

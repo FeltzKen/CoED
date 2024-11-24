@@ -1,6 +1,6 @@
 using UnityEngine;
-using YourGameNamespace;
-namespace YourGameNamespace
+using CoED;
+namespace CoED
 {
     // Represents an item that can be held in the player's inventory.
     [CreateAssetMenu(fileName = "NewItem", menuName = "Inventory/Item")]

@@ -14,19 +14,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dungeonSizeRange: {x: 200, y: 200}
   maxFloors: 5
+  floorTile: {fileID: 11400000, guid: 03be7fcaf47d358479a9533b8c9f0226, type: 2}
+  wallTile: {fileID: 11400000, guid: 2f4e23419adb2fe4eaa7001eb1968d07, type: 2}
+  floorTilemap: {fileID: 0}
+  wallTilemap: {fileID: 0}
+  itemPrefabs:
+  - {fileID: 0}
   seed: 0
   roomSizeRange: {x: 15, y: 12}
-  maxBSPIterations: 6
-  carvingIterationsMin: 2
-  carvingIterationsMax: 5
-  connectionChance: 0.13
-  minCorridorWidth: 2
-  maxCorridorWidth: 3
-  maxSegmentLength: 5
-  straightCorridorChance: 0.3
-  floorTile: {fileID: 11400000, guid: 03be7fcaf47d358479a9533b8c9f0226, type: 2}
-  corridorTile: {fileID: 11400000, guid: 54b9c63592104b04594888f98e402aad, type: 2}
-  wallTile: {fileID: 11400000, guid: 2f4e23419adb2fe4eaa7001eb1968d07, type: 2}
+  selectedAlgorithm:
+    algorithmType: 0
+    initialWallDensity: 0.482
+    iterations: 4
+    neighborWallThreshold: 5
+    edgeBias: 3.52
+    bspSubdivisions: 1
+    bspCarveChance: 0
+  initialWallDensity: 0.45
+  cellularAutomataIterations: 5
+  neighborWallThreshold: 4
+  edgeBias: 2.82
+  perlinNoiseIterations: 3
+  bspSubdivisions: 3
+  bspCarveChance: 0.5
   spawningRoomPrefab: {fileID: 6665827154481512502, guid: 8384ad92a2cf19c46a78d81282f9729a, type: 3}
   stairsUpPrefab: {fileID: 1638260800072365795, guid: 6c82c2d46b3613b4a89b278b9901da4d, type: 3}
   stairsDownPrefab: {fileID: 926577741634186297, guid: 619db7b191317044e995e508dedd5224, type: 3}
@@ -43,10 +53,11 @@ MonoBehaviour:
   playerLevelFactor: 0.1
   maxEnemyLevel: 20
   enableBossFights: 1
-  bossSpawnFloorInterval: 3
+  bossSpawnFloorInterval: 1
   enableAmbush: 1
   ambushEnemyCount: 3
   ambushRadius: 3
+  generateOuterWalls: 1
   enableDebugLogs: 0
   visualizePatrolRoutes: 0
   visualizeSpawnPositions: 0

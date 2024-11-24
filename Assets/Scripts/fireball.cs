@@ -1,7 +1,7 @@
 using UnityEngine;
-using YourGameNamespace;
+using CoED;
 
-namespace YourGameNamespace
+namespace CoED
 {
 public class Fireball : MonoBehaviour
 {

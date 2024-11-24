@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace YourGameNamespace
+namespace CoED
 {
     [System.Serializable]
     public class StatusEffect : MonoBehaviour

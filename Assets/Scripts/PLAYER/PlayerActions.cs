@@ -1,8 +1,8 @@
 using System.Collections;
 using UnityEngine;
-using YourGameNamespace;
+using CoED;
 
-namespace YourGameNamespace
+namespace CoED
 {
     // Handles player actions such as resting, collecting items, searching for secrets, and using abilities.
     public class PlayerActions : MonoBehaviour

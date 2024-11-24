@@ -1,7 +1,7 @@
 // IActor.cs
 using UnityEngine;
 
-namespace YourGameNamespace
+namespace CoED
 {
     public interface IActor
     {

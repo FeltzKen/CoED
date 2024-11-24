@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-namespace YourGameNamespace
+namespace CoED
 {
     public class CastSpell : MonoBehaviour
     {

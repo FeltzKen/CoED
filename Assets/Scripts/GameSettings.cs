@@ -1,7 +1,7 @@
 using UnityEngine;
-using YourGameNamespace;
+using CoED;
 
-namespace YourGameNamespace
+namespace CoED
 {
     /// Manages global game settings such as difficulty level and related multipliers.
     public class GameSettings : MonoBehaviour

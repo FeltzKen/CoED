@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace YourGameNamespace
+namespace CoED
 {
     public static class VectorConversion
     {

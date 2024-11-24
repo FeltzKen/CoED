@@ -1,8 +1,8 @@
 using UnityEngine;
-using YourGameNamespace;
+using CoED;
 using System;
 
-namespace YourGameNamespace
+namespace CoED
 {
     public class Player : MonoBehaviour
     {

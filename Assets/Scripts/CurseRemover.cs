@@ -1,8 +1,8 @@
 // CurseRemover.cs
 using UnityEngine;
-using YourGameNamespace;
+using CoED;
 
-namespace YourGameNamespace
+namespace CoED
 {
     /// Handles removing curses from items.
     public static class CurseRemover

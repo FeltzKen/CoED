@@ -1,8 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
-using YourGameNamespace;
+using CoED;
 
-namespace YourGameNamespace
+namespace CoED
 {
     public class PersistentTextManager : MonoBehaviour
     {

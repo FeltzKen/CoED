@@ -1,6 +1,6 @@
 using UnityEngine;
-using YourGameNamespace;
-namespace YourGameNamespace
+using CoED;
+namespace CoED
 {
     public class AmbushTriggerTile : MonoBehaviour
     {

@@ -1,8 +1,8 @@
 using UnityEngine;
 using System.Collections;
-using YourGameNamespace;
+using CoED;
 
-namespace YourGameNamespace
+namespace CoED
 {
     public class PlayerManager : MonoBehaviour, IActor
     {

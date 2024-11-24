@@ -181,7 +181,6 @@ GameObject:
   - component: {fileID: 3984977953762216121}
   - component: {fileID: 5710572630327944031}
   - component: {fileID: 1501273931103638685}
-  - component: {fileID: -1987303044018690111}
   m_Layer: 8
   m_Name: monster_1
   m_TagString: Enemy
@@ -385,6 +384,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72c9ac53f72bb934c9f1c943832200f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  uniqueID: 0
+  currentState: 0
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 456
@@ -419,20 +420,6 @@ MonoBehaviour:
   baseDetectionRange: 5
   baseFireRate: 5
   baseSpeed: 3
---- !u!114 &-1987303044018690111
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3198391839532095026}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: be1d200934ac2524ca60ce2629f4c542, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  autoValidateOnStart: 1
-  detailedLogs: 1
 --- !u!1 &6040042245667524606
 GameObject:
   m_ObjectHideFlags: 0

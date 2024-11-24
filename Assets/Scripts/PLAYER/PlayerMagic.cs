@@ -1,8 +1,8 @@
 using System.Collections;
 using UnityEngine;
-using YourGameNamespace;
+using CoED;
 
-namespace YourGameNamespace
+namespace CoED
 {
     // Manages the player's magic resources, including casting spells and refilling magic.
     public class PlayerMagic : MonoBehaviour

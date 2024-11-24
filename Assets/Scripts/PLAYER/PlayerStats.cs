@@ -1,8 +1,8 @@
 using System;
 using UnityEngine;
-using YourGameNamespace;
+using CoED;
 
-namespace YourGameNamespace
+namespace CoED
 {
     public class PlayerStats : MonoBehaviour
     {

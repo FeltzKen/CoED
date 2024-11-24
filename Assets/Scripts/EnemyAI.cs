@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-namespace YourGameNamespace
+namespace CoED
 {
     public class EnemyAI : MonoBehaviour, IActor
     {
@@ -252,17 +252,6 @@ namespace YourGameNamespace
         public void SetWalkableTiles(HashSet<Vector2Int> tiles)
         {
             walkableTiles = new HashSet<Vector2Int>(tiles);
-        }
-
-        private void RefreshWalkableTiles()
-        {
-            if (DungeonManager.Instance == null)
-            {
-                Debug.LogError($"Enemy [ID: {uniqueID}]: DungeonManager is null!");
-                return;
-            }
-
-            walkableTiles = DungeonManager.Instance.GetWalkableTilesForFloor(enemyStats.spawnFloor);
         }
 
         public void SetPatrolPoints(IEnumerable<Vector2Int> points)

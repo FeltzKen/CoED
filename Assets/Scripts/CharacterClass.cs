@@ -1,8 +1,8 @@
 // CharacterClass.cs
 using UnityEngine;
-using YourGameNamespace;
+using CoED;
 
-namespace YourGameNamespace
+namespace CoED
 {
     [CreateAssetMenu(fileName = "CharacterClass", menuName = "Character/CharacterClass")]
     public class CharacterClass : ScriptableObject

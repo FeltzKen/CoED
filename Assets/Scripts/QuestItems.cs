@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace YourGameNamespace
+namespace CoED
 {
     public class QuestItem : Item
     {
