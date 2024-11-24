@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using YourGameNamespace;
 
@@ -50,6 +51,20 @@ namespace YourGameNamespace
                 Debug.LogWarning($"Floor_{floor.FloorNumber} already exists.");
             }
         }
+        /// <summary>
+        /// Retrieves the walkable tiles for a specific floor.
+        /// </summary>
+        public HashSet<Vector2Int> GetWalkableTilesForFloor(int floorNumber)
+        {
+            if (floors.TryGetValue(floorNumber, out var floor))
+            {
+                // Convert Vector3Int to Vector2Int if necessary
+                return floor.GetWalkableTiles().Select(tile => new Vector2Int(tile.x, tile.y)).ToHashSet();
+            }
+            Debug.LogError($"DungeonManager: No FloorData found for floor {floorNumber}");
+            return new HashSet<Vector2Int>(); // Return an empty set as fallback
+        }
+
 
         /// <summary>
         /// Gets the FloorData for a specific floor number.

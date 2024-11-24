@@ -78,7 +78,7 @@ namespace YourGameNamespace
                 {
                     isMoving = false;
                     isActionComplete = true;
-                    Debug.Log("PlayerMovement: Movement action completed.");
+                   // Debug.Log("PlayerMovement: Movement action completed.");
                 }
             }
         }
@@ -87,7 +87,7 @@ namespace YourGameNamespace
         public void HandlePlayerTurn()
         {
             isActionComplete = false;
-            Debug.Log("PlayerMovement: Handling player turn for movement.");
+           // Debug.Log("PlayerMovement: Handling player turn for movement.");
         }
 
         private void HandleMovementInput()
@@ -114,11 +114,11 @@ namespace YourGameNamespace
                     transform.position = targetPosition;
                     isMoving = true;
                     moveCooldown = Time.time + moveDelay;
-                    Debug.Log($"PlayerMovement: Moving to {targetPosition}.");
+                  //  Debug.Log($"PlayerMovement: Moving to {targetPosition}.");
                 }
                 else
                 {
-                    Debug.Log("PlayerMovement: Move blocked by an obstacle.");
+                  //  Debug.Log("PlayerMovement: Move blocked by an obstacle.");
                 }
             }
         }
@@ -134,7 +134,7 @@ namespace YourGameNamespace
 
             if (hitCollider != null)
             {
-                Debug.Log($"PlayerMovement: Move blocked by {hitCollider.name} at {targetPosition}");
+              //  Debug.Log($"PlayerMovement: Move blocked by {hitCollider.name} at {targetPosition}");
                 return false;
             }
 

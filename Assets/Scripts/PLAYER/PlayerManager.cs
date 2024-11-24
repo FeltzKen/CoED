@@ -65,7 +65,7 @@ namespace YourGameNamespace
         {
             isActionComplete = false;
             actionSelected = false;
-            Debug.Log("PlayerManager: It's the player's turn.");
+           // Debug.Log("PlayerManager: It's the player's turn.");
 
             // If there's a pre-planned action, perform it
             if (lastAction != null)
@@ -96,7 +96,7 @@ namespace YourGameNamespace
             lastAction.Invoke(); // Execute the planned action
             lastAction = null; // Clear the action after execution
             isActionComplete = true;
-            Debug.Log("PlayerManager: Performed action.");
+          //  Debug.Log("PlayerManager: Performed action.");
         }
 
         public void CommitCombatAction(bool isMelee, Vector3 targetPosition)

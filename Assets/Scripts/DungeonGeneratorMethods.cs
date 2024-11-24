@@ -79,57 +79,71 @@ namespace YourGameNamespace
 
         private Room CreateRoom(Rect rect, Vector2Int roomSizeRange, int carveMin, int carveMax)
         {
+            // Define room dimensions and position within bounds
             float roomWidth = Random.Range(roomSizeRange.x, Mathf.Min(roomSizeRange.y, rect.width));
             float roomHeight = Random.Range(roomSizeRange.x, Mathf.Min(roomSizeRange.y, rect.height));
             float roomX = rect.x + Random.Range(0, rect.width - roomWidth);
             float roomY = rect.y + Random.Range(0, rect.height - roomHeight);
 
+            // Create the room with calculated size and position
             Rect roomRect = new Rect(roomX, roomY, roomWidth, roomHeight);
+            Room newRoom = new Room(roomRect, new HashSet<Vector2Int>());
 
-            // Fill the entire room area with floor tiles
+            // Carving logic: Add random carving within the roomRect bounds
             for (int x = Mathf.FloorToInt(roomRect.xMin); x < Mathf.CeilToInt(roomRect.xMax); x++)
             {
                 for (int y = Mathf.FloorToInt(roomRect.yMin); y < Mathf.CeilToInt(roomRect.yMax); y++)
                 {
-                    floorTiles.Add(new Vector2Int(x, y));
-                }
-            }
-            int carveAttempts = Random.Range(carveMin, carveMax);
-            for (int i = 0; i < carveAttempts; i++)
-            {
-                int carveWidth = Random.Range(1, Mathf.FloorToInt(roomWidth / 4));  // Narrower to focus on edges
-                int carveHeight = Random.Range(1, Mathf.FloorToInt(roomHeight / 4));
+                    Vector2Int position = new Vector2Int(x, y);
 
-                // Choose a position near the edges for carving
-                bool carveAlongX = Random.value > 0.5f;
-                int carveX = carveAlongX
-                    ? (Random.value > 0.5f ? Mathf.FloorToInt(roomRect.xMin) : Mathf.FloorToInt(roomRect.xMax) - carveWidth)
-                    : Mathf.FloorToInt(roomRect.xMin) + Random.Range(0, Mathf.FloorToInt(roomWidth - carveWidth));
-
-                int carveY = !carveAlongX
-                    ? (Random.value > 0.5f ? Mathf.FloorToInt(roomRect.yMin) : Mathf.FloorToInt(roomRect.yMax) - carveHeight)
-                    : Mathf.FloorToInt(roomRect.yMin) + Random.Range(0, Mathf.FloorToInt(roomHeight - carveHeight));
-
-                // Carve out the selected area
-                for (int x = carveX; x < carveX + carveWidth; x++)
-                {
-                    for (int y = carveY; y < carveY + carveHeight; y++)
+                    // Decide whether to carve this tile based on carve logic
+                    if (ShouldCarveTile(position, roomRect))
                     {
-                        floorTiles.Remove(new Vector2Int(x, y));
+                        newRoom.CarvedTiles.Add(position);
+                        newRoom.FloorTiles.Add(position);  // Keep track of floor tiles as well
                     }
                 }
             }
-            return new Room(roomRect, floorTiles);
+
+            return newRoom;
         }
+
+        private bool ShouldCarveTile(Vector2Int position, Rect roomRect)
+        {
+            // Calculate distance from edges
+            float distanceFromLeft = position.x - roomRect.xMin;
+            float distanceFromRight = roomRect.xMax - position.x;
+            float distanceFromBottom = position.y - roomRect.yMin;
+            float distanceFromTop = roomRect.yMax - position.y;
+
+            // Find the minimum distance to an edge
+            float minDistanceToEdge = Mathf.Min(distanceFromLeft, distanceFromRight, distanceFromBottom, distanceFromTop);
+
+            // Set a threshold for carving based on the distance to edges
+            float edgeThreshold = 3f; // The closer to the edge, the more likely to carve
+
+            // Probability calculation
+            if (minDistanceToEdge <= edgeThreshold)
+            {
+                // Higher probability to carve near edges
+                return Random.value > 0.95f; // 80% chance to carve if near the edge
+            }
+            else
+            {
+                // Lower probability to carve in the middle
+                return Random.value > 0.05f; // 20% chance to carve if in the middle
+            }
+        }
+
 
         // This method checks if a given position corresponds to a floor tile
         public bool IsFloorTile(Vector2Int position)
         {
             // Return true if the tilePosition is in the floorTiles set
-    bool isFloor = floorTiles.Contains(position);
-    //// // Debug.Log($"Checking tile position {position}: IsFloor = {isFloor}");
-    return isFloor;       
-     }
+            bool isFloor = floorTiles.Contains(position);
+            //// // Debug.Log($"Checking tile position {position}: IsFloor = {isFloor}");
+            return isFloor;       
+        }
 
         public void ConnectRoomsUsingMST(FloorData floor, int minCorridorWidth, int maxCorridorWidth, int maxSegmentLength, float straightCorridorChance, float extraConnectionChance = 0.2f)
         {
@@ -141,7 +155,7 @@ namespace YourGameNamespace
                 for (int j = i + 1; j < floor.Rooms.Count; j++)
                 {
                     float weight = Vector2.Distance(floor.Rooms[i].Center, floor.Rooms[j].Center);
-                    edges.Add(new Edge(floor.Rooms[i], floor.Rooms[j], weight)); 
+                    edges.Add(new Edge(floor.Rooms[i], floor.Rooms[j], weight));
                 }
             }
 
@@ -155,7 +169,7 @@ namespace YourGameNamespace
                 if (disjointSet.Find(edge.RoomA) != disjointSet.Find(edge.RoomB))
                 {
                     disjointSet.Union(edge.RoomA, edge.RoomB);
-                    CreateCorridorBetweenRooms(edge.RoomA, edge.RoomB, floor, minCorridorWidth, maxCorridorWidth, maxSegmentLength, straightCorridorChance);
+                    CreateCorridorBetweenRoomEntrances(edge.RoomA, edge.RoomB, floor, minCorridorWidth, maxCorridorWidth, maxSegmentLength, straightCorridorChance);
                 }
                 // If MST is complete, break out of loop
                 if (disjointSet.Count == 1) break;
@@ -166,58 +180,82 @@ namespace YourGameNamespace
             {
                 if (Random.value < extraConnectionChance && disjointSet.Find(edge.RoomA) != disjointSet.Find(edge.RoomB))
                 {
-                    CreateCorridorBetweenRooms(edge.RoomA, edge.RoomB, floor, minCorridorWidth, maxCorridorWidth, maxSegmentLength, straightCorridorChance);
+                    CreateCorridorBetweenRoomEntrances(edge.RoomA, edge.RoomB, floor, minCorridorWidth, maxCorridorWidth, maxSegmentLength, straightCorridorChance);
                 }
             }
         }
 
-// Helper function to create a corridor between two rooms
-private void CreateCorridorBetweenRooms(Room roomA, Room roomB, FloorData floor, int minCorridorWidth, int maxCorridorWidth, int maxSegmentLength, float straightCorridorChance)
-{
-    HashSet<Vector2Int> corridorTiles2D = new HashSet<Vector2Int>(
-        GenerateCorridorTiles(GetRandomWallPosition(roomA), GetRandomWallPosition(roomB), minCorridorWidth, maxCorridorWidth, maxSegmentLength, straightCorridorChance)
-    );
-
-    HashSet<Vector3Int> corridorTiles3D = new HashSet<Vector3Int>(
-        corridorTiles2D.Select(tile => new Vector3Int(tile.x, tile.y, 0))
-    );
-
-    floor.AddCorridor(corridorTiles3D, roomA, roomB);
-}
-
-
-
-        public void RenderRoom(Room room, Tilemap tilemap, TileBase tile)
-{
-    // Calculate room boundaries
-    int startX = Mathf.FloorToInt(room.Rect.xMin);
-    int endX = Mathf.CeilToInt(room.Rect.xMax);
-    int startY = Mathf.FloorToInt(room.Rect.yMin);
-    int endY = Mathf.CeilToInt(room.Rect.yMax);
-
-    // Fill the room area with tiles
-    for (int x = startX; x < endX; x++)
-    {
-        for (int y = startY; y < endY; y++)
+        private void CreateCorridorBetweenRoomEntrances(Room roomA, Room roomB, FloorData floor, int minCorridorWidth, int maxCorridorWidth, int maxSegmentLength, float straightCorridorChance)
         {
-            Vector3Int tilePosition = new Vector3Int(x, y, 0);
-            tilemap.SetTile(tilePosition, tile);
+            // Find entrance points for both rooms
+            Vector2Int entranceA = GetRoomEntrance(roomA);
+            Vector2Int entranceB = GetRoomEntrance(roomB);
+
+            // Generate corridor to connect the two entrance points without passing through the rooms
+            List<Vector2Int> corridorPath = GenerateCorridorTiles(entranceA, entranceB, minCorridorWidth, maxCorridorWidth, maxSegmentLength, straightCorridorChance);
+            HashSet<Vector3Int> corridorTiles = new HashSet<Vector3Int>(corridorPath.Select(tile => new Vector3Int(tile.x, tile.y, 0)));
+            
+            // Create and add the corridor
+            Corridor corridor = new Corridor(corridorTiles, roomA, roomB);
+            floor.AddCorridor(corridorTiles, roomA, roomB);
+
+            // Render the corridor
+            RenderCorridor(corridor.CorridorTiles, floor.CorridorTilemap, dungeonGenerator.corridorTile);
         }
+
+        private Vector2Int GetRoomEntrance(Room room)
+        {
+            // Choose an entrance point on the boundary of the room
+            List<Vector2Int> boundaryTiles = GetBoundaryTiles(room);
+            return boundaryTiles[Random.Range(0, boundaryTiles.Count)];
+        }
+
+        private List<Vector2Int> GetBoundaryTiles(Room room)
+        {
+            List<Vector2Int> boundaryTiles = new List<Vector2Int>();
+            Vector2Int roomMin = Vector2Int.FloorToInt(new Vector2(room.Rect.xMin, room.Rect.yMin));
+            Vector2Int roomMax = Vector2Int.FloorToInt(new Vector2(room.Rect.xMax, room.Rect.yMax));
+
+            // Get all boundary tiles of the room
+            for (int x = roomMin.x; x <= roomMax.x; x++)
+            {
+                boundaryTiles.Add(new Vector2Int(x, roomMin.y)); // Bottom boundary
+                boundaryTiles.Add(new Vector2Int(x, roomMax.y)); // Top boundary
+            }
+            for (int y = roomMin.y + 1; y < roomMax.y; y++) // +1 and < to avoid corners being duplicated
+            {
+                boundaryTiles.Add(new Vector2Int(roomMin.x, y)); // Left boundary
+                boundaryTiles.Add(new Vector2Int(roomMax.x, y)); // Right boundary
+            }
+
+            return boundaryTiles;
+        }
+
+public void RenderRoom(Room room, Tilemap tilemap, TileBase tile)
+{
+    // Render only the carved floor tiles within the room boundaries
+    foreach (Vector2Int position in room.CarvedTiles)
+    {
+        Vector3Int tilePosition = new Vector3Int(position.x, position.y, 0);
+        tilemap.SetTile(tilePosition, tile);
     }
 }
 
-        public void RenderCorridor(HashSet<Vector3Int> corridor, Tilemap tilemap, TileBase corridorTile)
-{
-    foreach (Vector2Int tilePos in corridor)
-    {
-        Vector3Int tilePosition = new Vector3Int(tilePos.x, tilePos.y, 0);
-        tilemap.SetTile(tilePosition, corridorTile); // Set the corridor tile at each position
-    }
-}
+
+                public void RenderCorridor(HashSet<Vector3Int> corridor, Tilemap tilemap, TileBase corridorTile)
+        {
+            foreach (Vector2Int tilePos in corridor)
+            {
+                Vector3Int tilePosition = new Vector3Int(tilePos.x, tilePos.y, 0);
+                tilemap.SetTile(tilePosition, corridorTile); // Set the corridor tile at each position
+            }
+        }
 
         public void CreateWallsForFloor(HashSet<Vector3Int> floorTiles, Tilemap wallTilemap, TileBase wallTile)
         {
-            Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+            // Define all directions, including diagonals
+            Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
+                                        new Vector2Int(1, 1), new Vector2Int(1, -1), new Vector2Int(-1, 1), new Vector2Int(-1, -1) };
 
             foreach (Vector3Int tile in floorTiles)
             {
@@ -234,6 +272,7 @@ private void CreateCorridorBetweenRooms(Room roomA, Room roomB, FloorData floor,
                 }
             }
         }
+
 
 
         public class DisjointSet

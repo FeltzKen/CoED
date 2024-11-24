@@ -151,60 +151,46 @@ namespace YourGameNamespace
 
             for (int floorNum = 1; floorNum <= maxFloors; floorNum++)
             {
-                // Create a container for each floor
                 GameObject floorObj = new GameObject($"Floor_{floorNum}");
                 floorObj.transform.parent = dungeonParent.transform;
-                // // Debug.Log($"Floor {floorNum} added to floorObjects.");
                 floorObjects.Add(floorObj);
 
-                
                 // Create separate Tilemaps for floor, corridors, and walls
-                Tilemap floorTilemap = CreateTilemap(floorObj.transform, "FloorTilemap");
-                Tilemap corridorTilemap = CreateTilemap(floorObj.transform, "CorridorTilemap");
-                Tilemap wallTilemap = CreateTilemap(floorObj.transform, "WallTilemap");
+                floorTilemap = CreateTilemap(floorObj.transform, "FloorTilemap");
+                corridorTilemap = CreateTilemap(floorObj.transform, "CorridorTilemap");
+                wallTilemap = CreateTilemap(floorObj.transform, "WallTilemap");
 
-                // Initialize FloorData
                 FloorData floor = new FloorData(floorNum);
                 floor.InitializeTilemaps(floorTilemap, corridorTilemap, wallTilemap);
                 floors.Add(floor);
-               // enemySpawner.GeneratePatrolPoints(floor);
 
                 // Generate floor layout with rooms
                 Rect initialRect = new Rect(-100, -100, Random.Range(dungeonSizeRange.x, dungeonSizeRange.y), Random.Range(dungeonSizeRange.x, dungeonSizeRange.y));
                 methods.GenerateFloorTiles(initialRect, maxBSPIterations, floor, roomSizeRange, carvingIterationsMin, carvingIterationsMax);
 
-                // Render and add each room
                 foreach (Room room in floor.Rooms)
                 {
                     methods.RenderRoom(room, floorTilemap, floorTile);
-                 //   floor.AddRoom(room);
                 }
-                yield return null; // Yield after room generation
+                yield return null;
 
                 // Connect rooms using corridors
                 methods.ConnectRoomsUsingMST(floor, minCorridorWidth, maxCorridorWidth, maxSegmentLength, straightCorridorChance, connectionChance);
 
-                // Render and add each corridor
                 foreach (Corridor corridor in floor.Corridors)
                 {
                     methods.RenderCorridor(corridor.CorridorTiles, corridorTilemap, corridorTile);
-                  //  floor.AddCorridor(corridor.CorridorTiles, corridor.RoomA, corridor.RoomB);
                 }
-                yield return null; // Yield after corridor generation
+                yield return null;
 
                 // Place walls around the combined floor tiles
                 methods.CreateWallsForFloor(floor.FloorTiles, wallTilemap, wallTile);
+                yield return null;
 
-                // Log floor summary
-                // // Debug.Log($"Floor {floorNum} generated with {floor.Rooms.Count} rooms and {floor.Corridors.Count} corridors.");
-
-                yield return null; 
-
-                floor.GeneratePatrolPoints(50); // Generate shared patrol points
+                // Generate shared patrol points
+                floor.GeneratePatrolPoints(50);
                 DungeonManager.Instance.AddFloor(floor, floorObj.transform);
-                // Validate patrol points
-                // // Debug.Log($"Floor {floorNum} patrol points: {string.Join(", ", floor.PatrolPoints)}");
-                // Add the floor transform to the dictionary
+
                 if (!DungeonManager.Instance.FloorTransforms.ContainsKey(floorNum))
                 {
                     DungeonManager.Instance.FloorTransforms[floorNum] = floorObj.transform;
@@ -231,12 +217,19 @@ namespace YourGameNamespace
                 }
 
                 walkableTilesByFloor[floorNum] = walkableTiles;
-
-                
             }
 
             enemySpawner.InitializeEnemyParents();
-            StartCoroutine(HideFloors()); // Set all floors inactive until the player enters
+            StartCoroutine(HideFloors());
+        }
+
+
+        private void LockTilemaps()
+        {
+            // Add logic here to lock or disable further rendering to the tilemaps.
+            floorTilemap.gameObject.GetComponent<TilemapRenderer>().enabled = false;
+            corridorTilemap.gameObject.GetComponent<TilemapRenderer>().enabled = false;
+            wallTilemap.gameObject.GetComponent<TilemapRenderer>().enabled = true; // Keep the walls visible
         }
 
         // Helper method to create a Tilemap under a specified parent transform
@@ -253,7 +246,7 @@ namespace YourGameNamespace
 
             return tilemap;
         }
-
+        
         public Vector3 GetExitPoint()
         {
             return methods.GetRandomFloorTile();

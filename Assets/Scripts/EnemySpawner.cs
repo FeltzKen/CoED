@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using YourGameNamespace;
 namespace YourGameNamespace
 {
-    public class EnemySpawner : MonoBehaviour
+    public class EnemySpawner 
     {
         [SerializeField] private DungeonSettings dungeonSettings;
         private Dictionary<int, Transform> enemyParents = new Dictionary<int, Transform>();
