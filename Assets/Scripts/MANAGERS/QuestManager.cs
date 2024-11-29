@@ -55,7 +55,7 @@ namespace CoED
 
             Debug.Log($"QuestManager: Assigned new quest '{newQuest.QuestName}'.");
 
-            UIManager.Instance?.ShowQuestAssigned(newQuest);
+            PlayerUI.Instance?.ShowQuestAssigned(newQuest);
 
             return newQuest;
         }
@@ -70,7 +70,7 @@ namespace CoED
                     $"QuestManager: Quest '{completedQuest.QuestName}' completed and removed from active quests."
                 );
 
-                UIManager.Instance?.ShowQuestCompleted(completedQuest);
+                PlayerUI.Instance?.ShowQuestCompleted(completedQuest);
             }
             else
             {

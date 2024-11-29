@@ -7,6 +7,7 @@ namespace CoED
     // Manages the player's magic resources, including casting spells and refilling magic.
     public class PlayerMagic : MonoBehaviour
     {
+        public static PlayerMagic Instance { get; private set; }
         [Header("Magic Settings")]
         [SerializeField]
         private int maxMagic = 100;
@@ -26,7 +27,7 @@ namespace CoED
         private ProjectileManager projectileManager;
 
         private Coroutine refillCoroutine;
-        private UIManager uiManager;
+        private PlayerUI playerUI;
         private PlayerManager playerManager;
 
         public int MaxMagic => maxMagic;
@@ -36,9 +37,23 @@ namespace CoED
             set { currentMagic = (int)Mathf.Max(0, value); } // Prevent going below zero
         }
 
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+                Debug.LogWarning("PlayerMagic instance already exists. Destroying duplicate.");
+                return;
+            }
+        }
+
         private void Start()
         {
-            uiManager = FindAnyObjectByType<UIManager>();
+            playerUI = FindAnyObjectByType<PlayerUI>();
             projectileManager = projectileManager ?? FindAnyObjectByType<ProjectileManager>();
             playerManager = PlayerManager.Instance;
 
@@ -77,7 +92,7 @@ namespace CoED
 
         private void UpdateMagicUI()
         {
-            uiManager?.UpdateMagicBar(currentMagic);
+            playerUI?.UpdateMagicBar(currentMagic);
         }
 
         public void RefillMagic(int amount)
@@ -116,10 +131,3 @@ namespace CoED
         }
     }
 }
-
-/*
-Changes made:
-1. Removed any direct reference to managing actions with TurnManager. All magic actions are now intended to be called via PlayerManager.
-2. Added `CastMagicAction()` method to be called by PlayerManager, delegating casting logic through it.
-3. Removed unnecessary redundant logic or left-over remnants that managed turn actions. Now all action registration must go through PlayerManager.
-*/

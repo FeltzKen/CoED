@@ -38,13 +38,13 @@ namespace CoED
             // Retrieve and validate essential components
 
             ValidateComponents();
-                playerStats = GetComponent<PlayerStats>();
-                playerCombat = GetComponent<PlayerCombat>();
-                playerMagic = GetComponent<PlayerMagic>();
-                castSpell = GetComponent<CastSpell>();
-                playerManager = GetComponent<PlayerManager>();
-                playerMovement = GetComponent<PlayerMovement>();
-                playerActions = GetComponent<PlayerActions>();
+                playerStats = PlayerStats.Instance;
+                playerCombat = PlayerCombat.Instance;
+                playerMagic = PlayerMagic.Instance;
+                castSpell = PlayerMagic.Instance.GetComponent<CastSpell>(); // Get the CastSpell component from PlayerMagic
+                playerManager = PlayerManager.Instance;
+                playerMovement = PlayerMovement.Instance;
+                playerActions = PlayerActions.Instance;
                 playerRigidbody = GetComponent<Rigidbody2D>();
                 statusEffectManager = GetComponent<StatusEffectManager>();
                 statusEffect = GetComponent<StatusEffect>();
@@ -84,13 +84,7 @@ namespace CoED
         {
             playerStats?.Heal(amount);
         }
-
-      /*  public bool CastSpell(Vector3 targetPosition, int spellCost, int spellDamage)
-        {
-            return playerMagic != null && playerMagic.HasEnoughMagic(spellCost) &&
-                   playerMagic.CastMagicAction(targetPosition, spellCost, spellDamage);
-        }
-      */
+      
         public void RefillMagic(int amount)
         {
             playerMagic?.RefillMagic(amount);
@@ -110,17 +104,7 @@ namespace CoED
         {
             statusEffectManager?.AddStatusEffect(effect);
         }
-        private void OnCollisionEnter2D(Collision2D collision)
-        {
-        Debug.Log("player collison detected.");
-        }
+
 
     }
 }
-
-/*
-Changes made:
-1. Retained references to essential components like `PlayerStats`, `PlayerCombat`, `PlayerMagic`, etc.
-2. Removed any direct turn management or action registration. All actions are now expected to flow through PlayerManager.
-3. Focused on providing utility methods for interacting with components, without handling turn or action-related logic directly.
-*/

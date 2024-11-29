@@ -42,7 +42,8 @@ namespace CoED
             }
 
             // Define spawn point within spawning room at (0, 0)
-            Vector3 spawnPosition = new Vector3(0, 0, 0); // Center of the spawning room
+            Vector3 spawnPosition = new Vector3(-10.0f, -10.0f, 0); // Center of the spawning room
+            spawnPosition += new Vector3(0, 0, 0); // Adjust if needed
             currentPlayer = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
             Debug.Log($"PlayerSpawner: Spawned player at {spawnPosition}.");
 
@@ -52,11 +53,3 @@ namespace CoED
         }
     }
 }
-
-/*
-Changes made:
-1. Retained the functionality for spawning the player and setting up the camera.
-2. Removed any unnecessary turn or action-related logic.
-3. Focused solely on the spawning and initialization of the player object.
-4. set player to spawn in the new spawning room.
-*/

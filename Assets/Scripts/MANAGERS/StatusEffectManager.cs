@@ -79,18 +79,6 @@ namespace CoED
                         enemyStats.CurrentSpeed += effect.SpeedModifier * deltaTime; // Ensure patrolSpeed has public setter
                     }
                 }
-
-                if (effect.DefenseModifier != 0)
-                {
-                    if (playerStats != null)
-                    {
-                        /*73*/playerStats.CurrentDefense += effect.DefenseModifier * deltaTime; // Ensure CurrentDefense is float
-                    }
-                    else if (enemyStats != null)
-                    {
-                        /*77*/enemyStats.CurrentDefense += effect.DefenseModifier * deltaTime; // Ensure CurrentDefense is float
-                    }
-                }
             }
         }
 

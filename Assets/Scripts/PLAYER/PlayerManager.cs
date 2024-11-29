@@ -4,7 +4,7 @@ using CoED;
 
 namespace CoED
 {
-    public class PlayerManager : MonoBehaviour, IActor
+    public class PlayerManager : MonoBehaviour//, IActor
     {
         public static PlayerManager Instance { get; private set; }
         public Vector3Int CurrentPosition { get; private set; } // Player's current grid position
@@ -14,7 +14,6 @@ namespace CoED
         private PlayerStats playerStats;
         private PlayerCombat playerCombat;
         private PlayerMagic playerMagic;
-        private TurnManager turnManager;
         private System.Action lastAction; // Stores the last planned action
         private bool isActionComplete = false;
         private bool actionSelected = false;
@@ -37,7 +36,6 @@ namespace CoED
             playerStats = GetComponent<PlayerStats>();
             playerCombat = GetComponent<PlayerCombat>();
             playerMagic = GetComponent<PlayerMagic>();
-            turnManager = TurnManager.Instance;
 
             ValidateComponents();
         }
@@ -47,7 +45,7 @@ namespace CoED
             // Initialize player's grid position
             Vector3 playerPosition = transform.position;
             CurrentPosition = new Vector3Int(Mathf.RoundToInt(playerPosition.x), Mathf.RoundToInt(playerPosition.y), 0);
-            turnManager.RegisterActor(this);
+            //turnManager.RegisterActor(this);
             Debug.Log("PlayerManager: Registered actor with TurnManager.");
         }
 
@@ -61,44 +59,6 @@ namespace CoED
             }
         }
 
-        public void Act()
-        {
-            isActionComplete = false;
-            actionSelected = false;
-           // Debug.Log("PlayerManager: It's the player's turn.");
-
-            // If there's a pre-planned action, perform it
-            if (lastAction != null)
-            {
-                PerformLastAction();
-            }
-            else
-            {
-                PlayerMovement.Instance.HandlePlayerTurn();
-            }
-        }
-
-        public void PerformAction()
-        {
-            // Perform action through PlayerMovement or combat/magic classes
-            if (lastAction != null)
-            {
-                PerformLastAction();
-            }
-            else
-            {
-                Debug.LogWarning("PlayerManager: No action has been planned.");
-            }
-        }
-
-        private void PerformLastAction()
-        {
-            lastAction.Invoke(); // Execute the planned action
-            lastAction = null; // Clear the action after execution
-            isActionComplete = true;
-          //  Debug.Log("PlayerManager: Performed action.");
-        }
-
         public void CommitCombatAction(bool isMelee, Vector3 targetPosition)
         {
             // Plan a combat action to be executed during the turn
@@ -106,7 +66,7 @@ namespace CoED
             {
                 if (isMelee)
                 {
-                    playerCombat.PerformMeleeAttack();
+                    playerCombat.PerformMeleeAttack(new Vector2Int((int)targetPosition.x, (int)targetPosition.y));    
                     Debug.Log("PlayerManager: Committed melee attack action.");
                 }
                 else
@@ -154,6 +114,14 @@ namespace CoED
         public bool IsActionComplete()
         {
             return isActionComplete;
+        }
+        public void ResetEnemyAttackFlags()
+        {
+            foreach (var enemy in FindObjectsByType<EnemyAI>(FindObjectsSortMode.None))
+            {
+                enemy.CanAttackPlayer = true;
+            }
+            Debug.Log("PlayerManager: Reset enemy attack flags.");
         }
     }
 }

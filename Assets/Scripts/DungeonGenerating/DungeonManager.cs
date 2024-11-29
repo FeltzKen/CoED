@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using CoED;
+using UnityEngine.Tilemaps;
 
 
 namespace CoED
@@ -32,18 +33,6 @@ namespace CoED
         }
     }
 
-    // Other code...
-
-
-
-        /// <summary>
-        /// Retrieves the next available floor number.
-        /// </summary>
-        public int GetNextFloorNumber()
-        {
-            return ++currentFloorNumber;
-        }
-
         /// <summary>
         /// Adds a floor to the dungeon's collection.
         /// </summary>
@@ -52,7 +41,6 @@ namespace CoED
             if (!floors.ContainsKey(floor.FloorNumber))
             {
                 floors[floor.FloorNumber] = floor;
-                Debug.Log($"Added Floor_{floor.FloorNumber}.");
             }
             else
             {
@@ -60,83 +48,53 @@ namespace CoED
             }
         }
 
-        /// <summary>
-        /// Retrieves the walkable tiles for a specific floor.
-        /// </summary>
-        public HashSet<Vector2> GetWalkableTilesForFloor(int floorNumber)
-        {
-            if (floors.TryGetValue(floorNumber, out var floor))
-            {
-                return new HashSet<Vector2>(floorData.FloorTiles.Select(tile => (Vector2)tile));
-            }
-            Debug.LogError($"No FloorData found for floor {floorNumber}.");
-            return new HashSet<Vector2>(); // Return an empty set as fallback
-        }
-
-        /// <summary>
-        /// Gets the FloorData for a specific floor number.
-        /// </summary>
-        public FloorData GetFloor(int floorNumber, bool logError = true)
-        {
-            if (floors.TryGetValue(floorNumber, out var floor))
-            {
-                return floor;
-            }
-
-            if (logError)
-            {
-                Debug.LogError($"Floor {floorNumber} not found.");
-            }
-            return null;
-        }
-
-        /// <summary>
-        /// Gets a random walkable tile from any floor.
-        /// </summary>
-        public Vector2 GetRandomDungeonTile()
-        {
-            if (floors.Count == 0)
-            {
-                Debug.LogError("No floors available in the dungeon.");
-                return Vector2.zero;
-            }
-
-            int randomFloorKey = Random.Range(1, floors.Count + 1); // Assuming floor numbers start at 1
-            FloorData randomFloor = floors[randomFloorKey];
-            return randomFloor.GetRandomFloorTile();
-        }
-
-        /// <summary>
-        /// Gets a random walkable tile from a specific floor.
-        /// </summary>
-        public Vector2 GetRandomTileFromFloor(int floorNumber)
-        {
-            FloorData floor = GetFloor(floorNumber);
-            if (floor != null)
-            {
-                return floor.GetRandomFloorTile();
-            }
-
-            return Vector2.zero;
-        }
-
-        /// <summary>
-        /// Gets a specified number of random tiles from a specific floor.
-        /// </summary>
-        public List<Vector2Int> GetRandomTilesFromFloor(int floorNumber, int count)
-        {
-            FloorData floor = GetFloor(floorNumber);
-            if (floor != null)
-            {
-                return floor.GetRandomFloorTiles(count);
-            }
-
-            return new List<Vector2Int>();
-        }
-
         public void SetSpawningRoomInstance(GameObject instance)
         {
             SpawningRoomInstance = instance;
+        }
+
+        public void ShowRenderersForFloor(int floorNumber)
+        {
+            if (FloorTransforms.TryGetValue(floorNumber, out Transform floorTransform))
+            {
+                Renderer[] renderers = floorTransform.GetComponentsInChildren<Renderer>();
+                foreach (var renderer in renderers)
+                {
+                    renderer.enabled = true;
+                }
+                Debug.Log($"All renderers for Floor {floorNumber} are now visible.");
+            }
+            else
+            {
+                Debug.LogError($"Floor {floorNumber} not found. Cannot show renderers.");
+            }
+        }
+
+        public Tilemap GetCurrentFloorTilemap(int currentFloorNumber)
+        {
+            // Assuming you have a way to get the current floor number
+            if (floors.TryGetValue(currentFloorNumber, out FloorData floorData))
+            {
+                return floorData.FloorTilemap;
+            }
+            Debug.LogError($"DungeonManager: Floor {currentFloorNumber} not found.");
+            return null;
+        }
+
+        private Dictionary<int, Vector2Int> stairsDownPositions = new Dictionary<int, Vector2Int>();
+
+        public void StoreStairsDownPosition(int floorNumber, Vector2Int position)
+        {
+            stairsDownPositions[floorNumber] = position;
+        }
+
+        public Vector2Int GetStairsDownPosition(int floorNumber)
+        {
+            if (stairsDownPositions.TryGetValue(floorNumber, out Vector2Int position))
+            {
+                return position;
+            }
+            return Vector2Int.zero; // Default if not found
         }
 
     }

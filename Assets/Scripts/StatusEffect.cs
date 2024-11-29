@@ -60,7 +60,7 @@ namespace CoED
 
             elapsedTime += Time.deltaTime;
 
-            if (damagePerSecond > 0 && target is IActor actor)
+            if (damagePerSecond > 0)
             {
                 int damage = Mathf.CeilToInt(damagePerSecond * Time.deltaTime);
                 PlayerStats.Instance.TakeDamage(damage);
@@ -75,7 +75,7 @@ namespace CoED
             if (target is Player player)
             {
                 player.playerStats.CurrentSpeed += speedModifier; // Ensure CurrentSpeed is float
-                player.playerStats.CurrentDefense += defenseModifier; // Ensure CurrentDefense is float
+                player.playerStats.CurrentDefense += (int)defenseModifier; // Ensure CurrentDefense is float
             }
             else if (target is Enemy enemy) // Change to Enemy
             {

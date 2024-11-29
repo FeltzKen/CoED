@@ -7,6 +7,7 @@ namespace CoED
     // Handles player actions such as resting, collecting items, searching for secrets, and using abilities.
     public class PlayerActions : MonoBehaviour
     {
+        public static PlayerActions Instance { get; private set; }
         [Header("Resting Settings")]
         [SerializeField]
         private int restHealRate = 5;
@@ -30,6 +31,20 @@ namespace CoED
         private Inventory playerInventory;
         private FloatingTextManager floatingTextManager;
         private PlayerManager playerManager;
+
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+                Debug.LogWarning("PlayerActions instance already exists. Destroying duplicate.");
+                return;
+            }
+        }
 
         private void Start()
         {
@@ -56,16 +71,19 @@ namespace CoED
             if (Input.GetKeyDown(KeyCode.G))
             {
                 playerManager.CommitSpecialAction(CollectItems);
+                PlayerManager.Instance.ResetEnemyAttackFlags();
             }
             else if (Input.GetKeyDown(KeyCode.S))
             {
                 playerManager.CommitSpecialAction(SearchForSecrets);
+                PlayerManager.Instance.ResetEnemyAttackFlags();
             }
             else if (Input.GetKeyDown(KeyCode.R) && !isResting)
             {
                 if (!IsDangerNearby())
                 {
                     playerManager.CommitSpecialAction(() => StartCoroutine(RestUntilHealed()));
+                    PlayerManager.Instance.ResetEnemyAttackFlags();
                 }
                 else
                 {
@@ -77,19 +95,12 @@ namespace CoED
                 if (!IsDangerNearby())
                 {
                     playerManager.CommitSpecialAction(() => StartCoroutine(RestUntilMagic()));
+                    PlayerManager.Instance.ResetEnemyAttackFlags();
                 }
                 else
                 {
                     ShowFloatingText("Cannot rest, danger is nearby");
                 }
-            }
-            else if (Input.GetKeyDown(KeyCode.I))
-            {
-                ToggleInventoryUI();
-            }
-            else if (Input.GetKeyDown(KeyCode.F))
-            {
-                playerManager.CommitSpecialAction(UseAbility);
             }
         }
 
@@ -236,9 +247,3 @@ namespace CoED
     }
 }
 
-/*
-Changes made:
-1. Removed direct calls to TurnManager (e.g., `turnManager?.NextTurn()`) to prevent PlayerActions from registering actions itself.
-2. Delegated action registration to PlayerManager by using `playerManager.CommitSpecialAction(...)`. This ensures all actions are centrally handled.
-3. Kept method names intact for compatibility with other scripts.
-*/

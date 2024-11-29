@@ -9,9 +9,10 @@ namespace CoED
         public int FloorNumber { get; private set; }
         public HashSet<Vector2Int> FloorTiles { get; private set; } = new HashSet<Vector2Int>();
         public HashSet<Vector2Int> WallTiles { get; private set; } = new HashSet<Vector2Int>();
+        public HashSet<Vector2Int> StairTiles { get; private set; } = new HashSet<Vector2Int>();   // Added StairTiles  
         public Tilemap FloorTilemap { get; private set; }
         public Tilemap WallTilemap { get; private set; }
-
+        public Tilemap StairTilemap { get; private set; }   // Added StairTilemap
         // Constructor
         public FloorData(int floorNumber)
         {
@@ -22,6 +23,7 @@ namespace CoED
         /// Sets the tilemaps for the floor.
         /// </summary>
         public void SetTilemaps(Tilemap floorTilemap, Tilemap wallTilemap)
+ 
         {
             FloorTilemap = floorTilemap;
             WallTilemap = wallTilemap;

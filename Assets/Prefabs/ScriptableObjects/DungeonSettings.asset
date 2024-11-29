@@ -14,38 +14,58 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dungeonSizeRange: {x: 200, y: 200}
   maxFloors: 5
-  floorTile: {fileID: 11400000, guid: 03be7fcaf47d358479a9533b8c9f0226, type: 2}
-  wallTile: {fileID: 11400000, guid: 2f4e23419adb2fe4eaa7001eb1968d07, type: 2}
-  floorTilemap: {fileID: 0}
-  wallTilemap: {fileID: 0}
+  tilePalette:
+    floorTiles:
+    - {fileID: 11400000, guid: ef233971b3c0cd44290ee2b4da324666, type: 2}
+    - {fileID: 11400000, guid: ee7fa5e8f35104342a3df0f8d3590061, type: 2}
+    - {fileID: 11400000, guid: 88e2ff96c1954b4449a4a8f652391865, type: 2}
+    - {fileID: 11400000, guid: 7264ba0dbed3cdf439c680642ef7d1c5, type: 2}
+    - {fileID: 11400000, guid: af42529d5d770f7449cea711e3b575d2, type: 2}
+    - {fileID: 11400000, guid: 4400cb8505b270e478d1ca523ce656b1, type: 2}
+    - {fileID: 11400000, guid: 56bbaef0cbd85174c925f557ff8a2248, type: 2}
+    - {fileID: 11400000, guid: 2dfc422ecd4a4464483dbf3d8b48b104, type: 2}
+    - {fileID: 11400000, guid: e580d119173a0074ea955ff6157de190, type: 2}
+    - {fileID: 11400000, guid: 2308adf271198a44fb4f54c1f8bcff76, type: 2}
+    - {fileID: 11400000, guid: e0772d31a8e1e2e4097c57d8d3403b1f, type: 2}
+    wallTiles:
+    - {fileID: 11400000, guid: 1b5ad9b8a40808e4dba59fbaee51d293, type: 2}
+    - {fileID: 11400000, guid: e1b1ee67357ae6748a53a0c7f4a387e9, type: 2}
+    voidTiles:
+    - {fileID: 11400000, guid: ae2bc12a08fee464598a9e77553ca5fc, type: 2}
+    stairsUpTile: {fileID: 1638260800072365795, guid: 6c82c2d46b3613b4a89b278b9901da4d, type: 3}
+    stairsDownTile: {fileID: 926577741634186297, guid: 619db7b191317044e995e508dedd5224, type: 3}
   itemPrefabs:
+  - {fileID: 0}
   - {fileID: 0}
   seed: 0
   roomSizeRange: {x: 15, y: 12}
   selectedAlgorithm:
     algorithmType: 0
     initialWallDensity: 0.482
-    iterations: 4
+    iterations: 1
     neighborWallThreshold: 5
     edgeBias: 3.52
-    bspSubdivisions: 1
-    bspCarveChance: 0
-  initialWallDensity: 0.45
-  cellularAutomataIterations: 5
-  neighborWallThreshold: 4
-  edgeBias: 2.82
-  perlinNoiseIterations: 3
-  bspSubdivisions: 3
-  bspCarveChance: 0.5
-  spawningRoomPrefab: {fileID: 6665827154481512502, guid: 8384ad92a2cf19c46a78d81282f9729a, type: 3}
-  stairsUpPrefab: {fileID: 1638260800072365795, guid: 6c82c2d46b3613b4a89b278b9901da4d, type: 3}
-  stairsDownPrefab: {fileID: 926577741634186297, guid: 619db7b191317044e995e508dedd5224, type: 3}
+    bspSubdivisions: 4
+    bspCarveChance: 0.7
+    spiralStepSize: 4
+    waveCollapseBias: 5
+    fractalDepth: 3
+    fractalSplitChance: 0.5
+    lSystemIterations: 3
+    branchChance: 0.5
+    radialGrowthRadius: 10
+    roomGrowthChance: 0.6
+    corridorGrowthChance: 0.4
+  spawningRoomPrefab: {fileID: 5500069649626026940, guid: a9bf6527bfeff0b449811bc54c64988e, type: 3}
   spawnEffectPrefab: {fileID: 4985454231279368892, guid: aed4c3bbbee4901408f729fded73a077, type: 3}
   enemyPrefabs:
   - {fileID: 3198391839532095026, guid: e63b6f03d1c9eba448e1a722c613b4e6, type: 3}
   - {fileID: 3198391839532095026, guid: 04a11b60e34b443448123f1b3fb662f3, type: 3}
-  bossPrefabs: []
-  numberOfEnemiesPerFloor: 5
+  healthBarPrefab: {fileID: 7920171421989906631, guid: 25e4b1c51ff90d54895cec756acb5a26, type: 3}
+  bossPrefabs:
+  - {fileID: 3198391839532095026, guid: 87ddcf6318ef8eb4688f3af074a97c1a, type: 3}
+  numberOfEnemiesPerFloor: 20
+  numberOfPatrolPoints: 10
   enableEnemyScaling: 1
   baseHealthMultiplier: 1
   baseDamageMultiplier: 1

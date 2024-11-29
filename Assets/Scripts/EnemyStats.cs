@@ -16,7 +16,7 @@ namespace CoED
         private int baseDefense = 5;
    
         [SerializeField, Min(0f)]
-        private float baseProjectileRange = 1f;
+        private float baseAttackRange = 1.0f;
         [SerializeField, Min(0f)]
         private float baseDetectionRange = 5f;
         [SerializeField, Min(0f)]
@@ -30,11 +30,11 @@ namespace CoED
         public int CurrentAttack { get; set; }
         public int CurrentHealth { get; set; }
         public float CurrentDefense { get; set; }
-        public float CurrentProjectileRange { get; set; }
+        public float CurrentAttackRange { get; set; }
         public float CurrentDetectionRange { get; set; }
         public float CurrentSpeed { get; set; }
         public float CurrentFireRate { get; set; }
-
+        public EnemyUI enemyUI { get; set; }
         public event Action<int, int> OnHealthChanged;
         public event Action OnEnemyDeath;
         public int spawnFloor {get; set;} // Store the floor this enemy spawned on
@@ -55,11 +55,11 @@ namespace CoED
             CalculateStats();
             CurrentHealth = maxHealth;
 
-            UIManager uiManager = UIManager.Instance;
-            if (uiManager != null)
+            EnemyUI enemyUI = FindAnyObjectByType<EnemyUI>();
+            if (enemyUI != null)
             {
-                uiManager.SetHealthBarMax(maxHealth);
-                UpdateHealthUI(uiManager);
+                enemyUI.SetHealthBarMax(maxHealth);
+                UpdateHealthUI(enemyUI);
             }
         }
 
@@ -69,7 +69,7 @@ namespace CoED
 
             CurrentAttack = Mathf.RoundToInt(baseAttack * floorMultiplier);
             CurrentDefense = baseDefense * floorMultiplier;
-            CurrentProjectileRange = baseProjectileRange * floorMultiplier;
+            CurrentAttackRange = baseAttackRange * floorMultiplier;
             CurrentDetectionRange = baseDetectionRange * floorMultiplier;
             CurrentSpeed = baseSpeed * floorMultiplier;
 
@@ -82,7 +82,7 @@ namespace CoED
             int effectiveDamage = Mathf.Max(damage - (int)CurrentDefense, 1);
             CurrentHealth = Mathf.Max(CurrentHealth - effectiveDamage, 0);
             OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
-            UpdateHealthUI(UIManager.Instance);
+            UpdateHealthUI(enemyUI);
 
             FloatingTextManager floatingTextManager = FloatingTextManager.Instance;
             floatingTextManager?.ShowFloatingText(effectiveDamage.ToString(), transform.position, Color.red);
@@ -105,7 +105,7 @@ namespace CoED
 
             CurrentHealth = Mathf.Min(CurrentHealth + amount, maxHealth);
             OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
-            UpdateHealthUI(UIManager.Instance);
+            UpdateHealthUI(enemyUI);
 
             FloatingTextManager floatingTextManager = FloatingTextManager.Instance;
             floatingTextManager?.ShowFloatingText($"+{amount}", transform.position, Color.green);
@@ -115,21 +115,18 @@ namespace CoED
 
         private void HandleDeath()
         {
-            IActor actor = GetComponent<IActor>();
-            if (actor != null)
-            {
+
                 Debug.Log("Enemy has died.");
-                TurnManager.Instance.RemoveActor(actor); // Remove from TurnManager
+            //    TurnManager.Instance.RemoveActor(actor); // Remove from TurnManager
                 Destroy(gameObject);
-            }
         }
 
 
-        private void UpdateHealthUI(UIManager uiManager)
+        private void UpdateHealthUI(EnemyUI enemyUI)
         {
-            if (uiManager != null)
+            if (enemyUI != null)
             {
-                uiManager.UpdateHealthBar(CurrentHealth);
+                enemyUI.UpdateHealthBar(CurrentHealth);
             }
         }
     }

@@ -10,6 +10,15 @@ namespace CoED
     {
         CellularAutomata,
         PerlinNoise,
-        BSP
+        BSP,
+        SpiralPattern,
+        WaveFunctionCollapse,
+        HybridAlgorithm,
+        IslandGrowth,
+        LSystem,
+        RipplePropagation,
+        BiomeGeneration,
+        FractalMaze,
+        RadialGrowth
     }
 }

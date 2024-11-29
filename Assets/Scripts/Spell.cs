@@ -49,9 +49,14 @@ namespace CoED
             Collider2D[] affectedTargets = Physics2D.OverlapCircleAll(targetPosition, areaOfEffect);
             foreach (var target in affectedTargets)
             {
-                if (target.TryGetComponent(out IActor actor) && actor != caster.GetComponent<IActor>())
+                if (target.CompareTag("Enemy"))
                 {
-                    PlayerStats.Instance.TakeDamage(damage);
+                    EnemyStats enemyStats = target.GetComponent<EnemyStats>();
+                    if (enemyStats != null)
+                    {
+                        enemyStats.TakeDamage(damage);
+                        Debug.Log($"Spell '{spellName}' dealt {damage} damage to {enemyStats.name}.");
+                    }
                 }
             }
         }

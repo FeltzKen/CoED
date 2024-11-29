@@ -57,7 +57,7 @@ namespace CoED
 
         // Current Stats (after applying equipment)
         public int CurrentAttack { get; set; }
-        public float CurrentDefense { get; set; }
+        public int CurrentDefense { get; set; }
         public int CurrentMagic { get; set; }
         public int CurrentMaxHealth { get; set; }
         public float CurrentRange { get; set; }
@@ -76,6 +76,7 @@ namespace CoED
         public event Action<int, int> OnExperienceChanged;
         public event Action<int, int> OnHealthChanged;
         public event Action OnPlayerDeath;
+        public int currentFloor = 1;
 
         private void Awake()
         {
@@ -103,11 +104,11 @@ namespace CoED
             CurrentStamina = maxStamina;
             CurrentHealth = CurrentMaxHealth;
 
-            UIManager uiManager = FindAnyObjectByType<UIManager>();
-            if (uiManager != null)
+            PlayerUI playerUI = FindAnyObjectByType<PlayerUI>();
+            if (playerUI != null)
             {
-                uiManager.SetHealthBarMax(CurrentMaxHealth);
-                UpdateHealthUI(uiManager);
+                playerUI.SetHealthBarMax(CurrentMaxHealth);
+                UpdateHealthUI(playerUI);
             }
         }
 
@@ -131,7 +132,7 @@ namespace CoED
             equipmentDefense = Mathf.Max(defense, 0);
             equipmentHealth = Mathf.Max(health, 0);
             CalculateStats();
-            UpdateHealthUI(FindAnyObjectByType<UIManager>());
+            UpdateHealthUI(FindAnyObjectByType<PlayerUI>());
         }
 
         public void GainExperience(int amount)
@@ -160,11 +161,11 @@ namespace CoED
             CalculateStats();
 
             OnLevelUp?.Invoke();
-            UIManager uiManager = FindAnyObjectByType<UIManager>();
-            if (uiManager != null)
+            PlayerUI playerUI = FindAnyObjectByType<PlayerUI>();
+            if (playerUI != null)
             {
-                uiManager.UpdateLevelDisplay(level);
-                UpdateHealthUI(uiManager);
+                playerUI.UpdateLevelDisplay(level);
+                UpdateHealthUI(playerUI);
             }
 
             Debug.Log($"PlayerStats: Leveled up to level {level}! Next level at {experienceToNextLevel} experience.");
@@ -189,10 +190,10 @@ namespace CoED
 
         public void TakeDamage(int damage)
         {
-            int effectiveDamage = Mathf.Max(damage - (int)CurrentDefense, 1);
+            int effectiveDamage = Mathf.Max(damage - CurrentDefense, 1);
             CurrentHealth = Mathf.Max(CurrentHealth - effectiveDamage, 0);
             OnHealthChanged?.Invoke(CurrentHealth, CurrentMaxHealth);
-            UpdateHealthUI(FindAnyObjectByType<UIManager>());
+            UpdateHealthUI(FindAnyObjectByType<PlayerUI>());
 
             FloatingTextManager floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
             floatingTextManager?.ShowFloatingText(effectiveDamage.ToString(), transform.position, Color.red);
@@ -215,7 +216,7 @@ namespace CoED
 
             CurrentHealth = Mathf.Min(CurrentHealth + amount, CurrentMaxHealth);
             OnHealthChanged?.Invoke(CurrentHealth, CurrentMaxHealth);
-            UpdateHealthUI(FindAnyObjectByType<UIManager>());
+            UpdateHealthUI(FindAnyObjectByType<PlayerUI>());
 
             FloatingTextManager floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
             floatingTextManager?.ShowFloatingText($"+{amount}", transform.position, Color.green);
@@ -231,23 +232,20 @@ namespace CoED
             OnPlayerDeath?.Invoke();
         }
 
-        private void UpdateHealthUI(UIManager uiManager)
+        private void UpdateHealthUI(PlayerUI playerUI)
         {
-            if (uiManager != null)
+            if (playerUI != null)
             {
-                uiManager.UpdateHealthBar(CurrentHealth);
+                playerUI.UpdateHealthBar(CurrentHealth);
             }
         }
 
         public int GetLevel() => level;
         public int GetExperience() => experience;
         public int GetExperienceToNextLevel() => experienceToNextLevel;
+
+        public int GetCurrentFloor() => currentFloor;
     }
 }
 
-/*
-Changes made:
-1. Removed any direct references to managing turns, as action registration should happen through PlayerManager.
-2. Cleaned up methods to focus on health, stamina, experience, and level management, allowing PlayerManager to decide when to register actions with TurnManager.
-3. Removed unnecessary turn-specific logic or left-over remnants that tried to register actions, ensuring consistency with the centralized approach.
-*/
+

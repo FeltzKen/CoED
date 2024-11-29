@@ -1,12 +1,13 @@
 using System.Collections;
+using System.Linq;
 using UnityEngine;
-using CoED;
 
 namespace CoED
 {
     // Handles the player's combat actions, including melee and ranged attacks, and integrates with the turn system.
     public class PlayerCombat : MonoBehaviour
     {
+        public static PlayerCombat Instance { get; private set; }
         [Header("Combat Settings")]
         [SerializeField]
         private float attackRange = 1.5f;
@@ -23,11 +24,25 @@ namespace CoED
         private ProjectileManager projectileManager;
         private PlayerManager playerManager;
 
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+                Debug.LogWarning("PlayerCombat instance already exists. Destroying duplicate.");
+                return;
+            }
+        }
+
         private void Start()
         {
             playerStats = GetComponent<PlayerStats>();
             playerMagic = GetComponent<PlayerMagic>();
-            projectileManager = FindAnyObjectByType<ProjectileManager>();
+            projectileManager = FindObjectsByType<ProjectileManager>(FindObjectsSortMode.None).FirstOrDefault();
             playerManager = PlayerManager.Instance;
 
             if (playerStats == null || playerMagic == null || projectileManager == null || playerManager == null)
@@ -37,56 +52,58 @@ namespace CoED
             }
         }
 
+        private void Update()
+        {
+            HandleCombatInput();
+        }
+
         private void HandleCombatInput()
         {
             if (playerStats.CurrentHealth > 0 && Time.time >= lastAttackTime + attackCooldown)
             {
                 if (Input.GetKeyDown(KeyCode.F))
                 {
-                    playerManager.CommitCombatAction(true, Vector3.zero); // Melee attack
+                 //   PerformMeleeAttack();
                 }
                 else if (Input.GetMouseButtonDown(0))
                 {
                     Vector3 targetPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                     targetPosition.z = 0f;
-                    playerManager.CommitCombatAction(false, targetPosition); // Ranged attack
+                    AttemptRangedAttack(targetPosition);
                 }
             }
         }
 
-        public void PerformMeleeAttack()
+public void PerformMeleeAttack(Vector2Int targetPosition)
+{
+    Debug.Log($"PlayerCombat: Attempting melee attack at {targetPosition}.");
+    Vector2 targetWorldPosition = new Vector2(targetPosition.x, targetPosition.y);
+
+    // Use a small overlap circle for better enemy detection coverage
+    Collider2D hitCollider = Physics2D.OverlapCircle(targetWorldPosition, 0.5f, LayerMask.GetMask("enemies"));
+
+    if (hitCollider != null && hitCollider.CompareTag("Enemy"))
+    {
+        EnemyStats enemyStats = hitCollider.GetComponent<EnemyStats>();
+        if (enemyStats != null)
         {
-            Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(transform.position, attackRange);
-            bool hitAny = false;
+            float damageDealt = Mathf.Max(playerStats.CurrentAttack - enemyStats.CurrentDefense, 1);
+            enemyStats.TakeDamage((int)damageDealt);
+            Debug.Log($"PlayerCombat: Melee attacked {enemyStats.name} at {targetPosition} for {damageDealt} damage.");
 
-            foreach (var enemyCollider in hitEnemies)
-            {
-                if (enemyCollider.CompareTag("Enemy"))
-                {
-                    EnemyStats enemyStats = enemyCollider.GetComponent<EnemyStats>();
-                    if (enemyStats != null)
-                    {
-                        int damageDealt = (int)Mathf.Max(playerStats.CurrentAttack - enemyStats.CurrentDefense, 1);
-                        enemyStats.TakeDamage(damageDealt);
-                        Debug.Log($"PlayerCombat: Melee attacked {enemyStats.name} for {damageDealt} damage.");
-                        hitAny = true;
+            // Apply status effect to enemy
+            StatusEffect stunEffect = new StatusEffect("Stun", 3f, 0f, null);
+            enemyStats.GetComponent<StatusEffectManager>()?.AddStatusEffect(stunEffect);
 
-                        // Apply status effect to enemy using the constructor
-                        StatusEffect stunEffect = new StatusEffect("Stun", 3f, 0f, null);
-                        enemyStats.GetComponent<StatusEffectManager>()?.AddStatusEffect(stunEffect);
-                    }
-                }
-            }
-
-            if (hitAny)
-            {
-                lastAttackTime = Time.time;
-            }
-            else
-            {
-                Debug.Log("PlayerCombat: No enemies in melee range.");
-            }
+            lastAttackTime = Time.time;
+            PlayerManager.Instance.ResetEnemyAttackFlags();
         }
+    }
+    else
+    {
+        Debug.Log($"PlayerCombat: No enemy at position {targetPosition} to attack.");
+    }
+}
 
         public void AttemptRangedAttack(Vector3 targetPosition)
         {
@@ -107,6 +124,7 @@ namespace CoED
                 projectileManager.LaunchProjectile(transform.position, targetPosition, spellDamage, false);
                 Debug.Log($"PlayerCombat: Cast spell towards {targetPosition} for {spellDamage} damage.");
                 lastAttackTime = Time.time;
+                PlayerManager.Instance.ResetEnemyAttackFlags();
             }
             else
             {
@@ -115,10 +133,3 @@ namespace CoED
         }
     }
 }
-
-/*
-Changes made:
-1. Removed the `CanAct()` method since it was a leftover from when this script implemented `IActor`. Action eligibility is now checked directly within input methods.
-2. Removed any direct interaction with turn management. Turn registration is now solely handled by `PlayerManager`.
-3. Kept cooldown checks and health conditions as internal checks before executing actions to ensure consistency without unnecessary redundancy.
-*/

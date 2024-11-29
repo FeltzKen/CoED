@@ -5,11 +5,11 @@ using CoED;
 
 namespace CoED
 {
-    public class UIManager : MonoBehaviour
+    public class PlayerUI : MonoBehaviour
     {
-        private static UIManager instance;
+        private static PlayerUI instance;
 
-        public static UIManager Instance => instance;
+        public static PlayerUI Instance => instance;
 
         [Header("Magic Number UI")]
         [SerializeField]
@@ -86,7 +86,7 @@ namespace CoED
             else
             {
                 Destroy(gameObject);
-                Debug.LogWarning("UIManager instance already exists. Destroying duplicate.");
+                Debug.LogWarning("PlayerUI instance already exists. Destroying duplicate.");
             }
         }
 
@@ -106,7 +106,7 @@ namespace CoED
             }
         }
 
-        public void SetHealthBarMax(int maxHealth)
+        public void SetHealthBarMax(float maxHealth)
         {
             if (healthBar != null)
             {
@@ -115,7 +115,7 @@ namespace CoED
             }
         }
 
-        public void UpdateHealthBar(int currentHealth)
+        public void UpdateHealthBar(float currentHealth)
         {
             if (healthBar != null)
             {
@@ -124,9 +124,9 @@ namespace CoED
             }
         }
 
-        private void CheckLowHealth(int currentHealth)
+        private void CheckLowHealth(float currentHealth)
         {
-            float healthPercentage = (float)currentHealth / healthBar.maxValue;
+            float healthPercentage = currentHealth / healthBar.maxValue;
             if (healthPercentage < 0.2f && !isLowHealth)
             {
                 isLowHealth = true;

@@ -147,7 +147,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -10.5, y: -8.5}
   m_SizeDelta: {x: 1, y: 1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!50 &3467289398806818614
@@ -169,7 +169,7 @@ Rigidbody2D:
   m_Material: {fileID: 6200000, guid: fdb52bb4983dbcb4e88f217b419e54dc, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 256
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -220,7 +220,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 2
   m_Sprite: {fileID: -5314290646257964137, guid: ef4a729b0a1a16b4984c65b15c101e1f, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -245,7 +245,7 @@ CapsuleCollider2D:
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 5888
+    m_Bits: 6016
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -381,6 +381,7 @@ MonoBehaviour:
     m_Bits: 384
   moveDelay: 0.2
   staminaBar: {fileID: 8034618581357456614, guid: 4e03e51d2d01fab4aa3632a729ecb472, type: 3}
+  playerCombat: {fileID: 0}
   currentTilePosition: {x: 0, y: 0}
 --- !u!114 &7276005580750806224
 MonoBehaviour:
@@ -414,14 +415,15 @@ MonoBehaviour:
   experienceToNextLevel: 100
   maxLevel: 50
   maxHealth: 100
-  baseAttack: 10
-  baseDefense: 5
+  baseAttack: 25
+  baseDefense: 7
   baseMagic: 5
   baseRange: 5
   baseSpeed: 5
   baseFireRate: 1
   baseProjectileLifespan: 2
   currency: 0
+  currentFloor: 1
 --- !u!1 &9016231569119957699
 GameObject:
   m_ObjectHideFlags: 0

@@ -45,7 +45,7 @@ namespace CoED
 
         public void OnPlayerDeath()
         {
-         //   UIManager.Instance?.ShowDeathPanel();
+            PlayerUI.Instance?.ShowDeathPanel();
             Time.timeScale = 0f; // Pause the game
             Debug.Log("GameManager: Player has died. Game paused.");
         }

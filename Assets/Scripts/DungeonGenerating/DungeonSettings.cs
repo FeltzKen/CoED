@@ -15,13 +15,13 @@ namespace CoED
         [Tooltip("Maximum number of dungeon floors.")]
         public int maxFloors = 5;
 
-        [Header("Tile base Settings")]
-        [Tooltip("Tile to use for floor generation.")]
-        public TileBase floorTile;
+    [Header("Tile Palette")]
+    [SerializeField] public TilePalette tilePalette;
 
-        [Tooltip("Tile to use for wall generation.")]
-        public TileBase wallTile;
- 
+    // Expose the TilePalette instance for access
+        public TilePalette TilePalette => tilePalette;
+
+
         [Tooltip("List of item prefabs to spawn in the dungeon.")]
         public List<GameObject> itemPrefabs = new List<GameObject>();
 
@@ -29,31 +29,14 @@ namespace CoED
         [Tooltip("Random seed for procedural generation. Set to 0 for random seed each run.")]
         public int seed;
 
-        [Header("Room Settings")]
-        [Tooltip("The range for room sizes (width x height) in tiles.")]
-        public Vector2Int roomSizeRange = new Vector2Int(15, 12);
-
         [Header("Generation Algorithms")]
         [Tooltip("Prioritized list of algorithms for generating the dungeon.")]
         [Header("Selected Algorithm")]
         public AlgorithmConfig selectedAlgorithm = new AlgorithmConfig();  
         
-        [HideInInspector][Range(0f, 1f)] public float initialWallDensity = 0.45f;
-        [HideInInspector][Range(1, 10)] public int cellularAutomataIterations = 5;
-        [HideInInspector][Range(0, 8)] public int neighborWallThreshold = 4;
-        [HideInInspector][Range(1f, 10f)] public float edgeBias = 3.0f;
-        [HideInInspector][Range(1, 10)] public int perlinNoiseIterations = 3;
-        [HideInInspector][Range(1, 10)] public int bspSubdivisions = 3;
-        [HideInInspector][Range(0f, 1f)] public float bspCarveChance = 0.5f;
         [Header("Prefab Settings")]
         [Tooltip("Prefab for the spawning room.")]
         public GameObject spawningRoomPrefab;
-
-        [Tooltip("Prefab for stairs leading up.")]
-        public GameObject stairsUpPrefab;
-
-        [Tooltip("Prefab for stairs leading down.")]
-        public GameObject stairsDownPrefab;
 
         [Tooltip("Prefab for spawn effects (e.g., particle effects).")]
         public GameObject spawnEffectPrefab;
@@ -61,13 +44,15 @@ namespace CoED
         [Header("Enemy Settings")]
         [Tooltip("List of enemy prefabs to use in the dungeon.")]
         public List<GameObject> enemyPrefabs = new List<GameObject>();
+        [Header("UI Elements")]
+        [SerializeField] public GameObject healthBarPrefab;
 
         [Tooltip("List of boss prefabs to use for special encounters.")]
         public List<GameObject> bossPrefabs = new List<GameObject>();
 
         [Tooltip("Default number of enemies to spawn per floor.")]
         public int numberOfEnemiesPerFloor = 5;
-
+        public int numberOfPatrolPoints = 10;
         [Header("Scaling Settings")]
         [Tooltip("Enable adaptive difficulty scaling for enemies.")]
         public bool enableEnemyScaling = true;
@@ -118,14 +103,72 @@ namespace CoED
         [Tooltip("Enable visualization for enemy spawn positions.")]
         public bool visualizeSpawnPositions = false;
 
-        [Serializable]
+
+        [System.Serializable]
         public class AlgorithmConfig
         {
+            [Header("Algorithm Type")]
+            [Tooltip("Select the carving algorithm to use.")]
             public CarvingAlgorithmType algorithmType;
-            public float initialWallDensity;
-            public int iterations;
-            public int neighborWallThreshold;
-            public float edgeBias;
+
+            [Header("Cellular Automata Settings")]
+            [Tooltip("Initial wall density (value between 0 and 1).")]
+            [Range(0f, 1f)]
+            public float initialWallDensity = 0.4f;
+
+            [Tooltip("Number of iterations for smoothing the map.")]
+            public int iterations = 5;
+
+            [Tooltip("Minimum neighbors required for a cell to become a wall.")]
+            public int neighborWallThreshold = 4;
+
+            [Header("Perlin Noise Settings")]
+            [Tooltip("Scale factor for Perlin noise.")]
+            public float edgeBias = 10f;
+
+            [Header("BSP Settings")]
+            [Tooltip("Number of subdivisions for BSP algorithm.")]
+            public int bspSubdivisions = 4;
+
+            [Tooltip("Chance to carve out a space.")]
+            [Range(0f, 1f)]
+            public float bspCarveChance = 0.7f;
+
+            [Header("Spiral Pattern Settings")]
+            [Tooltip("Step size for spiral generation.")]
+            public int spiralStepSize = 1;
+
+            [Header("Wave Function Collapse Settings")]
+            [Tooltip("Weighting factor for tile probabilities.")]
+            public float waveCollapseBias = 1.0f;
+
+            [Header("Fractal Maze Settings")]
+            [Tooltip("Maximum recursion depth for fractal subdivision.")]
+            public int fractalDepth = 3;
+
+            [Tooltip("Chance to split the area at each depth level.")]
+            [Range(0f, 1f)]
+            public float fractalSplitChance = 0.5f;
+
+            [Header("L-System Settings")]
+            [Tooltip("Number of iterations for the L-system.")]
+            public int lSystemIterations = 3;
+
+            [Tooltip("Chance for branching in the L-system.")]
+            [Range(0f, 1f)]
+            public float branchChance = 0.5f;
+
+            [Header("Radial Growth Settings")]
+            [Tooltip("Radius of radial growth.")]
+            public int radialGrowthRadius = 10;
+
+            [Tooltip("Chance for a cell to grow into a room.")]
+            [Range(0f, 1f)]
+            public float roomGrowthChance = 0.6f;
+
+            [Tooltip("Chance for a cell to grow into a corridor.")]
+            [Range(0f, 1f)]
+            public float corridorGrowthChance = 0.4f;
         }
 
 

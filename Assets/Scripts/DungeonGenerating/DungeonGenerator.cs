@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+//using System.Numerics;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -14,38 +15,38 @@ namespace CoED
         private int currentFloorNumber;
         private GameObject dungeonParent;
         private FloorData floorData;
+        private int StairIDCounter;
 
-private void Awake()
-{
-    if (dungeonSettings == null)
-    {
-        Debug.LogError("DungeonSettings is not assigned!");
-        return;
-    }
+        private void Awake()
+        {
+            if (dungeonSettings == null)
+            {
+                Debug.LogError("DungeonSettings is not assigned!");
+                return;
+            }
 
-    // Create dungeon parent
-    CreateDungeonParent();
+            // Create dungeon parent
+            CreateDungeonParent();
 
-    // Generate the dungeon floors first before handling the spawning room
-    GenerateDungeon();
+            // Generate the dungeon floors first before handling the spawning room
+            GenerateDungeon();
 
-    // Create the spawning room using the prefab from DungeonSettings
-    if (dungeonSettings.spawningRoomPrefab != null)
-    {
-        GameObject spawningRoom = Instantiate(dungeonSettings.spawningRoomPrefab, dungeonParent.transform);
-        spawningRoom.name = "SpawningRoom";
-        spawningRoom.transform.localPosition = Vector3.zero;
+            // Create the spawning room using the prefab from DungeonSettings
+            if (dungeonSettings.spawningRoomPrefab != null)
+            {
+                GameObject spawningRoom = Instantiate(dungeonSettings.spawningRoomPrefab, dungeonParent.transform);
+                spawningRoom.name = "SpawningRoom";
+               // spawningRoom.transform.localPosition = Vector3.zero;
 
-        // Store the reference to the spawning room in DungeonManager
-       DungeonManager.Instance.SpawningRoomInstance = spawningRoom;
+                // Store the reference to the spawning room in DungeonManager
+            DungeonManager.Instance.SpawningRoomInstance = spawningRoom;
 
-        Debug.Log("Spawning room successfully created.");
-    }
-    else
-    {
-        Debug.LogError("Spawning room prefab is not assigned in DungeonSettings!");
-    }
-}
+            }
+            else
+            {
+                Debug.LogError("Spawning room prefab is not assigned in DungeonSettings!");
+            }
+        }
 
 
         private void CreateDungeonParent()
@@ -56,101 +57,139 @@ private void Awake()
             dungeonParent = new GameObject("DungeonParent");
                 dungeonParent.transform.SetParent(gridObject.transform);
 
-            Debug.Log("Dungeon parent created.");
         }
 
-public void GenerateDungeon()
-{
-    Debug.Log("Starting dungeon generation...");
-    if (DungeonManager.Instance == null)
-    {
-        Debug.LogError("DungeonManager.Instance is null. Make sure DungeonManager is initialized first.");
-        return;
-    }
-    for (int i = 1; i <= dungeonSettings.maxFloors; i++)
-    {
-        try
+        public void GenerateDungeon()
         {
-            currentFloorNumber = i;
-            Debug.Log($"Generating Floor {currentFloorNumber}...");
+            int gridSize = Mathf.CeilToInt(Mathf.Sqrt(dungeonSettings.maxFloors));
 
-            // Create floor parent object
-            GameObject floorParent = new GameObject($"Floor_{currentFloorNumber}");
-            floorParent.transform.SetParent(dungeonParent.transform);
-            floorParent.layer = LayerMask.NameToLayer("FloorLayer");
+            if (DungeonManager.Instance == null)
+            {
+                Debug.LogError("DungeonManager.Instance is null. Make sure DungeonManager is initialized first.");
+                return;
+            }
 
-            // Log the assignment
-            Debug.Log($"Floor {currentFloorNumber} parent assigned to dungeonParent.");
+            for (int i = 1; i <= dungeonSettings.maxFloors; i++)
+            {
+                try
+                {
+                    currentFloorNumber = i;
 
-            // Create tilemaps for this floor
-            Tilemap floorTilemap = CreateTilemap(floorParent.transform, "FloorTilemap");
-            Tilemap wallTilemap = CreateTilemap(floorParent.transform, "WallTilemap");
+                    // Create the floor parent object
+                    GameObject floorParent = new GameObject($"Floor_{currentFloorNumber}");
+                    floorParent.transform.SetParent(dungeonParent.transform);
 
-            // Initialize FloorData
-            floorData = new FloorData(currentFloorNumber);
-            floorData.SetTilemaps(floorTilemap, wallTilemap);
+                    // Calculate grid position for the floor
+                    int row = (i - 1) / gridSize;
+                    int col = (i - 1) % gridSize;
+                    Vector3 floorPosition = new Vector3(
+                        col * dungeonSettings.dungeonSizeRange.x,
+                        row * dungeonSettings.dungeonSizeRange.y,
+                        0
+                    );
+                    floorParent.transform.position = floorPosition;
 
-            // Generate floor tiles using the selected algorithm
-            HashSet<Vector2Int> floorTiles = GenerateFloorTiles();
-            Debug.Log($"Generated {floorTiles.Count} floor tiles for Floor {currentFloorNumber}.");
+                    // Create the enemy parent object
+                    GameObject enemyParentObject = new GameObject("EnemyParent");
+                    enemyParentObject.transform.SetParent(floorParent.transform);
 
-            // Render floor tiles
-            RenderTiles(floorTiles, floorTilemap, dungeonSettings.floorTile);
-            Debug.Log($"Rendered {floorTiles.Count} floor tiles on Floor {currentFloorNumber}.");
+                    // Create tilemaps for this floor
+                    Tilemap floorTilemap = CreateTilemap(floorParent.transform, "FloorTilemap");
+                    floorTilemap.GetComponent<TilemapRenderer>().sortingOrder = 1; // Sorting order for floors (below walls)
+                    floorTilemap.gameObject.layer = LayerMask.NameToLayer("Default"); // Set to Default layer
 
-            // Generate and render wall tiles
-            HashSet<Vector2Int> wallTiles = GenerateWallTiles(floorTiles);
-            Debug.Log($"Generated {wallTiles.Count} wall tiles for Floor {currentFloorNumber}.");
-            RenderTiles(wallTiles, wallTilemap, dungeonSettings.wallTile);
-            Debug.Log($"Rendered {wallTiles.Count} wall tiles on Floor {currentFloorNumber}.");
+                    Tilemap wallTilemap = CreateTilemap(floorParent.transform, "WallTilemap", true);
+                    wallTilemap.GetComponent<TilemapRenderer>().sortingOrder = 2; // Sorting order for walls (above floor)
+                    wallTilemap.gameObject.layer = LayerMask.NameToLayer("Obstacles"); // Set to Obstacles layer
+                    
+                    Tilemap voidTilemap = CreateTilemap(floorParent.transform, "VoidTilemap", true);
+                    voidTilemap.GetComponent<TilemapRenderer>().sortingOrder = 0; // Sorting order for void space (below floor)
+                    voidTilemap.gameObject.layer = LayerMask.NameToLayer("Obstacles"); // Set to Obstacles layer 
 
-            // Store floor data
-            StoreFloorData(floorTiles);
-            Debug.Log($"Stored floor data for Floor {currentFloorNumber}.");
+                    // Initialize FloorData
+                    floorData = new FloorData(currentFloorNumber);
+                    floorData.SetTilemaps(floorTilemap, wallTilemap);
+                    DungeonManager.Instance.AddFloor(floorData);
 
-            // Spawn stairs
-            SpawnStairs(floorTiles, floorParent.transform);
-            Debug.Log($"Spawned stairs on Floor {currentFloorNumber}.");
+                    // Generate floor tiles using the selected algorithm
+                    HashSet<Vector2Int> floorTiles = GenerateFloorTiles();
+                    RenderTiles(floorTiles, floorTilemap, dungeonSettings.tilePalette.floorTiles);
 
-            // Disable components manually instead of setting the floor inactive
-            floorParent.SetActive(false);
+                    // Generate and render wall tiles
+                    HashSet<Vector2Int> wallTiles = GenerateWallTiles(floorTiles);
+                    RenderTiles(wallTiles, wallTilemap, dungeonSettings.tilePalette.wallTiles);
 
-            Debug.Log($"Components of Floor {currentFloorNumber} disabled.");
-            // Set the generated floor inactive initially
-            Debug.Log($"Setting Floor {currentFloorNumber} to inactive...");
+                    HashSet<Vector2Int> voidTiles = GenerateVoidTiles(floorTiles, wallTiles);
+                    RenderTiles(voidTiles, voidTilemap, dungeonSettings.tilePalette.voidTiles);
 
-            Debug.Log($"Floor {currentFloorNumber} is now inactive.");
+                    // Place stairs
+                    PlaceStairs(floorTiles, currentFloorNumber, dungeonSettings.maxFloors, floorTilemap, dungeonSettings.tilePalette.stairsUpTile, dungeonSettings.tilePalette.stairsDownTile);
 
-            // Store floor reference in DungeonManager for future activation
-            DungeonManager.Instance.FloorTransforms[currentFloorNumber] = floorParent.transform;
+                    // Store floor data
+                    StoreFloorData(floorTiles);
 
-            Debug.Log($"Dungeon generation complete for Floor {currentFloorNumber}");
+                    DungeonManager.Instance.FloorTransforms[currentFloorNumber] = floorParent.transform;
+                    Debug.Log($"Stored floor reference for Floor {currentFloorNumber} in DungeonManager.");
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Error generating floor {i}: {ex.Message}\n{ex.StackTrace}");
+                }
+            }
+
+            Debug.Log("Dungeon generation finished.");
+            if (DungeonManager.Instance != null)
+            {
+                DungeonSpawner.Instance.SpawnEnemiesForAllFloors();
+            }
+            else
+            {
+                Debug.LogError("DungeonManager instance is not available.");
+            }
+            ApplyOffsetToAllTilemaps(); // Offset all tilemaps to match their parent floor positions
         }
-        catch (Exception ex)
-        {
-            Debug.LogError($"Error generating floor {i}: {ex.Message}\n{ex.StackTrace}");
-        }
-    }
-
-    Debug.Log("Dungeon generation finished.");
-    DungeonSpawner.Instance.SpawnEnemiesOnFloor(floorData);
-}
 
 
-   private Tilemap CreateTilemap(Transform parent, string name)
+        private Tilemap CreateTilemap(Transform parent, string name, bool addCollider = false)
         {
             GameObject tilemapObject = new GameObject(name);
             tilemapObject.transform.SetParent(parent);
 
             Tilemap tilemap = tilemapObject.AddComponent<Tilemap>();
-            tilemapObject.AddComponent<TilemapRenderer>();
-                // Add TilemapCollider2D to the tilemap
-            tilemapObject.AddComponent<TilemapCollider2D>();
-            tilemap.tileAnchor = Vector3.zero; // Set anchor to (0, 0, 0)
+                    _ = tilemapObject.AddComponent<TilemapRenderer>();
 
-    Debug.Log($"Tilemap '{name}' created under parent '{parent.name}' at position {tilemapObject.transform.position}");
+                    if (addCollider)
+            {
+                _ = tilemapObject.AddComponent<TilemapCollider2D>();
+
+            }
+
+            Debug.Log($"Tilemap '{name}' created under parent '{parent.name}'.");
 
             return tilemap;
+        }
+
+
+        public void EnableTilemapsForFloor(int floorNumber)
+        {
+            if (DungeonManager.Instance.FloorTransforms.ContainsKey(floorNumber))
+            {
+                Transform floorParent = DungeonManager.Instance.FloorTransforms[floorNumber];
+
+                // Iterate over all Tilemaps in the floor parent
+                foreach (Tilemap tilemap in floorParent.GetComponentsInChildren<Tilemap>())
+                {
+                    TilemapRenderer renderer = tilemap.GetComponent<TilemapRenderer>();
+                    if (renderer != null)
+                    {
+                        renderer.enabled = true;
+                    }
+                }
+            }
+            else
+            {
+                Debug.LogError($"Floor {floorNumber} not found in DungeonManager.");
+            }
         }
 
         private HashSet<Vector2Int> GenerateFloorTiles()
@@ -158,7 +197,6 @@ public void GenerateDungeon()
             RectInt dungeonBounds = new RectInt(0, 0, dungeonSettings.dungeonSizeRange.x, dungeonSettings.dungeonSizeRange.y);
             HashSet<Vector2Int> floorTiles = CarvingAlgorithm.Execute(dungeonSettings.selectedAlgorithm.algorithmType, dungeonSettings, dungeonBounds);
 
-            Debug.Log($"Generated {floorTiles.Count} floor tiles.");
 
             return floorTiles;
         }
@@ -182,54 +220,119 @@ public void GenerateDungeon()
 
             return wallTiles;
         }
-
-        private void RenderTiles(HashSet<Vector2Int> tiles, Tilemap tilemap, TileBase tile)
+        private HashSet<Vector2Int> GenerateVoidTiles(HashSet<Vector2Int> floorTiles, HashSet<Vector2Int> wallTiles)
         {
-            foreach (var tilePos in tiles)
+            HashSet<Vector2Int> voidTiles = new HashSet<Vector2Int>();
+
+            RectInt dungeonBounds = new RectInt(0, 0, dungeonSettings.dungeonSizeRange.x, dungeonSettings.dungeonSizeRange.y);
+
+            for (int x = dungeonBounds.xMin; x < dungeonBounds.xMax; x++)
             {
-                Vector3Int position = new Vector3Int(tilePos.x, tilePos.y, 0);
-                tilemap.SetTile(position, tile);
-            
+                for (int y = dungeonBounds.yMin; y < dungeonBounds.yMax; y++)
+                {
+                    Vector2Int position = new Vector2Int(x, y);
+                    if (!floorTiles.Contains(position) && !wallTiles.Contains(position))
+                    {
+                        voidTiles.Add(position);
+                    }
+                }
             }
 
-            tilemap.RefreshAllTiles();
+            return voidTiles;
+        }
+        public void RenderTiles(HashSet<Vector2Int> tiles, Tilemap tilemap, TileBase[] tilePalette)
+        {
+            if (tiles.Count == 0)
+            {
+                Debug.LogWarning($"No tiles to render on {tilemap.name}.");
+                return;
+            }
+
+            foreach (Vector2Int position in tiles)
+            {
+                Vector3Int tilePosition = new Vector3Int(position.x, position.y, 0);
+                
+                // Select a random tile from the palette
+                TileBase selectedTile = tilePalette[UnityEngine.Random.Range(0, tilePalette.Length)];
+                tilemap.SetTile(tilePosition, selectedTile);
+            }
         }
 
-private void StoreFloorData(HashSet<Vector2Int> floorTiles)
-{
-    if (floorData == null)
-    {
-        Debug.LogError($"Error in StoreFloorData: `floorData` is null for Floor {currentFloorNumber}");
-        return;
-    }
+        private void StoreFloorData(HashSet<Vector2Int> floorTiles)
+        {
+            if (floorData == null)
+            {
+                Debug.LogError($"Error in StoreFloorData: `floorData` is null for Floor {currentFloorNumber}");
+                return;
+            }
 
-    if (DungeonManager.Instance == null)
-    {
-        Debug.LogError("Error in StoreFloorData: `DungeonManager.Instance` is null.");
-        return;
-    }
+            if (DungeonManager.Instance == null)
+            {
+                Debug.LogError("Error in StoreFloorData: `DungeonManager.Instance` is null.");
+                return;
+            }
 
-    floorData.AddFloorTiles(floorTiles);
-    DungeonManager.Instance.AddFloor(floorData);
-    Debug.Log($"Stored floor data for Floor {currentFloorNumber}.");
+            floorData.AddFloorTiles(floorTiles);
+        }
+
+        private void PlaceStairs(HashSet<Vector2Int> floorTiles, int currentFloor, int totalFloors, Tilemap floorTilemap, GameObject stairsUpPrefab, GameObject stairsDownPrefab)
+        {
+            if (floorTiles == null || floorTiles.Count == 0)
+            {
+                Debug.LogError($"Floor {currentFloor} has no valid floor tiles for stair placement.");
+                return;
+            }
+
+            List<Vector2Int> floorTileList = new List<Vector2Int>(floorTiles);
+
+            // Number of stair pairs to place
+            int stairPairs = 5;
+
+            // Handle stairs up (for floors 2 and above)
+            if (currentFloor > 1)
+            {
+                for (int i = 0; i < stairPairs; i++)
+                {
+                    Vector2Int stairsUpPosition = DungeonManager.Instance.GetStairsDownPosition(currentFloor - 1);
+                    if (stairsUpPosition != Vector2Int.zero && floorTiles.Contains(stairsUpPosition))
+                    {
+                        PlaceGameObjectAtTile(stairsUpPosition, floorTilemap, stairsUpPrefab, floorTilemap.transform);
+                        floorData.StairTiles.Add(stairsUpPosition);
+
+                        Debug.Log($"Stairs up placed on Floor {currentFloor} at {stairsUpPosition}");
+                    }
+                }
+            }
+
+            // Handle stairs down (for all but the last floor)
+            if (currentFloor < totalFloors)
+            {
+                for (int i = 0; i < stairPairs; i++)
+                {
+                    Vector2Int stairsDownPosition = GetRandomTile(floorTiles);
+                    DungeonManager.Instance.StoreStairsDownPosition(currentFloor, stairsDownPosition);
+                    PlaceGameObjectAtTile(stairsDownPosition, floorTilemap, stairsDownPrefab, floorTilemap.transform);
+                    floorData.StairTiles.Add(stairsDownPosition);
+                    Debug.Log($"Stairs down placed on Floor {currentFloor} at {stairsDownPosition}");
+                }
+            }
+        }
+
+        public void ApplyOffsetToAllTilemaps()
+        {
+            Vector3 offset = new Vector3(-0.5f, -0.5f, 0); // Offset by half a tile to center the tilemap
+            foreach (Transform floorTransform in dungeonParent.transform)
+            {
+                // Iterate through all child tilemaps under each floor
+                foreach (Tilemap tilemap in floorTransform.GetComponentsInChildren<Tilemap>(true))
+                {
+                    if (tilemap != null)
+                    {
+                        tilemap.transform.localPosition += floorTransform.position + offset;
+                    }
+                }
+            }
 }
-
-
-        private void SpawnStairs(HashSet<Vector2Int> floorTiles, Transform parent)
-        {
-            Vector2Int upStairsPosition = GetRandomTile(floorTiles);
-            Vector2Int downStairsPosition = GetRandomTile(floorTiles);
-
-            if (dungeonSettings.stairsUpPrefab != null)
-            {
-                Instantiate(dungeonSettings.stairsUpPrefab, new Vector3(upStairsPosition.x, upStairsPosition.y, 0), Quaternion.identity, parent);
-            }
-
-            if (dungeonSettings.stairsDownPrefab != null)
-            {
-                Instantiate(dungeonSettings.stairsDownPrefab, new Vector3(downStairsPosition.x, downStairsPosition.y, 0), Quaternion.identity, parent);
-            }
-        }
 
         public static class Direction2D
         {
@@ -245,7 +348,17 @@ private void StoreFloorData(HashSet<Vector2Int> floorTiles)
             }
         }
 
-
+private void PlaceGameObjectAtTile(Vector2Int tilePosition, Tilemap floorTilemap, GameObject prefab, Transform parent)
+{
+    // Convert tile position to world position using the tilemap
+    Vector3 worldPosition = floorTilemap.CellToWorld(new Vector3Int(tilePosition.x, tilePosition.y, 0));
+    worldPosition += new Vector3(-0.5f, -0.5f, 0); // Offset by half a tile to center the object
+    // Instantiate and position the object
+    GameObject instance = Instantiate(prefab, worldPosition, Quaternion.identity, parent);
+    instance.name = $"{prefab.name}_at_{tilePosition.x}_{tilePosition.y}";
+    
+    Debug.Log($"Placed {prefab.name} at tile position {tilePosition}, world position {worldPosition}");
+}
         private Vector2Int GetRandomTile(HashSet<Vector2Int> tiles)
         {
             int index = UnityEngine.Random.Range(0, tiles.Count);

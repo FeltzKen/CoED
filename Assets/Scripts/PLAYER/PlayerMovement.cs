@@ -14,12 +14,11 @@ namespace CoED
         [SerializeField] private Slider staminaBar;
 
         public static PlayerMovement Instance { get; private set; }
-
         private PlayerStats playerStats;
         public Vector2Int currentTilePosition;
         private float moveCooldown;
         private Rigidbody2D rb;
-        private TurnManager turnManager;
+      //  private TurnManager turnManager;
         private bool isActionComplete = false;
         private bool isMoving = false;    
         private Vector2 targetPosition;
@@ -50,13 +49,13 @@ namespace CoED
         {
             playerStats = PlayerStats.Instance;
             currentTilePosition = Vector2Int.RoundToInt(transform.position);
-            turnManager = TurnManager.Instance;
+       //     turnManager = TurnManager.Instance;
 
             rb.bodyType = RigidbodyType2D.Kinematic;
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             rb.interpolation = RigidbodyInterpolation2D.Interpolate;
 
-            turnManager.RegisterActor(PlayerManager.Instance);
+         //   turnManager.RegisterActor(PlayerManager.Instance);
             Debug.Log("PlayerMovement: Registered PlayerManager with TurnManager.");
 
             UpdateStaminaUI();
@@ -90,39 +89,81 @@ namespace CoED
            // Debug.Log("PlayerMovement: Handling player turn for movement.");
         }
 
-        private void HandleMovementInput()
+private void HandleMovementInput()
+{
+    if (Time.time < moveCooldown) return;
+
+    Vector2Int direction = Vector2Int.zero;
+
+    // Determine direction based on player input
+    if (Input.GetKey(KeyCode.UpArrow)) direction += Vector2Int.up;
+    if (Input.GetKey(KeyCode.DownArrow)) direction += Vector2Int.down;
+    if (Input.GetKey(KeyCode.LeftArrow)) direction += Vector2Int.left;
+    if (Input.GetKey(KeyCode.RightArrow)) direction += Vector2Int.right;
+
+    // If a direction is chosen, check if the tile is walkable or contains an enemy
+    if (direction != Vector2Int.zero)
+    {
+        Vector2Int newTilePosition = currentTilePosition + direction;
+        Vector2 newPosition = new Vector2(newTilePosition.x, newTilePosition.y);
+
+        // Check for collisions separately for each axis
+        bool canMoveX = IsMovePossible(new Vector2Int(direction.x, 0));
+        bool canMoveY = IsMovePossible(new Vector2Int(0, direction.y));
+        bool canMoveDiagonal = IsMovePossible(direction);
+
+        if (canMoveDiagonal && canMoveX && canMoveY)
         {
-            if (Time.time < moveCooldown) return;
-
-            Vector2Int direction = Vector2Int.zero;
-
-            // Determine direction based on player input
-            if (Input.GetKey(KeyCode.UpArrow)) direction += Vector2Int.up;
-            if (Input.GetKey(KeyCode.DownArrow)) direction += Vector2Int.down;
-            if (Input.GetKey(KeyCode.LeftArrow)) direction += Vector2Int.left;
-            if (Input.GetKey(KeyCode.RightArrow)) direction += Vector2Int.right;
-
-            // If a direction is chosen, check if the tile is walkable
-            if (direction != Vector2Int.zero)
-            {
-                if (IsMovePossible(direction))
-                {
-                    // Update current tile position and move the player
-                    currentTilePosition += direction;
-                    targetPosition = new Vector2(currentTilePosition.x, currentTilePosition.y);
-                    rb.position = targetPosition; 
-                    transform.position = targetPosition;
-                    isMoving = true;
-                    moveCooldown = Time.time + moveDelay;
-                  //  Debug.Log($"PlayerMovement: Moving to {targetPosition}.");
-                }
-                else
-                {
-                  //  Debug.Log("PlayerMovement: Move blocked by an obstacle.");
-                }
-            }
+            // Move diagonally if both directions are possible
+            currentTilePosition = newTilePosition;
+            targetPosition = newPosition;
+        }
+        else if (canMoveX)
+        {
+            // Move horizontally if only the X direction is possible
+            currentTilePosition += new Vector2Int(direction.x, 0);
+            targetPosition = new Vector2(currentTilePosition.x, currentTilePosition.y);
+        }
+        else if (canMoveY)
+        {
+            // Move vertically if only the Y direction is possible
+            currentTilePosition += new Vector2Int(0, direction.y);
+            targetPosition = new Vector2(currentTilePosition.x, currentTilePosition.y);
         }
 
+        if (canMoveX || canMoveY || (canMoveDiagonal && canMoveX && canMoveY))
+        {
+            if (IsEnemyAtPosition(newTilePosition))
+            {
+                // Perform attack if an enemy is at the target position
+                Debug.Log("PlayerMovement: Enemy detected at target position. Initiating attack.");
+                PlayerCombat.Instance.PerformMeleeAttack(newTilePosition);
+            }
+            else
+            {
+                // Move to the target position
+                rb.position = targetPosition;
+                transform.position = targetPosition;
+                isMoving = true;
+                moveCooldown = Time.time + moveDelay;
+//                Debug.Log($"PlayerMovement: Moving to {targetPosition}.");
+                PlayerManager.Instance.ResetEnemyAttackFlags();
+            }
+        }
+        else
+        {
+            Debug.Log("PlayerMovement: Move blocked by an obstacle.");
+        }
+    }
+}
+
+        private bool IsEnemyAtPosition(Vector2Int position)
+        {
+            Vector2 targetPosition = new Vector2(position.x, position.y);
+            Collider2D hitCollider = Physics2D.OverlapBox(targetPosition, Vector2.one * 0.8f, 0f, LayerMask.GetMask("enemies"));
+
+            return hitCollider != null;
+        }
         private bool IsMovePossible(Vector2Int direction)
         {
             Vector2Int targetTile = currentTilePosition + direction;
@@ -152,6 +193,7 @@ namespace CoED
             // by setting Rigidbody and transform position directly
             rb.position = position; 
             transform.position = position;
+            PlayerManager.Instance.ResetEnemyAttackFlags();
         }
 
 
