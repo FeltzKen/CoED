@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: DungeonSettings
   m_EditorClassIdentifier: 
   dungeonSizeRange: {x: 200, y: 200}
-  maxFloors: 5
+  maxFloors: 6
   tilePalette:
     floorTiles:
     - {fileID: 11400000, guid: ef233971b3c0cd44290ee2b4da324666, type: 2}
@@ -38,19 +38,18 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   seed: 0
-  roomSizeRange: {x: 15, y: 12}
   selectedAlgorithm:
     algorithmType: 0
-    initialWallDensity: 0.482
-    iterations: 1
-    neighborWallThreshold: 5
-    edgeBias: 3.52
-    bspSubdivisions: 4
-    bspCarveChance: 0.7
-    spiralStepSize: 4
+    initialWallDensity: 0.417
+    iterations: 5
+    neighborWallThreshold: 4
+    edgeBias: 10
+    bspSubdivisions: 7
+    bspCarveChance: 0.795
+    spiralStepSize: 10
     waveCollapseBias: 5
     fractalDepth: 3
-    fractalSplitChance: 0.5
+    fractalSplitChance: 0.805
     lSystemIterations: 3
     branchChance: 0.5
     radialGrowthRadius: 10
@@ -64,7 +63,7 @@ MonoBehaviour:
   healthBarPrefab: {fileID: 7920171421989906631, guid: 25e4b1c51ff90d54895cec756acb5a26, type: 3}
   bossPrefabs:
   - {fileID: 3198391839532095026, guid: 87ddcf6318ef8eb4688f3af074a97c1a, type: 3}
-  numberOfEnemiesPerFloor: 20
+  numberOfEnemiesPerFloor: 50
   numberOfPatrolPoints: 10
   enableEnemyScaling: 1
   baseHealthMultiplier: 1

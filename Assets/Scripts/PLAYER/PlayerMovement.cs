@@ -49,14 +49,10 @@ namespace CoED
         {
             playerStats = PlayerStats.Instance;
             currentTilePosition = Vector2Int.RoundToInt(transform.position);
-       //     turnManager = TurnManager.Instance;
 
             rb.bodyType = RigidbodyType2D.Kinematic;
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             rb.interpolation = RigidbodyInterpolation2D.Interpolate;
-
-         //   turnManager.RegisterActor(PlayerManager.Instance);
-            Debug.Log("PlayerMovement: Registered PlayerManager with TurnManager.");
 
             UpdateStaminaUI();
         }
@@ -136,7 +132,6 @@ private void HandleMovementInput()
             if (IsEnemyAtPosition(newTilePosition))
             {
                 // Perform attack if an enemy is at the target position
-                Debug.Log("PlayerMovement: Enemy detected at target position. Initiating attack.");
                 PlayerCombat.Instance.PerformMeleeAttack(newTilePosition);
             }
             else
@@ -146,13 +141,11 @@ private void HandleMovementInput()
                 transform.position = targetPosition;
                 isMoving = true;
                 moveCooldown = Time.time + moveDelay;
-//                Debug.Log($"PlayerMovement: Moving to {targetPosition}.");
                 PlayerManager.Instance.ResetEnemyAttackFlags();
             }
         }
         else
         {
-            Debug.Log("PlayerMovement: Move blocked by an obstacle.");
         }
     }
 }
@@ -175,7 +168,6 @@ private void HandleMovementInput()
 
             if (hitCollider != null)
             {
-              //  Debug.Log($"PlayerMovement: Move blocked by {hitCollider.name} at {targetPosition}");
                 return false;
             }
 

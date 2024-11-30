@@ -92,7 +92,7 @@ namespace CoED
 
         private void UpdateMagicUI()
         {
-            playerUI?.UpdateMagicBar(currentMagic);
+            playerUI?.UpdateMagicBar(currentMagic, maxMagic);
         }
 
         public void RefillMagic(int amount)

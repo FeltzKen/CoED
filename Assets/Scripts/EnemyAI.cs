@@ -80,7 +80,6 @@ namespace CoED
             currentState = EnemyState.Patrol;
             SetNewPatrolDestination();
 
-         //   TurnManager.Instance.RegisterActor(this);
         }
 
 
@@ -93,7 +92,6 @@ namespace CoED
                 if (playerObj != null)
                 {
                     playerTransform = playerObj.transform;
-                    //Debug.Log("EnemyAI: Player assigned.");
                 }
                 else
                 {
@@ -205,7 +203,7 @@ namespace CoED
         }
 
         // Check if the player is within attack range
-        if (Vector2.Distance(transform.position, playerTransform.position) < enemyStats.CurrentAttackRange)
+        if (Vector2.Distance(transform.position, playerTransform.position) < 1)
         {
             currentState = EnemyState.Attack;
         }
@@ -241,8 +239,6 @@ namespace CoED
                 Debug.Log($"Enemy [ID: {uniqueID}] is attacking the player.");
                 playerManager.TakeDamage(enemyStats.CurrentAttack);
                 CanAttackPlayer = false; // Set CanAttackPlayer to false after attacking
-
-                // Start a coroutine to reset CanAttackPlayer after a cooldown
             }
         }
 

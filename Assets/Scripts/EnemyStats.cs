@@ -6,11 +6,14 @@ namespace CoED
 {
     public class EnemyStats : MonoBehaviour
     {
-
+        [Header("Experience System")]
+        [SerializeField, Min(1)]
+        public int availableExperienceLevel = 1;
+        
       
         [Header("Base Stats")]
         [SerializeField, Min(0)]
-        private int baseAttack {get;}= 10;
+        private int baseAttack {get;} = 10;
 
         [SerializeField, Min(0)]
         private int baseDefense = 5;
@@ -26,7 +29,7 @@ namespace CoED
         private int baseSpeed = 5;
 
         // Current Stats (after applying equipment)
-        private int maxHealth = 100;
+        private int maxHealth = 1000;
         public int CurrentAttack { get; set; }
         public int CurrentHealth { get; set; }
         public float CurrentDefense { get; set; }
@@ -41,6 +44,11 @@ namespace CoED
 
         private void Awake()
         {
+            enemyUI = GetComponentInChildren<EnemyUI>();
+            if (enemyUI == null)
+            {
+                Debug.LogError("EnemyStats: EnemyUI component not found.");
+            }
             Debug.Log("EnemyStats instance initialized for: " + gameObject.name);
         }
 
@@ -54,19 +62,14 @@ namespace CoED
 
             CalculateStats();
             CurrentHealth = maxHealth;
-
-            EnemyUI enemyUI = FindAnyObjectByType<EnemyUI>();
-            if (enemyUI != null)
-            {
-                enemyUI.SetHealthBarMax(maxHealth);
-                UpdateHealthUI(enemyUI);
-            }
+            enemyUI.SetHealthBarMax(maxHealth);
+            UpdateHealthUI(enemyUI);
+            
         }
 
         private void CalculateStats()
         {
             float floorMultiplier = 1 + (spawnFloor * 0.1f); // Example: each floor increases stats by 10%
-
             CurrentAttack = Mathf.RoundToInt(baseAttack * floorMultiplier);
             CurrentDefense = baseDefense * floorMultiplier;
             CurrentAttackRange = baseAttackRange * floorMultiplier;
@@ -115,10 +118,9 @@ namespace CoED
 
         private void HandleDeath()
         {
-
-                Debug.Log("Enemy has died.");
-            //    TurnManager.Instance.RemoveActor(actor); // Remove from TurnManager
-                Destroy(gameObject);
+            AwardExperienceToPlayer();
+            Debug.Log("Enemy has died.");
+            Destroy(gameObject);
         }
 
 
@@ -128,6 +130,29 @@ namespace CoED
             {
                 enemyUI.UpdateHealthBar(CurrentHealth);
             }
+        }
+
+        private int CalculateExperiencePoints()
+        {
+            // Base experience points
+            int baseExperience = 10;
+
+            // Scaling factor for experience points per floor
+            int scalingFactor = 5;
+
+            // Random range factor to add variability
+            int randomRange = 3;
+
+            // Calculate experience points with some randomness
+            int experiencePoints = baseExperience + (spawnFloor * scalingFactor) + UnityEngine.Random.Range(0, randomRange * spawnFloor);
+
+            return experiencePoints;
+        }
+        private void AwardExperienceToPlayer()
+        {
+            int experiencePoints = CalculateExperiencePoints();
+            PlayerStats.Instance?.GainExperience(experiencePoints);
+            Debug.Log($"EnemyStats: Awarded {experiencePoints} experience points to the player.");
         }
     }
 }

@@ -161,7 +161,7 @@ namespace CoED
             ShowFloatingText("Resting and healing...");
             Debug.Log("PlayerActions: Starting to rest and heal...");
 
-            while (playerStats.CurrentHealth < playerStats.CurrentMaxHealth && !IsDangerNearby())
+            while (playerStats.CurrentHealth < playerStats.MaxHealth && !IsDangerNearby())
             {
                 playerStats.Heal(restHealRate);
                 ShowFloatingText($"Healed {restHealRate} HP");

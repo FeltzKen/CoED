@@ -381,7 +381,6 @@ MonoBehaviour:
     m_Bits: 384
   moveDelay: 0.2
   staminaBar: {fileID: 8034618581357456614, guid: 4e03e51d2d01fab4aa3632a729ecb472, type: 3}
-  playerCombat: {fileID: 0}
   currentTilePosition: {x: 0, y: 0}
 --- !u!114 &7276005580750806224
 MonoBehaviour:
@@ -414,7 +413,7 @@ MonoBehaviour:
   experience: 0
   experienceToNextLevel: 100
   maxLevel: 50
-  maxHealth: 100
+  maxHealth: 1000
   baseAttack: 25
   baseDefense: 7
   baseMagic: 5

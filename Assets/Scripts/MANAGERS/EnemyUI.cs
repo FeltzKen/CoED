@@ -14,10 +14,10 @@ namespace CoED
         private Slider healthBar;
 
         [SerializeField]
-        private Image healthBarBackground;
+        private Color healthBarBackground = Color.red; 
 
         [SerializeField]
-        private Color normalHealthColor = Color.red;
+        private Color normalHealthColor = Color.green;
 
         [SerializeField]
         private Color lowHealthColor = new Color(0.6f, 0f, 0f, 1f);
@@ -60,7 +60,7 @@ namespace CoED
                 {
                     StopCoroutine(healthPulseCoroutine);
                 }
-                healthBarBackground.color = normalHealthColor;
+                healthBarBackground = normalHealthColor;
             }
         }
 
@@ -68,7 +68,7 @@ namespace CoED
         {
             while (isLowHealth)
             {
-                healthBarBackground.color = Color.Lerp(
+                healthBarBackground = Color.Lerp(
                     normalHealthColor,
                     lowHealthColor,
                     Mathf.PingPong(Time.time * pulseSpeed, 1)

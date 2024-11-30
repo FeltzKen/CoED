@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using CoED;
+using TMPro;
 
 namespace CoED
 {
@@ -22,12 +23,14 @@ namespace CoED
         [Header("Health UI")]
         [SerializeField]
         private Slider healthBar;
+        [SerializeField]
+        private TMP_Text healthText;
 
         [SerializeField]
-        private Image healthBarBackground;
+        private Color healthBarBackground = Color.red;
 
         [SerializeField]
-        private Color normalHealthColor = Color.red;
+        private Color normalHealthColor = Color.green;
 
         [SerializeField]
         private Color lowHealthColor = new Color(0.6f, 0f, 0f, 1f);
@@ -42,15 +45,16 @@ namespace CoED
         private Slider experienceBar;
 
         [SerializeField]
-        private Text experienceText;
+        private TMP_Text experienceText;
 
         [Header("Level UI")]
         [SerializeField]
-        private Text levelText;
+        private TMP_Text levelText;
 
         [Header("Ability UI")]
         [SerializeField]
         private Image abilityIcon;
+
 
         [SerializeField]
         private Text abilityNameText;
@@ -62,10 +66,14 @@ namespace CoED
         [Header("Stamina UI")]
         [SerializeField]
         private Slider staminaBar;
+        [SerializeField]
+        private TMP_Text staminaText;
 
         [Header("Magic UI")]
         [SerializeField]
         private Slider magicBar;
+        [SerializeField]
+        private TMP_Text magicText;
 
         [Header("Quest UI")]
         [SerializeField]
@@ -89,7 +97,17 @@ namespace CoED
                 Debug.LogWarning("PlayerUI instance already exists. Destroying duplicate.");
             }
         }
+        private void Start()
+        {
+            PlayerStats.Instance.OnExperienceChanged += UpdateExperienceBar;
+            PlayerStats.Instance.OnHealthChanged += UpdateHealthBar;
+            PlayerStats.Instance.OnLevelUp += UpdateLevelDisplay;
+            PlayerStats.Instance.OnMagicChanged += UpdateMagicBar;
+            PlayerStats.Instance.OnStaminaChanged += UpdateStaminaBar;
+            
+        }
 
+        
         public void UpdateMagicNumber(int number)
         {
             if (magicNumberText != null)
@@ -113,33 +131,46 @@ namespace CoED
                 healthBar.maxValue = maxHealth;
                 healthBar.value = maxHealth;
             }
+            if (healthText != null)
+            {
+                healthText.text = $"{maxHealth} / {maxHealth}";
+            }
         }
 
-        public void UpdateHealthBar(float currentHealth)
+        public void UpdateHealthBar(int currentHealth, int maxHealth)
         {
-            if (healthBar != null)
+         
+           if (healthBar != null)
             {
+                healthBar.maxValue = maxHealth;
                 healthBar.value = currentHealth;
-                CheckLowHealth(currentHealth);
             }
+
+            if (healthText != null)
+            {
+                healthText.text = $"{currentHealth} / {maxHealth}";
+            }
+                
+            CheckLowHealth(currentHealth);
+            
         }
 
         private void CheckLowHealth(float currentHealth)
         {
             float healthPercentage = currentHealth / healthBar.maxValue;
-            if (healthPercentage < 0.2f && !isLowHealth)
+            if (healthPercentage < 0.9f && !isLowHealth)
             {
                 isLowHealth = true;
                 healthPulseCoroutine = StartCoroutine(PulseHealthBarBackground());
             }
-            else if (healthPercentage >= 0.2f && isLowHealth)
+            else if (healthPercentage >= 0.9f && isLowHealth)
             {
                 isLowHealth = false;
                 if (healthPulseCoroutine != null)
                 {
                     StopCoroutine(healthPulseCoroutine);
                 }
-                healthBarBackground.color = normalHealthColor;
+                healthBarBackground = normalHealthColor;
             }
         }
 
@@ -147,7 +178,7 @@ namespace CoED
         {
             while (isLowHealth)
             {
-                healthBarBackground.color = Color.Lerp(
+                healthBarBackground = Color.Lerp(
                     normalHealthColor,
                     lowHealthColor,
                     Mathf.PingPong(Time.time * pulseSpeed, 1)
@@ -169,12 +200,13 @@ namespace CoED
             }
         }
 
-        public void UpdateLevelDisplay(int level)
+        public void UpdateLevelDisplay()
         {
             if (levelText != null)
             {
-                levelText.text = $"Level: {level}";
+                levelText.text = $"Level: {PlayerStats.Instance.level}";
             }
+
         }
 
         public void DisplayAbility(string abilityName, Sprite abilityIconSprite)
@@ -188,6 +220,7 @@ namespace CoED
                 abilityIcon.sprite = abilityIconSprite;
                 abilityIcon.enabled = true;
             }
+
         }
 
         public void HideAbilityDisplay()
@@ -201,6 +234,7 @@ namespace CoED
                 abilityIcon.sprite = null;
                 abilityIcon.enabled = false;
             }
+
         }
 
         public void ShowDeathPanel()
@@ -209,6 +243,7 @@ namespace CoED
             {
                 deathPanel.SetActive(true);
             }
+
         }
 
         public void HideDeathPanel()
@@ -217,6 +252,7 @@ namespace CoED
             {
                 deathPanel.SetActive(false);
             }
+
         }
 
         public void SetStaminaBarMax(float maxStamina)
@@ -226,13 +262,23 @@ namespace CoED
                 staminaBar.maxValue = maxStamina;
                 staminaBar.value = maxStamina;
             }
+            if (staminaText != null)
+            {
+                staminaText.text = $"{maxStamina} / {maxStamina}";
+            }
         }
 
-        public void UpdateStaminaBar(float currentStamina)
+
+        public void UpdateStaminaBar(int currentStamina, int maxStamina)
         {
             if (staminaBar != null)
             {
+                staminaBar.maxValue = maxStamina;
                 staminaBar.value = currentStamina;
+            }
+            if (staminaText != null)
+            {
+                staminaText.text = $"{currentStamina} / {maxStamina}";
             }
         }
 
@@ -243,13 +289,23 @@ namespace CoED
                 magicBar.maxValue = maxMagic;
                 magicBar.value = maxMagic;
             }
+            if (magicText != null)
+            {
+                magicText.text = $"{maxMagic} / {maxMagic}";
+            }
         }
 
-        public void UpdateMagicBar(float currentMagic)
+        public void UpdateMagicBar(int currentMagic, int maxMagic)
         {
             if (magicBar != null)
             {
+                magicBar.maxValue = maxMagic;
                 magicBar.value = currentMagic;
+
+            }
+            if (magicText != null)
+            {
+                magicText.text = $"{currentMagic} / {maxMagic}";
             }
         }
 

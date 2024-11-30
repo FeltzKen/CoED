@@ -17,7 +17,6 @@ GameObject:
   - component: {fileID: 3984977953762216121}
   - component: {fileID: 5710572630327944031}
   - component: {fileID: 499285718735250053}
-  - component: {fileID: 5438747970293043986}
   m_Layer: 8
   m_Name: monster_2
   m_TagString: Enemy
@@ -200,7 +199,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f96c446ab19ac8148a70147fb636cfa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 100
+  maxHealth: 1000
   IsVisible: 1
   possibleDrops: []
   baseDropRate: 0.3
@@ -257,23 +256,6 @@ MonoBehaviour:
   baseDetectionRange: 6
   baseFireRate: 6
   baseSpeed: 5
---- !u!114 &5438747970293043986
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3198391839532095026}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4404c920c35399d4684db60b12cda71b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  healthBar: {fileID: 6359726529322919973}
-  healthBarBackground: {fileID: 0}
-  normalHealthColor: {r: 1, g: 0, b: 0, a: 1}
-  lowHealthColor: {r: 0.6, g: 0, b: 0, a: 1}
-  pulseSpeed: 1
 --- !u!1001 &2245403152686551375
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -384,17 +366,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 5487585351427140837, guid: 25e4b1c51ff90d54895cec756acb5a26, type: 3}
   m_PrefabInstance: {fileID: 2245403152686551375}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &6359726529322919973 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5146224385321285994, guid: 25e4b1c51ff90d54895cec756acb5a26, type: 3}
-  m_PrefabInstance: {fileID: 2245403152686551375}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &2356286850045673033
 PrefabInstance:
   m_ObjectHideFlags: 0

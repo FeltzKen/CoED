@@ -45,8 +45,6 @@ namespace CoED
             // Initialize player's grid position
             Vector3 playerPosition = transform.position;
             CurrentPosition = new Vector3Int(Mathf.RoundToInt(playerPosition.x), Mathf.RoundToInt(playerPosition.y), 0);
-            //turnManager.RegisterActor(this);
-            Debug.Log("PlayerManager: Registered actor with TurnManager.");
         }
 
         private void ValidateComponents()
@@ -121,7 +119,6 @@ namespace CoED
             {
                 enemy.CanAttackPlayer = true;
             }
-            Debug.Log("PlayerManager: Reset enemy attack flags.");
         }
     }
 }
