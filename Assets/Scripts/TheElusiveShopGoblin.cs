@@ -136,7 +136,7 @@ namespace CoED
         {
             if (dialogueIndex < introDialogue.Length)
             {
-                Debug.Log($"ShopGoblin: {introDialogue[dialogueIndex]}");
+                // Debug.Log($"ShopGoblin: {introDialogue[dialogueIndex]}");
                 dialogueIndex++;
             }
             else
@@ -152,7 +152,7 @@ namespace CoED
             if (shopUI != null)
             {
                 shopUI.SetActive(true);
-                Debug.Log("ShopGoblin: Shop UI opened.");
+                // Debug.Log("ShopGoblin: Shop UI opened.");
             }
             else
             {
@@ -165,7 +165,7 @@ namespace CoED
             if (shopUI != null)
             {
                 shopUI.SetActive(false);
-                Debug.Log("ShopGoblin: Shop UI closed.");
+                // Debug.Log("ShopGoblin: Shop UI closed.");
             }
             else
             {
@@ -188,7 +188,7 @@ namespace CoED
                     Instantiate(teleportEffectPrefab, transform.position, Quaternion.identity);
                 }
                 playerVisited = false;
-                Debug.Log("ShopGoblin: Teleported to a new location!");
+                // Debug.Log("ShopGoblin: Teleported to a new location!");
             }
             else
             {
@@ -236,7 +236,7 @@ namespace CoED
             Vector2 playerPosition = playerTransform.position;
             Vector2 spawnPosition = GetNearbyPosition(playerPosition, 3, 5);
             //transform.position = spawnPosition;
-            Debug.Log($"ShopGoblin: Spawned near player at {spawnPosition}.");
+            // Debug.Log($"ShopGoblin: Spawned near player at {spawnPosition}.");
         }
 
         private void GenerateInitialInventory()
@@ -248,7 +248,7 @@ namespace CoED
                 ShopItem newItem = GenerateRandomShopItem();
                 inventory.Add(newItem);
             }
-            Debug.Log($"ShopGoblin: Generated {inventory.Count} initial items for sale.");
+            // Debug.Log($"ShopGoblin: Generated {inventory.Count} initial items for sale.");
         }
 
         private ShopItem GenerateRandomShopItem()

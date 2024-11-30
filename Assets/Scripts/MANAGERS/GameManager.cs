@@ -53,7 +53,7 @@ namespace CoED
         public void QuitGame()
         {
             Time.timeScale = 1f; // Ensure the game is unpaused
-            Debug.Log("GameManager: Quitting game...");
+             Debug.Log("GameManager: Quitting game...");
             Application.Quit();
 
 #if UNITY_EDITOR

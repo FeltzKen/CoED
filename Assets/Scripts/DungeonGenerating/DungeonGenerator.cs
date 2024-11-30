@@ -129,7 +129,7 @@ namespace CoED
                     StoreFloorData(floorTiles);
 
                     DungeonManager.Instance.FloorTransforms[currentFloorNumber] = floorParent.transform;
-                    Debug.Log($"Stored floor reference for Floor {currentFloorNumber} in DungeonManager.");
+                    // Debug.Log($"Stored floor reference for Floor {currentFloorNumber} in DungeonManager.");
                 }
                 catch (Exception ex)
                 {
@@ -137,7 +137,7 @@ namespace CoED
                 }
             }
 
-            Debug.Log("Dungeon generation finished.");
+            // Debug.Log("Dungeon generation finished.");
             if (DungeonManager.Instance != null)
             {
                 DungeonSpawner.Instance.SpawnEnemiesForAllFloors();
@@ -164,7 +164,7 @@ namespace CoED
 
             }
 
-            Debug.Log($"Tilemap '{name}' created under parent '{parent.name}'.");
+            // Debug.Log($"Tilemap '{name}' created under parent '{parent.name}'.");
 
             return tilemap;
         }
@@ -299,7 +299,7 @@ namespace CoED
                         PlaceGameObjectAtTile(stairsUpPosition, floorTilemap, stairsUpPrefab, floorTilemap.transform);
                         floorData.StairTiles.Add(stairsUpPosition);
 
-                        Debug.Log($"Stairs up placed on Floor {currentFloor} at {stairsUpPosition}");
+                        // Debug.Log($"Stairs up placed on Floor {currentFloor} at {stairsUpPosition}");
                     }
                 }
             }
@@ -313,7 +313,7 @@ namespace CoED
                     DungeonManager.Instance.StoreStairsDownPosition(currentFloor, stairsDownPosition);
                     PlaceGameObjectAtTile(stairsDownPosition, floorTilemap, stairsDownPrefab, floorTilemap.transform);
                     floorData.StairTiles.Add(stairsDownPosition);
-                    Debug.Log($"Stairs down placed on Floor {currentFloor} at {stairsDownPosition}");
+                    // Debug.Log($"Stairs down placed on Floor {currentFloor} at {stairsDownPosition}");
                 }
             }
         }
@@ -357,7 +357,7 @@ private void PlaceGameObjectAtTile(Vector2Int tilePosition, Tilemap floorTilemap
     GameObject instance = Instantiate(prefab, worldPosition, Quaternion.identity, parent);
     instance.name = $"{prefab.name}_at_{tilePosition.x}_{tilePosition.y}";
     
-    Debug.Log($"Placed {prefab.name} at tile position {tilePosition}, world position {worldPosition}");
+    // Debug.Log($"Placed {prefab.name} at tile position {tilePosition}, world position {worldPosition}");
 }
         private Vector2Int GetRandomTile(HashSet<Vector2Int> tiles)
         {

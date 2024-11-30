@@ -57,7 +57,7 @@ namespace CoED
             }
 
             UpdateEnemyStatMultiplier();
-            Debug.Log($"GameSettings: Difficulty level set to {difficultyLevel}.");
+            // Debug.Log($"GameSettings: Difficulty level set to {difficultyLevel}.");
         }
 
         /// Calculates the enemy stat multiplier based on the current difficulty level.
@@ -78,7 +78,7 @@ namespace CoED
         {
             difficultyLevel = 5;
             UpdateEnemyStatMultiplier();
-            Debug.Log("GameSettings: Difficulty level reset to default (5).");
+            // Debug.Log("GameSettings: Difficulty level reset to default (5).");
         }
     }
 }

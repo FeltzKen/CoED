@@ -56,13 +56,13 @@ namespace CoED
             }
 
             cursedNumber = luckyNumbers[Random.Range(0, luckyNumbers.Count)];
-            Debug.Log($"PlayerProfileManager: Cursed Number (Hidden): {cursedNumber}");
+            // Debug.Log($"PlayerProfileManager: Cursed Number (Hidden): {cursedNumber}");
         }
 
         public void SetDungeonSeed(int seed)
         {
             dungeonSeed = seed;
-            Debug.Log($"PlayerProfileManager: Dungeon Seed Set: {dungeonSeed}");
+            // Debug.Log($"PlayerProfileManager: Dungeon Seed Set: {dungeonSeed}");
         }
     }
 }

@@ -44,7 +44,7 @@ namespace CoED
             {
                 int slotIndex = GetSlotIndex(); // Get the index of this slot
                 EquipmentManager.Instance?.EquipItem(equippedItem, slotIndex);
-                Debug.Log($"Equipped item: {equippedItem.ItemName}");
+                // Debug.Log($"Equipped item: {equippedItem.ItemName}");
                 UpdateSlotUI(); // Refresh the UI after equipping
             }
             else
@@ -58,7 +58,7 @@ namespace CoED
         {
             int slotIndex = GetSlotIndex(); // Get the index of this slot
             EquipmentManager.Instance?.UnequipItem(slotIndex);
-            Debug.Log($"Unequipped item: {equippedItem.ItemName}");
+            // Debug.Log($"Unequipped item: {equippedItem.ItemName}");
             equippedItem = null; // Clear the reference
             UpdateSlotUI(); // Refresh the UI after unequipping
         }

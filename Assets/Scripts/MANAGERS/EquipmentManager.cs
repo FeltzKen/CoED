@@ -28,9 +28,9 @@ namespace CoED
                 return;
             }
 
-            if (Player.Instance != null)
+            if (PlayerStats.Instance != null)
             {
-                playerStats = Player.Instance.playerStats;
+                playerStats = PlayerStats.Instance;
             }
 
             if (playerStats == null)
@@ -77,7 +77,7 @@ namespace CoED
                         -previousItem.DefenseBoost,
                         -previousItem.HealthBoost
                     );
-                    Debug.Log(
+                     Debug.Log(
                         $"EquipmentManager: Removed '{previousItem.ItemName}', adjusting stats."
                     );
                 }
@@ -110,7 +110,7 @@ namespace CoED
                     -unequippedItem.DefenseBoost,
                     -unequippedItem.HealthBoost
                 );
-                Debug.Log(
+                 Debug.Log(
                     $"EquipmentManager: Unequipped '{unequippedItem.ItemName}', adjusting stats."
                 );
             }
@@ -146,7 +146,7 @@ namespace CoED
                 totalDefenseModifier,
                 totalHealthModifier
             );
-            Debug.Log("EquipmentManager: Updated all equipment stats.");
+            // Debug.Log("EquipmentManager: Updated all equipment stats.");
         }
     }
 }

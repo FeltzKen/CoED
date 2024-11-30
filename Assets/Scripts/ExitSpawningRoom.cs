@@ -17,7 +17,7 @@ namespace CoED
 
         private void DisplayWarning()
         {
-            Debug.Log(warningMessage);
+            // Debug.Log(warningMessage);
         }
 
         private void ExitSpawningRoom(GameObject player)

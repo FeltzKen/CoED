@@ -34,7 +34,7 @@ namespace CoED
             if (spellEffectPrefab != null)
             {
                 Instantiate(spellEffectPrefab, targetPosition, Quaternion.identity);
-                Debug.Log($"Spell '{spellName}' cast at position {targetPosition}.");
+                // Debug.Log($"Spell '{spellName}' cast at position {targetPosition}.");
             }
             else
             {
@@ -55,7 +55,7 @@ namespace CoED
                     if (enemyStats != null)
                     {
                         enemyStats.TakeDamage(damage);
-                        Debug.Log($"Spell '{spellName}' dealt {damage} damage to {enemyStats.name}.");
+                        // Debug.Log($"Spell '{spellName}' dealt {damage} damage to {enemyStats.name}.");
                     }
                 }
             }

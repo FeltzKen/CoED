@@ -38,7 +38,7 @@ namespace CoED
             if (playerStats != null)
             {
                 playerStats.GainCurrency(amount);
-                Debug.Log($"Money: Collected {amount} currency.");
+                // Debug.Log($"Money: Collected {amount} currency.");
             }
             else
             {

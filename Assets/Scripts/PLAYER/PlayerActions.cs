@@ -130,12 +130,12 @@ namespace CoED
                 }
             }
 
-            Debug.Log(collectedAny ? "PlayerActions: Collected items." : "PlayerActions: No items to collect nearby.");
+            // Debug.Log(collectedAny ? "PlayerActions: Collected items." : "PlayerActions: No items to collect nearby.");
         }
 
         private void SearchForSecrets()
         {
-            Debug.Log("PlayerActions: Searching for hidden doors and traps...");
+            // Debug.Log("PlayerActions: Searching for hidden doors and traps...");
             Collider2D[] secrets = Physics2D.OverlapCircleAll(transform.position, 1f);
             bool foundAny = false;
 
@@ -145,13 +145,13 @@ namespace CoED
                 {
                     secretCollider.gameObject.SetActive(true);
                     foundAny = true;
-                    Debug.Log($"PlayerActions: Revealed {secretCollider.tag}.");
+                    // Debug.Log($"PlayerActions: Revealed {secretCollider.tag}.");
                 }
             }
 
             if (!foundAny)
             {
-                Debug.Log("PlayerActions: No hidden objects found.");
+                // Debug.Log("PlayerActions: No hidden objects found.");
             }
         }
 
@@ -159,7 +159,7 @@ namespace CoED
         {
             isResting = true;
             ShowFloatingText("Resting and healing...");
-            Debug.Log("PlayerActions: Starting to rest and heal...");
+            // Debug.Log("PlayerActions: Starting to rest and heal...");
 
             while (playerStats.CurrentHealth < playerStats.MaxHealth && !IsDangerNearby())
             {
@@ -170,14 +170,14 @@ namespace CoED
 
             isResting = false;
             ShowFloatingText("Resting completed");
-            Debug.Log("PlayerActions: Resting completed.");
+            // Debug.Log("PlayerActions: Resting completed.");
         }
 
         private IEnumerator RestUntilMagic()
         {
             isResting = true;
             ShowFloatingText("Resting to regain magic...");
-            Debug.Log("PlayerActions: Starting to rest and refill magic...");
+            // Debug.Log("PlayerActions: Starting to rest and refill magic...");
 
             while (playerMagic.CurrentMagic < playerMagic.MaxMagic && !IsDangerNearby())
             {
@@ -188,7 +188,7 @@ namespace CoED
 
             isResting = false;
             ShowFloatingText("Magic refill completed");
-            Debug.Log("PlayerActions: Magic refill completed.");
+            // Debug.Log("PlayerActions: Magic refill completed.");
         }
 
         private void ToggleInventoryUI()
@@ -196,7 +196,7 @@ namespace CoED
             if (inventoryUI != null)
             {
                 inventoryUI.SetActive(!inventoryUI.activeSelf);
-                Debug.Log($"PlayerActions: Inventory UI {(inventoryUI.activeSelf ? "opened" : "closed")}");
+                // Debug.Log($"PlayerActions: Inventory UI {(inventoryUI.activeSelf ? "opened" : "closed")}");
             }
             else
             {
@@ -219,7 +219,7 @@ namespace CoED
 
         private void UseAbility()
         {
-            Debug.Log("PlayerActions: Using ability...");
+            // Debug.Log("PlayerActions: Using ability...");
             // have possible other script to use for player abilities.
         }
 
@@ -237,7 +237,6 @@ namespace CoED
             Gizmos.DrawWireSphere(transform.position, dangerRadius);
         }
     }
-
     public class ItemCollectible : MonoBehaviour
     {
         [SerializeField]

@@ -99,11 +99,11 @@ namespace CoED
         }
         private void Start()
         {
-            PlayerStats.Instance.OnExperienceChanged += UpdateExperienceBar;
-            PlayerStats.Instance.OnHealthChanged += UpdateHealthBar;
-            PlayerStats.Instance.OnLevelUp += UpdateLevelDisplay;
-            PlayerStats.Instance.OnMagicChanged += UpdateMagicBar;
-            PlayerStats.Instance.OnStaminaChanged += UpdateStaminaBar;
+         //   PlayerStats.Instance.OnExperienceChanged += UpdateExperienceBar;
+         //   PlayerStats.Instance.OnHealthChanged += UpdateHealthBar;
+        //    PlayerStats.Instance.OnLevelUp += UpdateLevelDisplay;
+        //    PlayerStats.Instance.OnMagicChanged += UpdateMagicBar;
+          //  PlayerStats.Instance.OnStaminaChanged += UpdateStaminaBar;
             
         }
 

@@ -8,9 +8,9 @@ namespace CoED
     {
 
         public static EnemyUI enemyAI;
+        public static EnemyStats enemyStats;
 
         [Header("Health UI")]
-        [SerializeField]
         private Slider healthBar;
 
         [SerializeField]
@@ -27,6 +27,14 @@ namespace CoED
         private bool isLowHealth = false;
         private Coroutine healthPulseCoroutine;
 
+        private void Awake()
+        {
+            healthBar = GetComponentInChildren<Slider>();
+            if (healthBar == null)
+            {
+                Debug.LogError("EnemyUI: HealthBar component not found.");
+            }
+        }
         public void SetHealthBarMax(float maxHealth)
         {
             if (healthBar != null)
@@ -36,18 +44,19 @@ namespace CoED
             }
         }
 
-        public void UpdateHealthBar(float currentHealth)
+        public void UpdateHealthBar(int currentHealth, int maxHealth)
         {
             if (healthBar != null)
             {
+                healthBar.maxValue = maxHealth;
                 healthBar.value = currentHealth;
-                CheckLowHealth(currentHealth);
+                CheckLowHealth(currentHealth, maxHealth);
             }
         }
 
-        private void CheckLowHealth(float currentHealth)
+        private void CheckLowHealth(int currentHealth, int maxHealth)
         {
-            float healthPercentage = currentHealth / healthBar.maxValue;
+            float healthPercentage = (float)currentHealth / maxHealth;
             if (healthPercentage < 0.2f && !isLowHealth)
             {
                 isLowHealth = true;

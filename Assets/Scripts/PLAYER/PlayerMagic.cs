@@ -70,8 +70,8 @@ namespace CoED
             if (HasEnoughMagic(spellCost))
             {
                 SpendMagic(spellCost);
-                projectileManager?.LaunchProjectile(transform.position, targetPosition, spellDamage, false);
-                Debug.Log($"PlayerMagic: Cast spell towards {targetPosition} for {spellDamage} damage.");
+                projectileManager?.LaunchProjectile(transform.position, targetPosition);
+                // Debug.Log($"PlayerMagic: Cast spell towards {targetPosition} for {spellDamage} damage.");
             }
             else
             {
@@ -99,7 +99,7 @@ namespace CoED
         {
             currentMagic = Mathf.Min(currentMagic + amount, maxMagic);
             UpdateMagicUI();
-            Debug.Log($"PlayerMagic: Refilled magic by {amount}. Current magic: {currentMagic}");
+            // Debug.Log($"PlayerMagic: Refilled magic by {amount}. Current magic: {currentMagic}");
         }
 
         public void StartMagicRefill()

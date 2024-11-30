@@ -25,7 +25,7 @@ namespace CoED
             if (availableSpells.Count == 0)
             {
                 availableSpells.Add(CreateDefaultFireball());
-                Debug.Log("CastSpell: Added default Fireball spell for testing.");
+                // Debug.Log("CastSpell: Added default Fireball spell for testing.");
             }
         }
 
@@ -38,13 +38,13 @@ namespace CoED
             // Check if player has enough MP to cast the spell
             if (playerStats.CurrentMagic < selectedSpell.MagicCost)
             {
-                Debug.Log($"Not enough MP to cast {selectedSpell.SpellName}.");
+                // Debug.Log($"Not enough MP to cast {selectedSpell.SpellName}.");
                 return;
             }
 
             // Consume MP and cast the spell
             playerStats.CurrentMagic -= selectedSpell.MagicCost;
-            Debug.Log($"Casting spell: {selectedSpell.SpellName}");
+            // Debug.Log($"Casting spell: {selectedSpell.SpellName}");
 
             // Handle spell type
             switch (selectedSpell.Type)
@@ -72,25 +72,20 @@ namespace CoED
                 return;
             }
 
-            ProjectileManager.Instance.LaunchProjectile(
-                spellSpawnPoint.position,
-                targetPosition,
-                spell.Damage,
-                isEnemyProjectile: false
-            );
+            ProjectileManager.Instance.LaunchProjectile(spellSpawnPoint.position, targetPosition);
         }
 
         // Casts an AoE spell at the player's position
         private void CastAoESpell(Spell spell)
         {
-            Debug.Log($"Casting AoE spell: {spell.SpellName}");
+            // Debug.Log($"Casting AoE spell: {spell.SpellName}");
             spell.Cast(transform, spellSpawnPoint.position);
         }
 
         // Casts a heal spell on the player
         private void CastHealSpell(Spell spell)
         {
-            Debug.Log($"Casting Heal spell: {spell.SpellName}");
+            // Debug.Log($"Casting Heal spell: {spell.SpellName}");
             playerStats.Heal(spell.Damage);
         }
 
@@ -99,7 +94,7 @@ namespace CoED
             if (spellIndex >= 0 && spellIndex < availableSpells.Count)
             {
                 selectedSpellIndex = spellIndex;
-                Debug.Log($"Selected spell: {availableSpells[selectedSpellIndex].SpellName}");
+                // Debug.Log($"Selected spell: {availableSpells[selectedSpellIndex].SpellName}");
             }
             else
             {

@@ -39,12 +39,12 @@ namespace CoED
                 if (slot.IsEmpty())
                 {
                     slot.AssignSpell(spell);
-                    Debug.Log($"MagicPanel: Equipped spell {spell.SpellName}.");
+                    // Debug.Log($"MagicPanel: Equipped spell {spell.SpellName}.");
                     return;
                 }
             }
 
-            Debug.Log("MagicPanel: All spell slots are full. Unable to equip new spell.");
+            // Debug.Log("MagicPanel: All spell slots are full. Unable to equip new spell.");
         }
 
         public void UnequipSpell(int slotIndex)
@@ -56,7 +56,7 @@ namespace CoED
             }
 
             spellSlots[slotIndex].ClearSlot();
-            Debug.Log($"MagicPanel: Unequipped spell from slot {slotIndex}.");
+            // Debug.Log($"MagicPanel: Unequipped spell from slot {slotIndex}.");
         }
 
         public void DisplayEquippedSpells()
@@ -66,11 +66,11 @@ namespace CoED
                 Spell spell = slot.GetAssignedSpell();
                 if (spell != null)
                 {
-                    Debug.Log($"MagicPanel: Spell {spell.SpellName} is equipped.");
+                    // Debug.Log($"MagicPanel: Spell {spell.SpellName} is equipped.");
                 }
                 else
                 {
-                    Debug.Log("MagicPanel: Slot is empty.");
+                    // Debug.Log("MagicPanel: Slot is empty.");
                 }
             }
         }
@@ -81,7 +81,7 @@ namespace CoED
             {
                 slot.ClearSlot();
             }
-            Debug.Log("MagicPanel: Cleared all spell slots.");
+            // Debug.Log("MagicPanel: Cleared all spell slots.");
         }
     }
 }

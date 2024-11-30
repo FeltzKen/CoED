@@ -65,12 +65,12 @@ namespace CoED
                 if (isMelee)
                 {
                     playerCombat.PerformMeleeAttack(new Vector2Int((int)targetPosition.x, (int)targetPosition.y));    
-                    Debug.Log("PlayerManager: Committed melee attack action.");
+                    // Debug.Log("PlayerManager: Committed melee attack action.");
                 }
                 else
                 {
                     playerCombat.AttemptRangedAttack(targetPosition);
-                    Debug.Log("PlayerManager: Committed ranged attack action.");
+                    // Debug.Log("PlayerManager: Committed ranged attack action.");
                 }
             };
             actionSelected = true; // Action has been selected
@@ -84,7 +84,7 @@ namespace CoED
                 if (playerMagic.HasEnoughMagic(spellCost))
                 {
                     playerMagic.CastMagicAction(targetPosition, spellCost, spellDamage);
-                    Debug.Log($"PlayerManager: Cast magic at {targetPosition} with cost {spellCost} and damage {spellDamage}.");
+                    // Debug.Log($"PlayerManager: Cast magic at {targetPosition} with cost {spellCost} and damage {spellDamage}.");
                 }
                 else
                 {
@@ -99,14 +99,14 @@ namespace CoED
         {
             lastAction = specialAction;
             actionSelected = true;
-            Debug.Log("PlayerManager: Committed special action.");
+            // Debug.Log("PlayerManager: Committed special action.");
         }
 
         public void TakeDamage(int damage)
         {
             // Apply damage to the player
             playerStats.TakeDamage(damage);
-            Debug.Log($"PlayerManager: Player took {damage} damage.");
+            // Debug.Log($"PlayerManager: Player took {damage} damage.");
         }
 
         public bool IsActionComplete()

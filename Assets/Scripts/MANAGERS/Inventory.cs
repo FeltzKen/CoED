@@ -38,12 +38,12 @@ namespace CoED
         {
             if (items.Count >= maxInventorySlots)
             {
-                Debug.Log("Inventory: Inventory is full, cannot add item.");
+                // Debug.Log("Inventory: Inventory is full, cannot add item.");
                 return false;
             }
 
             items.Add(item);
-            Debug.Log($"Inventory: Added {item.ItemName}.");
+            // Debug.Log($"Inventory: Added {item.ItemName}.");
             OnInventoryChanged?.Invoke(); // Notify subscribers that inventory has changed
             return true;
         }
@@ -58,7 +58,7 @@ namespace CoED
         {
             if (items.Remove(item))
             {
-                Debug.Log($"Inventory: Removed {item.ItemName}.");
+                // Debug.Log($"Inventory: Removed {item.ItemName}.");
                 OnInventoryChanged?.Invoke(); // Notify subscribers that inventory has changed
                 return true;
             }
@@ -83,7 +83,7 @@ namespace CoED
         public void ClearInventory()
         {
             items.Clear();
-            Debug.Log("Inventory: Inventory cleared.");
+            // Debug.Log("Inventory: Inventory cleared.");
             OnInventoryChanged?.Invoke(); // Notify subscribers that inventory has changed
         }
 

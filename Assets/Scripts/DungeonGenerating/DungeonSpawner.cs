@@ -16,7 +16,7 @@ namespace CoED
         private Rigidbody2D rb;
         private void Awake()
         {
-                Debug.Log("DungeonSpawner Awake called");
+                // Debug.Log("DungeonSpawner Awake called");
 
             if (Instance == null)
             {
@@ -39,7 +39,7 @@ public void Start()
     {
         // Set player position in the spawning room
         player.transform.position = DungeonManager.Instance.SpawningRoomInstance.transform.position + Vector3.up * 2; // Adjust if needed
-        Debug.Log("Player placed in the spawning room.");
+        // Debug.Log("Player placed in the spawning room.");
     }
     else
     {
@@ -52,13 +52,13 @@ public void Start()
         /// </summary>
 public void TransportPlayerToDungeon(GameObject player)
         {
-            Debug.Log("Transporting player to the dungeon...");
+            // Debug.Log("Transporting player to the dungeon...");
 
             // Destroy the spawning room if it exists
             if (DungeonManager.Instance.SpawningRoomInstance != null)
             {
                 Destroy(DungeonManager.Instance.SpawningRoomInstance);
-                Debug.Log("Spawning room destroyed.");
+                // Debug.Log("Spawning room destroyed.");
             }
 
             // Get the walkable tiles for the first floor and teleport the player
@@ -82,7 +82,7 @@ public void TransportPlayerToDungeon(GameObject player)
                         // Update camera position
                         Camera.main.GetComponent<CameraController>().SetPlayerTransform(player.transform);
 
-                        Debug.Log($"Player transported to position: {exitPosition}");
+                        // Debug.Log($"Player transported to position: {exitPosition}");
                     }
                 }
                 else
@@ -103,7 +103,7 @@ public void TransportPlayerToDungeon(GameObject player)
         /// </summary>
 public void SpawnEnemiesForAllFloors()
 {
-    Debug.Log("Starting enemy spawning for all floors...");
+    // Debug.Log("Starting enemy spawning for all floors...");
     
     if (DungeonManager.Instance == null)
     {
@@ -199,7 +199,7 @@ private IEnumerator SpawnEnemiesForFloor(FloorData floorData, Transform floorPar
                 SpawnItem(position);
             }
 
-            Debug.Log($"Spawned {itemCount} items on Floor {floorData.FloorNumber}");
+            // Debug.Log($"Spawned {itemCount} items on Floor {floorData.FloorNumber}");
         }
         private void SpawnItem(Vector2 position)
         {

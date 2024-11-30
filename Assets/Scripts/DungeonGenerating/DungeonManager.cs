@@ -29,7 +29,7 @@ namespace CoED
         {
             Instance = this;
             DontDestroyOnLoad(gameObject); // Optional: use if this object should persist across scenes.
-            Debug.Log("DungeonManager: Singleton instance created.");
+            // Debug.Log("DungeonManager: Singleton instance created.");
         }
     }
 
@@ -62,7 +62,7 @@ namespace CoED
                 {
                     renderer.enabled = true;
                 }
-                Debug.Log($"All renderers for Floor {floorNumber} are now visible.");
+                // Debug.Log($"All renderers for Floor {floorNumber} are now visible.");
             }
             else
             {

@@ -203,7 +203,7 @@ namespace CoED
         }
 
         // Check if the player is within attack range
-        if (Vector2.Distance(transform.position, playerTransform.position) < 1)
+        if (Vector2.Distance(transform.position, playerTransform.position) < enemyStats.CurrentAttackRange)
         {
             currentState = EnemyState.Attack;
         }
@@ -236,7 +236,7 @@ namespace CoED
             PlayerManager playerManager = playerTransform.GetComponent<PlayerManager>();
             if (playerManager != null)
             {
-                Debug.Log($"Enemy [ID: {uniqueID}] is attacking the player.");
+                // Debug.Log($"Enemy [ID: {uniqueID}] is attacking the player.");
                 playerManager.TakeDamage(enemyStats.CurrentAttack);
                 CanAttackPlayer = false; // Set CanAttackPlayer to false after attacking
             }

@@ -45,7 +45,7 @@ namespace CoED
             Vector3 spawnPosition = new Vector3(-10.0f, -10.0f, 0); // Center of the spawning room
             spawnPosition += new Vector3(0, 0, 0); // Adjust if needed
             currentPlayer = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
-            Debug.Log($"PlayerSpawner: Spawned player at {spawnPosition}.");
+            // Debug.Log($"PlayerSpawner: Spawned player at {spawnPosition}.");
 
 
 

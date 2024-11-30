@@ -32,15 +32,16 @@ namespace CoED
 
         [Header("Stamina")]
         [SerializeField, Min(0)]
-        public float baseStamina = 100f;
-        public float CurrentStamina { get; set; }
-        public float MaxStamina { get; set; }
+        public int baseStamina = 100;
+        public int CurrentStamina { get; set; }
+        public int MaxStamina { get; set; }
 
         [Header("Magic")]
         [SerializeField, Min(0)]
         private int baseMagic = 50;
         public int CurrentMagic { get; set; }
         public int MaxMagic { get; set; }
+        public int equipmentMagic = 0;
 
         [Header("Attack")]
         [SerializeField, Min(0)]
@@ -56,8 +57,9 @@ namespace CoED
 
         [Header("Range")]
         [SerializeField, Min(0f)]
-        private float baseRange = 5f;
-        public float CurrentRange { get; set; }
+        private float baseProjectileRange = 5f;
+        public float CurrentProjectileRange { get; set; }
+        private float equipmentRange = 0;
 
         [Header("Speed")]
         [SerializeField, Min(0)]
@@ -81,16 +83,16 @@ namespace CoED
         public int currentFloor = 1;
         private PlayerUI playerUI;
         // Events
-        public event Action OnLevelUp;
-        public event Action<int, int> OnExperienceChanged;
-        public event Action<int, int> OnHealthChanged;
-        public event Action<int, int> OnMagicChanged;
-        public event Action<int, int> OnStaminaChanged;
+      //  public event Action OnLevelUp;
+       // public event Action<int, int> OnExperienceChanged;
+      //  public event Action<int, int> OnHealthChanged;
+       // public event Action<int, int> OnMagicChanged;
+       // public event Action<int, int> OnStaminaChanged;
         public event Action OnPlayerDeath;
 
         private void Awake()
         {
-            PlayerUI playerUI = FindAnyObjectByType<PlayerUI>();
+            //_ = FindAnyObjectByType<PlayerUI>();
 
             // Implement Singleton Pattern
             if (Instance == null)
@@ -104,59 +106,42 @@ namespace CoED
                 return;
             }
         }
-        private void InitializeUI()
-        {
-            if (playerUI != null)
-            {
-                playerUI.SetHealthBarMax(MaxHealth);
-
-                UpdateExperienceUI(playerUI);
-                
-                playerUI.SetMagicBarMax(MaxMagic);
-
-                
-                playerUI.SetStaminaBarMax((int)MaxStamina);                
-                
-                UpdateLevelDisplay(playerUI);
-                OnLevelUp?.Invoke();
-
-
-            }
-        }
-
         private void Start()
         {
-            InitializeStats();
-            InitializeUI();
+            CalculateStats();
+            
         }
 
-        private void InitializeStats()
+        private void InitializeUI()
         {
-            CalculateStats();
-            CurrentStamina = MaxStamina;
-            CurrentHealth = MaxHealth;
-
+            playerUI = FindAnyObjectByType<PlayerUI>();
             if (playerUI != null)
             {
                 playerUI.SetHealthBarMax(MaxHealth);
-                UpdateHealthUI(playerUI);
+                UpdateExperienceUI(playerUI);
+                playerUI.SetMagicBarMax(MaxMagic);
+                playerUI.SetStaminaBarMax(MaxStamina);
+                playerUI.UpdateLevelDisplay();
             }
         }
+
 
         private void CalculateStats()
         {
+            MaxStamina = baseStamina + Mathf.RoundToInt(level * 5);
+            MaxHealth = baseHealth + level * 20 + equipmentHealth;
+            MaxMagic = baseMagic + level * 10 + equipmentMagic;
             CurrentAttack = baseAttack + Mathf.RoundToInt(baseAttack * level * 0.2f) + equipmentAttack;
             CurrentDefense = baseDefense + Mathf.RoundToInt(baseDefense * level * 0.15f) + equipmentDefense;
-            CurrentRange = baseRange + level * 0.1f;
+            CurrentProjectileRange = baseProjectileRange + level * 0.1f + equipmentRange;
             CurrentSpeed = baseSpeed + level * 0.05f;
             CurrentFireRate = Mathf.Max(baseFireRate - level * 0.02f, 0.1f);
             CurrentProjectileLifespan = baseProjectileLifespan + level * 0.05f;
-            MaxHealth = baseHealth + level * 20 + equipmentHealth;
-            MaxStamina = baseStamina;
-            MaxMagic = baseMagic;
+            CurrentHealth = MaxHealth;
+            CurrentMagic = MaxMagic;
+            CurrentStamina = MaxStamina;
 
-            // Ensure current health does not exceed max health
-            CurrentHealth = baseHealth + level * 20 + equipmentHealth;
+            InitializeUI();
         }
 
         public void SetEquipmentStats(int attack, int defense, int health)
@@ -165,20 +150,20 @@ namespace CoED
             equipmentDefense = Mathf.Max(defense, 0);
             equipmentHealth = Mathf.Max(health, 0);
             CalculateStats();
-            UpdateHealthUI(playerUI);
+            UpdateHealthUI(FindAnyObjectByType<PlayerUI>());
         }
 
         public void GainExperience(int amount)
         {
             if (level >= maxLevel)
             {
-                Debug.Log("PlayerStats: Maximum level reached.");
+                // Debug.Log("PlayerStats: Maximum level reached.");
                 return;
             }
-            UpdateExperienceUI(FindAnyObjectByType<PlayerUI>());
             currentExp += Mathf.Max(amount, 0);
-            OnExperienceChanged?.Invoke(currentExp, ExpToNextLevel);
-            Debug.Log($"PlayerStats: Gained {amount} experience. Total experience: {currentExp}/{ExpToNextLevel}");
+            //OnExperienceChanged?.Invoke(currentExp, ExpToNextLevel);
+            // Debug.Log($"PlayerStats: Gained {amount} experience. Total experience: {currentExp}/{ExpToNextLevel}");
+            UpdateExperienceUI(FindAnyObjectByType<PlayerUI>());
 
             while (currentExp >= ExpToNextLevel && level < maxLevel)
             {
@@ -193,13 +178,15 @@ namespace CoED
             ExpToNextLevel = Mathf.CeilToInt(ExpToNextLevel * 1.25f);
             CalculateStats();
 
+          //  OnLevelUp?.Invoke();
             if (playerUI != null)
             {
+                playerUI = FindAnyObjectByType<PlayerUI>();
                 playerUI.UpdateLevelDisplay();
-                OnLevelUp?.Invoke();
                 UpdateHealthUI(playerUI);
                 UpdateExperienceUI(playerUI);
-                UpdateLevelDisplay(playerUI);
+                UpdateMagicUI(playerUI);
+                UpdateStaminaUI(playerUI);
             }
 
             Debug.Log($"PlayerStats: Leveled up to level {level}! Next level at {ExpToNextLevel} experience.");
@@ -214,7 +201,7 @@ namespace CoED
             }
 
             currency += amount;
-            Debug.Log($"PlayerStats: Gained {amount} currency. Total currency: {currency}");
+            // Debug.Log($"PlayerStats: Gained {amount} currency. Total currency: {currency}");
         }
 
         public int GetCurrency()
@@ -237,59 +224,14 @@ namespace CoED
             }
 
             currency -= amount;
-            Debug.Log($"PlayerStats: Spent {amount} currency. Total currency: {currency}");
-        }
-
-        public void RefillMagicPartial(int amount){
-            CurrentMagic += amount;
-            OnMagicChanged?.Invoke(CurrentMagic, MaxMagic);
-        }
-        public void RefillMagicFull(){
-            CurrentMagic = MaxMagic;
-            OnMagicChanged?.Invoke(CurrentMagic, MaxMagic);
-        }
-        public void UseMagic(int amount){
-            if (amount <= 0)
-            {
-                Debug.LogWarning("PlayerStats: Magic amount must be positive.");
-                return;
-            }
-
-            if (CurrentMagic < amount)
-            {
-                Debug.LogWarning("PlayerStats: Insufficient magic.");
-                return;
-            }
-
-            CurrentMagic -= amount;
-            OnMagicChanged?.Invoke(CurrentMagic, MaxMagic);
-        }
-        public void RefillStamina(){
-            CurrentStamina = MaxStamina;
-            OnStaminaChanged?.Invoke((int)CurrentStamina, (int)MaxStamina);
-        }
-        public void UseStamina(float amount){
-            if (amount <= 0)
-            {
-                Debug.LogWarning("PlayerStats: Stamina amount must be positive.");
-                return;
-            }
-
-            if (CurrentStamina < amount)
-            {
-                Debug.LogWarning("PlayerStats: Insufficient stamina.");
-                return;
-            }
-
-            CurrentStamina -= amount;
-            OnStaminaChanged?.Invoke((int)CurrentStamina, (int)MaxStamina);
+            // Debug.Log($"PlayerStats: Spent {amount} currency. Total currency: {currency}");
         }
 
         public void TakeDamage(int damage)
         {
             int effectiveDamage = Mathf.Max(damage - CurrentDefense, 1);
             CurrentHealth = Mathf.Max(CurrentHealth - effectiveDamage, 0);
-            OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
+            //OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
             UpdateHealthUI(FindAnyObjectByType<PlayerUI>());
 
             FloatingTextManager floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
@@ -312,7 +254,7 @@ namespace CoED
             }
 
             CurrentHealth = Mathf.Min(CurrentHealth + amount, MaxHealth);
-            OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
+            //OnHealthChanged?.Invoke(CurrentHealth, MaxHealth);
             UpdateHealthUI(FindAnyObjectByType<PlayerUI>());
 
             FloatingTextManager floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
@@ -321,13 +263,7 @@ namespace CoED
             Debug.Log($"PlayerStats: Healed {amount} health. Current health: {CurrentHealth}/{MaxHealth}");
         }
 
-        private void HandleDeath()
-        {
-            Debug.Log("PlayerStats: Player has died.");
-            GameManager gameManager = FindAnyObjectByType<GameManager>();
-            gameManager?.OnPlayerDeath();
-            OnPlayerDeath?.Invoke();
-        }
+       
 
         private void UpdateExperienceUI(PlayerUI playerUI)
         {
@@ -357,28 +293,21 @@ namespace CoED
                 playerUI.UpdateStaminaBar((int)CurrentStamina, (int)MaxStamina);
             }
         }
-        private void UpdateLevelDisplay(PlayerUI playerUI)
-        {
-            if (playerUI != null)
-            {
-                playerUI.UpdateLevelDisplay();
-            }
 
-        }
-        
-        public void UpdateLevelDisplay(int level)
+        public int GetCurrentFloor()
         {
-            if (playerUI != null)
-            {
-                playerUI.UpdateLevelDisplay();
-            }
-            // Update level display logic
+            return currentFloor;
         }
-        public int GetLevel() => level;
-        public int GetExperience() => currentExp;
-        public int GetExperienceToNextLevel() => ExpToNextLevel;
+    
 
-        public int GetCurrentFloor() => currentFloor;
+
+         private void HandleDeath()
+        {
+            // Debug.Log("PlayerStats: Player has died.");
+            GameManager gameManager = FindAnyObjectByType<GameManager>();
+            gameManager?.OnPlayerDeath();
+            OnPlayerDeath?.Invoke();
+        }
     }
 }
 

@@ -21,13 +21,13 @@ private void OnTriggerEnter2D(Collider2D other)
 {
     if (other.CompareTag("Player"))
     {
-        Debug.Log("hello from stairs trigger");
+        // Debug.Log("hello from stairs trigger");
 
         // Transition logic
         int currentFloor = PlayerStats.Instance.GetCurrentFloor();
         int newFloor = currentFloor + floorChangeValue;
         PlayerStats.Instance.currentFloor = newFloor;
-        Debug.Log($"Transitioning player from Floor {currentFloor} to Floor {newFloor}. Updated player's currentFloor value");
+        // Debug.Log($"Transitioning player from Floor {currentFloor} to Floor {newFloor}. Updated player's currentFloor value");
 
         // Find the target floor based on the new floor number
         Transform targetFloorParent = FindFloor(newFloor);
@@ -46,7 +46,7 @@ private void OnTriggerEnter2D(Collider2D other)
                 if (targetCollider != null)
                 {
                     targetCollider.enabled = false;
-                    Debug.Log($"Disabled collider for stairs on Floor {newFloor}.");
+                    // Debug.Log($"Disabled collider for stairs on Floor {newFloor}.");
                 }
             }
         }
@@ -58,7 +58,7 @@ private void OnTriggerEnter2D(Collider2D other)
         Vector3 newPosition = player.position + offset + new Vector3(-0.5f, -0.5f, 0); // Adjust if needed
         PlayerMovement.Instance.UpdateCurrentTilePosition(newPosition);
 
-        Debug.Log($"Player transitioned to Floor {newFloor}, Position: {player.position}");
+        // Debug.Log($"Player transitioned to Floor {newFloor}, Position: {player.position}");
     }
 }
 
@@ -82,7 +82,7 @@ private void OnTriggerEnter2D(Collider2D other)
             {
                 if (floor.name.Contains($"Floor_{floorNumber}"))
                 {
-                    Debug.Log($"Floor found: {floor.name}");
+                    // Debug.Log($"Floor found: {floor.name}");
                     return floor;
                 }
             }

@@ -78,7 +78,7 @@ namespace CoED
                 {
                     AssignSpell(draggedSpell);
                     dragHandler.ClearDrag();
-                    Debug.Log($"SpellSlot: Assigned spell '{draggedSpell.SpellName}' to slot.");
+                    // Debug.Log($"SpellSlot: Assigned spell '{draggedSpell.SpellName}' to slot.");
                 }
                 else
                 {
@@ -94,7 +94,7 @@ namespace CoED
                 isOnCooldown = true;
                 cooldownTimer = assignedSpell.Cooldown;
                 cooldownText.enabled = true;
-                Debug.Log($"SpellSlot: Started cooldown for spell '{assignedSpell.SpellName}'.");
+                // Debug.Log($"SpellSlot: Started cooldown for spell '{assignedSpell.SpellName}'.");
             }
             else
             {

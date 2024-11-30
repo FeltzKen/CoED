@@ -113,7 +113,6 @@ GameObject:
   - component: {fileID: 3467289398806818614}
   - component: {fileID: 4918402029249683888}
   - component: {fileID: 7168025207566393736}
-  - component: {fileID: 9070758813798802788}
   - component: {fileID: 5844711914316261250}
   - component: {fileID: 4558179072998116767}
   - component: {fileID: 1948119710454645371}
@@ -122,6 +121,7 @@ GameObject:
   - component: {fileID: 8182549918890610233}
   - component: {fileID: 7276005580750806224}
   - component: {fileID: 5833244433419089174}
+  - component: {fileID: 32469408573616091}
   m_Layer: 3
   m_Name: player
   m_TagString: Player
@@ -269,20 +269,6 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0}
   m_Size: {x: 1, y: 1}
   m_Direction: 0
---- !u!114 &9070758813798802788
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8948494598534906761}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4863f4c8022a29f489d86094cac567c6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  playerRigidbody: {fileID: 3467289398806818614}
-  statusEffect: {fileID: 0}
 --- !u!114 &5844711914316261250
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -379,7 +365,7 @@ MonoBehaviour:
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 384
-  moveDelay: 0.2
+  moveDelay: 0.25
   staminaBar: {fileID: 8034618581357456614, guid: 4e03e51d2d01fab4aa3632a729ecb472, type: 3}
   currentTilePosition: {x: 0, y: 0}
 --- !u!114 &7276005580750806224
@@ -396,7 +382,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   luckyNumbers: 59010000ea000000a701000084000000
   cursedNumber: 223
-  dungeonSeed: 1253
+  dungeonSeed: 1254
 --- !u!114 &5833244433419089174
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -410,19 +396,36 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   level: 1
-  experience: 0
-  experienceToNextLevel: 100
+  currentExp: 0
+  ExpToNextLevel: 100
   maxLevel: 50
-  maxHealth: 1000
-  baseAttack: 25
-  baseDefense: 7
-  baseMagic: 5
-  baseRange: 5
+  baseHealth: 1000
+  baseStamina: 100
+  baseMagic: 50
+  equipmentMagic: 0
+  baseAttack: 10
+  baseDefense: 5
+  baseProjectileRange: 5
   baseSpeed: 5
   baseFireRate: 1
   baseProjectileLifespan: 2
   currency: 0
   currentFloor: 1
+--- !u!114 &32469408573616091
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8948494598534906761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71ce4cfc9e5903847b92e612e7566090, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  availableSpells:
+  - {fileID: 11400000, guid: b4aff671b76d4924a98190206dcb4011, type: 2}
+  spellSpawnPoint: {fileID: 7814736005868405856}
 --- !u!1 &9016231569119957699
 GameObject:
   m_ObjectHideFlags: 0

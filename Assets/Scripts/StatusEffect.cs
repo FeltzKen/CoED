@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace CoED
@@ -64,7 +65,7 @@ namespace CoED
             {
                 int damage = Mathf.CeilToInt(damagePerSecond * Time.deltaTime);
                 PlayerStats.Instance.TakeDamage(damage);
-                Debug.Log($"Player taking damage: {damage}");
+                // Debug.Log($"Player taking damage: {damage}");
                 FloatingTextManager.Instance?.ShowFloatingText(
                     damage.ToString(),
                     target.transform.position,
@@ -72,10 +73,10 @@ namespace CoED
                 );
             }
 
-            if (target is Player player)
+            if (target is PlayerStats playerStats)
             {
-                player.playerStats.CurrentSpeed += speedModifier; // Ensure CurrentSpeed is float
-                player.playerStats.CurrentDefense += (int)defenseModifier; // Ensure CurrentDefense is float
+                playerStats.CurrentSpeed += speedModifier; // Ensure CurrentSpeed is float
+                playerStats.CurrentDefense += (int)defenseModifier; // Ensure CurrentDefense is float
             }
             else if (target is Enemy enemy) // Change to Enemy
             {
@@ -83,8 +84,8 @@ namespace CoED
 
                 if (enemyStats != null) // Ensure it's not null
                 {
-                    enemyStats.CurrentSpeed += speedModifier; // Modify the enemy's current speed
-                    enemyStats.CurrentDefense += defenseModifier; // Modify the enemy's current defense
+                    enemyStats.CurrentSpeed += Mathf.RoundToInt(speedModifier); // Modify the enemy's current speed
+                    enemyStats.CurrentDefense += Mathf.RoundToInt(defenseModifier); // Modify the enemy's current defense
                 }
             }
         }

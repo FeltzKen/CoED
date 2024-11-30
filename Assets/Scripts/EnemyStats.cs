@@ -6,91 +6,94 @@ namespace CoED
 {
     public class EnemyStats : MonoBehaviour
     {
-        [Header("Experience System")]
-        [SerializeField, Min(1)]
-        public int availableExperienceLevel = 1;
-        
-      
         [Header("Base Stats")]
         [SerializeField, Min(0)]
-        private int baseAttack {get;} = 10;
+        private int baseAttack = 10;
 
         [SerializeField, Min(0)]
         private int baseDefense = 5;
-   
-        [SerializeField, Min(0f)]
-        private float baseAttackRange = 1.0f;
-        [SerializeField, Min(0f)]
-        private float baseDetectionRange = 5f;
-        [SerializeField, Min(0f)]
-        private float baseFireRate = 5f;
+
+        [SerializeField, Min(0)]
+        private int baseHealth = 100;
 
         [SerializeField, Min(0)]
         private int baseSpeed = 5;
 
-        // Current Stats (after applying equipment)
-        private int maxHealth = 1000;
+        [SerializeField, Min(0f)]
+        private float baseAttackRange = 1.0f;
+
+        [SerializeField, Min(0f)]
+        private float baseDetectionRange = 5f;
+
+        [SerializeField, Min(0f)]
+        private float baseFireRate = 1f;
+
+        [SerializeField, Min(0f)]
+        private float baseProjectileLifespan = 2f;
+
+        // Current Stats
         public int CurrentAttack { get; set; }
+        public int CurrentDefense { get; set; }
         public int CurrentHealth { get; set; }
-        public float CurrentDefense { get; set; }
+        public int MaxHealth { get; set; }
+        public int CurrentSpeed { get; set; }
         public float CurrentAttackRange { get; set; }
         public float CurrentDetectionRange { get; set; }
-        public float CurrentSpeed { get; set; }
         public float CurrentFireRate { get; set; }
-        public EnemyUI enemyUI { get; set; }
-        public event Action<int, int> OnHealthChanged;
+        public float CurrentProjectileLifespan { get; set; }
+
+        private EnemyUI enemyUI { get; set; }
+       // public event Action <int> OnHealthChanged;
         public event Action OnEnemyDeath;
-        public int spawnFloor {get; set;} // Store the floor this enemy spawned on
+        public int spawnFloor { get; set; } // Store the floor this enemy spawned on
 
         private void Awake()
         {
-            enemyUI = GetComponentInChildren<EnemyUI>();
-            if (enemyUI == null)
-            {
-                Debug.LogError("EnemyStats: EnemyUI component not found.");
-            }
-            Debug.Log("EnemyStats instance initialized for: " + gameObject.name);
+
         }
 
         private void Start()
         {
-            InitializeStats();
+            CalculateStats();
         }
 
-        private void InitializeStats()
+        private void InitializeUI()
         {
-
-            CalculateStats();
-            CurrentHealth = maxHealth;
-            enemyUI.SetHealthBarMax(maxHealth);
-            UpdateHealthUI(enemyUI);
-            
+            enemyUI = GetComponent<EnemyUI>();
+            if (enemyUI != null)
+            {
+                enemyUI.SetHealthBarMax(MaxHealth);
+            }
         }
 
         private void CalculateStats()
         {
             float floorMultiplier = 1 + (spawnFloor * 0.1f); // Example: each floor increases stats by 10%
+
+            MaxHealth = Mathf.RoundToInt(baseHealth * floorMultiplier);
             CurrentAttack = Mathf.RoundToInt(baseAttack * floorMultiplier);
-            CurrentDefense = baseDefense * floorMultiplier;
+            CurrentDefense = Mathf.RoundToInt(baseDefense * floorMultiplier);
+            CurrentSpeed = Mathf.RoundToInt(baseSpeed * floorMultiplier);
             CurrentAttackRange = baseAttackRange * floorMultiplier;
             CurrentDetectionRange = baseDetectionRange * floorMultiplier;
-            CurrentSpeed = baseSpeed * floorMultiplier;
+            CurrentFireRate = Mathf.Max(baseFireRate - spawnFloor * 0.02f, 0.1f);
+            CurrentProjectileLifespan = baseProjectileLifespan + spawnFloor * 0.05f;
+            CurrentHealth = MaxHealth;
 
-            // Ensure current health does not exceed max health
-            CurrentHealth = Mathf.Min(CurrentHealth, maxHealth);
+            InitializeUI();
         }
 
         public void TakeDamage(int damage)
         {
-            int effectiveDamage = Mathf.Max(damage - (int)CurrentDefense, 1);
+            int effectiveDamage = Mathf.Max(damage - CurrentDefense, 1);
             CurrentHealth = Mathf.Max(CurrentHealth - effectiveDamage, 0);
-            OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
-            UpdateHealthUI(enemyUI);
+           // OnHealthChanged?.Invoke(CurrentHealth);
+            UpdateHealthUI();
 
             FloatingTextManager floatingTextManager = FloatingTextManager.Instance;
             floatingTextManager?.ShowFloatingText(effectiveDamage.ToString(), transform.position, Color.red);
 
-            Debug.Log($"EnemyStats: Took {effectiveDamage} damage. Current health: {CurrentHealth}/{maxHealth}");
+            Debug.Log($"EnemyStats: Took {effectiveDamage} damage. Current health: {CurrentHealth}/{MaxHealth}");
 
             if (CurrentHealth <= 0)
             {
@@ -106,14 +109,14 @@ namespace CoED
                 return;
             }
 
-            CurrentHealth = Mathf.Min(CurrentHealth + amount, maxHealth);
-            OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
-            UpdateHealthUI(enemyUI);
+            CurrentHealth = Mathf.Min(CurrentHealth + amount, MaxHealth);
+            //OnHealthChanged?.Invoke(CurrentHealth);
+            UpdateHealthUI();
 
             FloatingTextManager floatingTextManager = FloatingTextManager.Instance;
             floatingTextManager?.ShowFloatingText($"+{amount}", transform.position, Color.green);
 
-            Debug.Log($"EnemyStats: Healed {amount} health. Current health: {CurrentHealth}/{maxHealth}");
+            Debug.Log($"EnemyStats: Healed {amount} health. Current health: {CurrentHealth}/{MaxHealth}");
         }
 
         private void HandleDeath()
@@ -124,11 +127,16 @@ namespace CoED
         }
 
 
-        private void UpdateHealthUI(EnemyUI enemyUI)
+        private void UpdateHealthUI()
         {
+            EnemyUI enemyUI = GetComponentInChildren<EnemyUI>();
+            if (enemyUI == null)
+            {
+                Debug.LogError("EnemyStats: EnemyUI component not found.");
+            }
             if (enemyUI != null)
             {
-                enemyUI.UpdateHealthBar(CurrentHealth);
+                enemyUI.UpdateHealthBar(CurrentHealth, MaxHealth);
             }
         }
 
@@ -144,7 +152,7 @@ namespace CoED
             int randomRange = 3;
 
             // Calculate experience points with some randomness
-            int experiencePoints = baseExperience + (spawnFloor * scalingFactor) + UnityEngine.Random.Range(0, randomRange * spawnFloor);
+            int experiencePoints = baseExperience + (spawnFloor * scalingFactor) + UnityEngine.Random.Range(baseExperience * spawnFloor, randomRange * spawnFloor);
 
             return experiencePoints;
         }

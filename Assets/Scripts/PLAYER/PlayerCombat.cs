@@ -76,24 +76,24 @@ namespace CoED
 
 public void PerformMeleeAttack(Vector2Int targetPosition)
 {
-    Debug.Log($"PlayerCombat: Attempting melee attack at {targetPosition}.");
+    //Debug.Log($"PlayerCombat: Attempting melee attack at {targetPosition}.");
     Vector2 targetWorldPosition = new Vector2(targetPosition.x, targetPosition.y);
 
     // Use a small overlap circle for better enemy detection coverage
-    Collider2D hitCollider = Physics2D.OverlapCircle(targetWorldPosition, 0.5f, LayerMask.GetMask("enemies"));
+    Collider2D hitCollider = Physics2D.OverlapCircle(targetWorldPosition, 0f, LayerMask.GetMask("enemies"));
 
     if (hitCollider != null && hitCollider.CompareTag("Enemy"))
     {
         EnemyStats enemyStats = hitCollider.GetComponent<EnemyStats>();
         if (enemyStats != null)
         {
-            float damageDealt = Mathf.Max(playerStats.CurrentAttack - enemyStats.CurrentDefense, 1);
-            enemyStats.TakeDamage((int)damageDealt);
+            int damageDealt = Mathf.Max(playerStats.CurrentAttack, 1);
             Debug.Log($"PlayerCombat: Melee attacked {enemyStats.name} at {targetPosition} for {damageDealt} damage.");
+            enemyStats.TakeDamage(damageDealt);
 
             // Apply status effect to enemy
-            StatusEffect stunEffect = new StatusEffect("Stun", 3f, 0f, null);
-            enemyStats.GetComponent<StatusEffectManager>()?.AddStatusEffect(stunEffect);
+           // StatusEffect stunEffect = new StatusEffect("Stun", 3f, 0f, null);
+           // enemyStats.GetComponent<StatusEffectManager>()?.AddStatusEffect(stunEffect);
 
             lastAttackTime = Time.time;
             PlayerManager.Instance.ResetEnemyAttackFlags();
@@ -101,7 +101,7 @@ public void PerformMeleeAttack(Vector2Int targetPosition)
     }
     else
     {
-        Debug.Log($"PlayerCombat: No enemy at position {targetPosition} to attack.");
+        // Debug.Log($"PlayerCombat: No enemy at position {targetPosition} to attack.");
     }
 }
 
@@ -121,14 +121,14 @@ public void PerformMeleeAttack(Vector2Int targetPosition)
             if (playerMagic.CurrentMagic >= spellCost)
             {
                 playerMagic.CurrentMagic -= spellCost;
-                projectileManager.LaunchProjectile(transform.position, targetPosition, spellDamage, false);
+                projectileManager.LaunchProjectile(transform.position, targetPosition);
                 Debug.Log($"PlayerCombat: Cast spell towards {targetPosition} for {spellDamage} damage.");
                 lastAttackTime = Time.time;
                 PlayerManager.Instance.ResetEnemyAttackFlags();
             }
             else
             {
-                Debug.Log("PlayerCombat: Not enough magic to cast the spell.");
+                // Debug.Log("PlayerCombat: Not enough magic to cast the spell.");
             }
         }
     }

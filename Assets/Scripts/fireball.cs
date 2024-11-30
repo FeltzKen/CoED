@@ -44,7 +44,7 @@ private void OnTriggerEnter2D(Collider2D other)
     // Ignore collisions with the player
     if (other.CompareTag("Player")) return;
 
-    Debug.Log($"Player taking damage from fireball: {damage}");
+    // Debug.Log($"Player taking damage from fireball: {damage}");
 
     // Check if the collided object is in the specified collision layers
     if (((1 << other.gameObject.layer) & collisionLayers) != 0)

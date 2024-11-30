@@ -73,7 +73,7 @@ namespace CoED
                 {
                     isMoving = false;
                     isActionComplete = true;
-                   // Debug.Log("PlayerMovement: Movement action completed.");
+                   // // Debug.Log("PlayerMovement: Movement action completed.");
                 }
             }
         }
@@ -82,7 +82,7 @@ namespace CoED
         public void HandlePlayerTurn()
         {
             isActionComplete = false;
-           // Debug.Log("PlayerMovement: Handling player turn for movement.");
+           // // Debug.Log("PlayerMovement: Handling player turn for movement.");
         }
 
 private void HandleMovementInput()
@@ -199,9 +199,9 @@ private void HandleMovementInput()
 
         private void DeductStamina(float amount)
         {
-            playerStats.CurrentStamina = Mathf.Max(playerStats.CurrentStamina - amount, 0);
+            playerStats.CurrentStamina = Mathf.RoundToInt(Mathf.Max(playerStats.CurrentStamina - amount, 0));
             UpdateStaminaUI();
-            Debug.Log($"PlayerMovement: Deducted {amount} stamina. Current stamina: {playerStats.CurrentStamina}");
+            // Debug.Log($"PlayerMovement: Deducted {amount} stamina. Current stamina: {playerStats.CurrentStamina}");
         }
 
         public bool IsActionComplete()

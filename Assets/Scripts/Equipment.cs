@@ -27,7 +27,7 @@ public class Equipment : ScriptableObject
             IsEnchanted = Random.value < enchantmentChance;
             IsCursed = !IsEnchanted && Random.value < curseChance; // Only assign curse if not enchanted
 
-            Debug.Log($"{equipmentName} initialized: Enchanted = {IsEnchanted}, Cursed = {IsCursed}");
+            // Debug.Log($"{equipmentName} initialized: Enchanted = {IsEnchanted}, Cursed = {IsCursed}");
         }
 
         public void RemoveCurse()

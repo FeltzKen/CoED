@@ -76,7 +76,7 @@ namespace CoED
                     }
                     else if (enemyStats != null)
                     {
-                        enemyStats.CurrentSpeed += effect.SpeedModifier * deltaTime; // Ensure patrolSpeed has public setter
+                        enemyStats.CurrentSpeed += Mathf.RoundToInt(effect.SpeedModifier * deltaTime); // Ensure patrolSpeed has public setter
                     }
                 }
             }
@@ -109,9 +109,9 @@ namespace CoED
                 if (activeEffect.Effect.EffectName == effect.EffectName)
                 {
                     activeEffect.RemainingDuration = effect.Duration;
-                    Debug.Log(
+                    /*Debug.Log(
                         $"StatusEffectManager: Refreshed duration for existing effect '{effect.EffectName}'."
-                    );
+                    );*/
                     return;
                 }
             }
@@ -131,7 +131,7 @@ namespace CoED
 
             activeEffects.RemoveAll(ae => ae.Effect.EffectName == effect.EffectName);
             RemoveEffectIcon(effect);
-            Debug.Log($"StatusEffectManager: Removed status effect '{effect.EffectName}'.");
+            // Debug.Log($"StatusEffectManager: Removed status effect '{effect.EffectName}'.");
         }
 
         private void DisplayEffectIcon(StatusEffect effect)

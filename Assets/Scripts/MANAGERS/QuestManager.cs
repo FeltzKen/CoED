@@ -53,7 +53,7 @@ namespace CoED
             activeQuests.Add(newQuest);
             availableQuests.RemoveAt(randomIndex);
 
-            Debug.Log($"QuestManager: Assigned new quest '{newQuest.QuestName}'.");
+            // Debug.Log($"QuestManager: Assigned new quest '{newQuest.QuestName}'.");
 
             PlayerUI.Instance?.ShowQuestAssigned(newQuest);
 
@@ -85,7 +85,7 @@ namespace CoED
             if (quest.RewardItem != null)
             {
                 playerInventory.AddItem(quest.RewardItem);
-                Debug.Log(
+                 Debug.Log(
                     $"QuestManager: Granted reward '{quest.RewardItem.ItemName}' to the player."
                 );
             }
@@ -132,7 +132,7 @@ namespace CoED
             if (quest != null && !availableQuests.Contains(quest))
             {
                 availableQuests.Add(quest);
-                Debug.Log($"QuestManager: Added quest '{quest.QuestName}' to available quests.");
+                // Debug.Log($"QuestManager: Added quest '{quest.QuestName}' to available quests.");
             }
             else
             {
@@ -147,7 +147,7 @@ namespace CoED
             if (availableQuests.Contains(quest))
             {
                 availableQuests.Remove(quest);
-                Debug.Log(
+                 Debug.Log(
                     $"QuestManager: Removed quest '{quest.QuestName}' from available quests."
                 );
             }

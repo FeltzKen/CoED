@@ -8,7 +8,7 @@ namespace CoED
         {
             if (other.CompareTag("Player"))
             {
-                Debug.Log("Player entered the trigger tile!");
+                // Debug.Log("Player entered the trigger tile!");
                 // Add functionality here (e.g., spawn an event, trap, etc.)
             }
         }

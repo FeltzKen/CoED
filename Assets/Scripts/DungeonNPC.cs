@@ -29,7 +29,7 @@ namespace CoED
                     transform.position,
                     Color.white
                 );
-                Debug.Log($"NPC Quest Assigned: {assignedQuest.QuestName}");
+                // Debug.Log($"NPC Quest Assigned: {assignedQuest.QuestName}");
             }
             else
             {
@@ -47,7 +47,7 @@ namespace CoED
                     transform.position,
                     Color.green
                 );
-                Debug.Log($"{rewardItem.ItemName} has been added to your inventory!");
+                // Debug.Log($"{rewardItem.ItemName} has been added to your inventory!");
             }
             else
             {
@@ -64,7 +64,7 @@ namespace CoED
                     transform.position,
                     Color.cyan
                 );
-                Debug.Log($"{assignedQuest.Description}");
+                // Debug.Log($"{assignedQuest.Description}");
             }
             else
             {
@@ -73,7 +73,7 @@ namespace CoED
                     transform.position,
                     Color.gray
                 );
-                Debug.Log("No quest assigned to this NPC.");
+                // Debug.Log("No quest assigned to this NPC.");
             }
         }
     }

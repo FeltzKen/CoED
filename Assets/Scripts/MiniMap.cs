@@ -53,7 +53,7 @@ namespace CoED
 
             if (playerTransform == null)
             {
-                playerTransform = Player.Instance?.transform;
+                playerTransform = PlayerStats.Instance?.transform;
                 if (playerTransform == null)
                 {
                     Debug.LogError(

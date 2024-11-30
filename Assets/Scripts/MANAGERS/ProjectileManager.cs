@@ -10,7 +10,7 @@ namespace CoED
 
         [Header("Projectile Settings")]
         [SerializeField]
-        private GameObject projectilePrefab;
+        private Projectiles projectiles;
 
         [SerializeField]
         private Transform projectileParent;
@@ -40,7 +40,7 @@ namespace CoED
 
         private void InitializeProjectilePool()
         {
-            if (projectilePrefab == null)
+            if (projectiles == null)
             {
                 Debug.LogError("ProjectileManager: Projectile Prefab is not assigned.");
                 return;
@@ -50,54 +50,36 @@ namespace CoED
             {
                 projectileParent = new GameObject("Projectiles").transform;
                 projectileParent.parent = transform;
-                Debug.Log("ProjectileManager: Created default Projectile Parent.");
+                // Debug.Log("ProjectileManager: Created default Projectile Parent.");
             }
 
             for (int i = 0; i < poolSize; i++)
             {
-                GameObject projectile = Instantiate(projectilePrefab, projectileParent);
+                GameObject projectile = Instantiate(projectiles.projectilePrefab, projectileParent);
                 projectile.SetActive(false);
                 projectilePool.Enqueue(projectile);
             }
         }
 
-        public void LaunchProjectile(
-            Vector3 startPosition,
-            Vector3 targetPosition,
-            int damage,
-            bool isEnemyProjectile
-        )
+           public void LaunchProjectile(Vector3 startPosition, Vector3 targetPosition)
+    {
+        if (projectilePool.Count == 0)
         {
-            if (projectilePool.Count == 0)
-            {
-                Debug.LogWarning(
-                    "ProjectileManager: No available projectiles in the pool. Consider increasing the pool size."
-                );
-                return;
-            }
-
-            GameObject projectileObj = projectilePool.Dequeue();
-            projectileObj.transform.position = startPosition;
-            projectileObj.transform.rotation = Quaternion.identity;
-            projectileObj.SetActive(true);
-
-            Projectile projectile = projectileObj.GetComponent<Projectile>();
-            if (projectile != null)
-            {
-                projectile.Initialize(targetPosition, damage, isEnemyProjectile);
-                Debug.Log(
-                    $"ProjectileManager: Launched projectile towards {targetPosition} with damage {damage}."
-                );
-            }
-            else
-            {
-                Debug.LogError(
-                    "ProjectileManager: Projectile Prefab does not contain a Projectile component."
-                );
-                projectileObj.SetActive(false);
-                projectilePool.Enqueue(projectileObj);
-            }
+            Debug.LogWarning("ProjectileManager: No available projectiles in the pool. Consider increasing the pool size.");
+            return;
         }
+        Debug.Log("ProjectileManager: Launching projectile.");
+        GameObject projectileObj = projectilePool.Dequeue();
+        projectileObj.transform.position = startPosition;
+        projectileObj.transform.rotation = Quaternion.identity;
+        projectileObj.SetActive(true);
+
+        Projectile projectile = projectileObj.GetComponent<Projectile>();
+        if (projectile != null)
+        {
+            projectile.Initialize(targetPosition, projectiles.damage, projectiles.isEnemyProjectile, this, projectiles.speed);
+        }
+    }
 
         public void ReturnToPool(GameObject projectile)
         {
@@ -116,6 +98,11 @@ namespace CoED
                 Debug.LogWarning("ProjectileManager: No available projectiles in the pool.");
                 return null;
             }
+        }
+        public void ReturnProjectileToPool(GameObject projectile)
+        {
+            projectile.SetActive(false);
+            projectilePool.Enqueue(projectile);
         }
     }
 }

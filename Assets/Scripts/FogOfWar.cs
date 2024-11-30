@@ -31,7 +31,7 @@ namespace CoED
 
         private void Start()
         {
-            playerTransform = Player.Instance?.transform;
+            playerTransform = PlayerStats.Instance?.transform;
 
             if (playerTransform == null)
             {
@@ -60,7 +60,7 @@ namespace CoED
             foreach (var fogTile in fogTiles)
             {
                 fogTile.gameObject.SetActive(false);
-                Debug.Log("FogOfWar: Revealed fog tile at " + fogTile.transform.position);
+                // Debug.Log("FogOfWar: Revealed fog tile at " + fogTile.transform.position);
             }
         }
     }

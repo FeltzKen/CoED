@@ -47,7 +47,7 @@ namespace CoED
             //IsEnchanted = Random.value < enchantmentChance;
             //IsCursed = !IsEnchanted && Random.value < curseChance; // Only assign curse if not enchanted
 
-           // Debug.Log($"{itemName} initialized: Enchanted = {IsEnchanted}, Cursed = {IsCursed}");
+           // // Debug.Log($"{itemName} initialized: Enchanted = {IsEnchanted}, Cursed = {IsCursed}");
         }
 
     }

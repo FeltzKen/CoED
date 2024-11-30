@@ -1207,7 +1207,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6017913122229554259, guid: e2f0308c96fcf7742aeeda564ade46de, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8495418548794293491, guid: e2f0308c96fcf7742aeeda564ade46de, type: 3}
       propertyPath: m_Name
@@ -1247,7 +1247,7 @@ BoxCollider2D:
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 328
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -1288,7 +1288,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8779610342960107156}
-  m_BodyType: 2
+  m_BodyType: 1
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
@@ -1299,7 +1299,7 @@ Rigidbody2D:
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 8
+    m_Bits: 456
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0

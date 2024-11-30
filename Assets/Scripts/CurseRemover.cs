@@ -19,14 +19,14 @@ namespace CoED
             if (equipment.IsCursed)
             {
                 equipment.RemoveCurse();
-                Debug.Log($"{equipment.equipmentName} has been uncursed.");
+                // Debug.Log($"{equipment.equipmentName} has been uncursed.");
 
                 // Optionally, we could invoke some UI or status update here.
                 // For example: UIManager.Instance?.UpdateInventoryDisplay();
             }
             else
             {
-                Debug.Log("CurseRemover: This item is not cursed or cannot be uncursed.");
+                // Debug.Log("CurseRemover: This item is not cursed or cannot be uncursed.");
             }
         }
     }
