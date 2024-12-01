@@ -165,7 +165,7 @@ private IEnumerator SpawnEnemiesForFloor(FloorData floorData, Transform floorPar
         EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
         if (enemyAI != null)
         {
-            enemyAI.SetWalkableTiles(floorData); 
+            enemyAI.Initialize(floorData); 
             enemyAI.SetPatrolPoints(floorData.GetRandomFloorTiles(dungeonSettings.numberOfPatrolPoints));
 
         }

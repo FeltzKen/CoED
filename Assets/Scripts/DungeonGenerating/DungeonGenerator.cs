@@ -15,7 +15,6 @@ namespace CoED
         private int currentFloorNumber;
         private GameObject dungeonParent;
         private FloorData floorData;
-        private int StairIDCounter;
 
         private void Awake()
         {
@@ -108,8 +107,7 @@ namespace CoED
 
                     // Initialize FloorData
                     floorData = new FloorData(currentFloorNumber);
-                    floorData.SetTilemaps(floorTilemap, wallTilemap);
-                    DungeonManager.Instance.AddFloor(floorData);
+                    floorData.SetTilemaps(floorTilemap, wallTilemap, voidTilemap);
 
                     // Generate floor tiles using the selected algorithm
                     HashSet<Vector2Int> floorTiles = GenerateFloorTiles();
@@ -122,14 +120,17 @@ namespace CoED
                     HashSet<Vector2Int> voidTiles = GenerateVoidTiles(floorTiles, wallTiles);
                     RenderTiles(voidTiles, voidTilemap, dungeonSettings.tilePalette.voidTiles);
 
-                    // Place stairs
-                    PlaceStairs(floorTiles, currentFloorNumber, dungeonSettings.maxFloors, floorTilemap, dungeonSettings.tilePalette.stairsUpTile, dungeonSettings.tilePalette.stairsDownTile);
+
 
                     // Store floor data
-                    StoreFloorData(floorTiles);
+                    StoreFloorData(floorTiles, wallTiles, voidTiles);
 
                     DungeonManager.Instance.FloorTransforms[currentFloorNumber] = floorParent.transform;
                     // Debug.Log($"Stored floor reference for Floor {currentFloorNumber} in DungeonManager.");
+
+                    // Place stairs
+                    PlaceStairs(floorTiles, currentFloorNumber, dungeonSettings.maxFloors, floorTilemap, dungeonSettings.tilePalette.stairsUpTile, dungeonSettings.tilePalette.stairsDownTile);
+
                 }
                 catch (Exception ex)
                 {
@@ -258,7 +259,7 @@ namespace CoED
             }
         }
 
-        private void StoreFloorData(HashSet<Vector2Int> floorTiles)
+        private void StoreFloorData(HashSet<Vector2Int> floorTiles, HashSet<Vector2Int> wallTiles, HashSet<Vector2Int> voidTiles)
         {
             if (floorData == null)
             {
@@ -272,7 +273,9 @@ namespace CoED
                 return;
             }
 
-            floorData.AddFloorTiles(floorTiles);
+            floorData.AddAllFloorTiles(floorTiles, wallTiles, voidTiles);
+            DungeonManager.Instance.AddFloor(floorData);
+
         }
 
         private void PlaceStairs(HashSet<Vector2Int> floorTiles, int currentFloor, int totalFloors, Tilemap floorTilemap, GameObject stairsUpPrefab, GameObject stairsDownPrefab)

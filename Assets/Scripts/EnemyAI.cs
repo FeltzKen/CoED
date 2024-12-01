@@ -16,6 +16,7 @@ namespace CoED
         private Pathfinder pathfinding;
         private List<Vector2Int> currentPath;
         private int pathIndex;
+        private Tilemap floorTilemap;
 
         public enum EnemyState { Patrol, Chase, Attack }
         public EnemyState currentState = EnemyState.Patrol;
@@ -23,7 +24,6 @@ namespace CoED
         public HashSet<Vector2Int> patrolPoints { get; private set; } = new HashSet<Vector2Int>();
         private Vector2Int patrolDestination;
         private Transform playerTransform;
-        private HashSet<Vector2Int> walkableTiles = new HashSet<Vector2Int>(); // Initialize empty
 
         private Rigidbody2D rb;
         public Vector2Int CurrentPosition { get; private set; }
@@ -36,8 +36,7 @@ namespace CoED
         public bool CanAttackPlayer { get; set; } = true;        
         private bool isPaused = false;
         private float pauseDuration = 0.5f;
-        public int SpawningFloor { get; set; } = 0;
-        private Tilemap tilemap;
+        public int SpawningFloor { get; set; } = 1;
 
         #region Setup
         private void Awake()
@@ -59,27 +58,42 @@ namespace CoED
                 return;
             }
         }
+        public void Initialize(FloorData floorData)
+        {
+            if (floorData != null)
+            {
+                floorTilemap = floorData.FloorTilemap;
+                SpawningFloor = floorData.FloorNumber;
+            }
+            else
+            {
+                Debug.LogError("EnemyAI: FloorData is null.");
+            }
+        }
 
         private void Start()
         {
-            // Ensure tilemap is assigned
-            if (tilemap == null)
+            FloorData floorData = DungeonManager.Instance.GetFloorData(SpawningFloor);
+            if (floorData != null)
             {
-                Debug.LogError("EnemyAI: Tilemap reference is missing. Ensure SetWalkableTiles is called before Start.");
+                floorTilemap = floorData.FloorTilemap;
+            }
+            else
+            {
+                Debug.LogError("EnemyAI: FloorData is null.");
                 return;
             }
 
             // Initialize CurrentPosition using tilemap grid coordinates
-            Vector3Int cellPosition = tilemap.WorldToCell(transform.position);
+            Vector3Int cellPosition = floorTilemap.WorldToCell(transform.position);
             CurrentPosition = new Vector2Int(cellPosition.x, cellPosition.y);
 
             // Align the enemy's position to the grid
-            Vector3 worldPosition = tilemap.CellToWorld(cellPosition);
+            Vector3 worldPosition = floorTilemap.CellToWorld(cellPosition);
             transform.position = new Vector3(worldPosition.x, worldPosition.y, transform.position.z);
 
             currentState = EnemyState.Patrol;
             SetNewPatrolDestination();
-
         }
 
 
@@ -170,10 +184,11 @@ namespace CoED
             if (patrolPoints.Count > 0)
             {
                 patrolDestination = patrolPoints.ElementAt(Random.Range(0, patrolPoints.Count));
+                    Vector3Int tilePosition = new Vector3Int(patrolDestination.x, patrolDestination.y, 0);
 
                 // Loop until we find a valid and different destination (up to 10 tries)
                 int attempts = 0;
-                while ((!walkableTiles.Contains(patrolDestination) || patrolDestination == CurrentPosition) && attempts < 10)
+                while ((floorTilemap.HasTile(tilePosition) || patrolDestination == CurrentPosition) && attempts < 10)
                 {
                     patrolDestination = patrolPoints.ElementAt(Random.Range(0, patrolPoints.Count));
                     attempts++;
@@ -189,15 +204,16 @@ namespace CoED
         #region Chase Behavior
     private void ChaseBehavior()
     {
-        Vector3Int playerTilePosition = tilemap.WorldToCell(playerTransform.position);
+        Vector3Int playerTilePosition = floorTilemap.WorldToCell(playerTransform.position);
         Vector2Int direction = new Vector2Int(
             playerTilePosition.x > CurrentPosition.x ? 1 : (playerTilePosition.x < CurrentPosition.x ? -1 : 0),
             playerTilePosition.y > CurrentPosition.y ? 1 : (playerTilePosition.y < CurrentPosition.y ? -1 : 0)
         );
 
         Vector2Int newPosition = CurrentPosition + direction;
+        Vector3Int tilePosition = new Vector3Int(newPosition.x, newPosition.y, 0);
 
-        if (walkableTiles.Contains(newPosition) && !IsObstacle(newPosition))
+        if (floorTilemap.HasTile(tilePosition) && !IsObstacle(newPosition))
         {
             UpdateCurrentTilePosition(newPosition);
         }
@@ -252,8 +268,9 @@ namespace CoED
             );
 
             Vector2Int newPosition = CurrentPosition + direction;
+            Vector3Int tilePosition = new Vector3Int(newPosition.x, newPosition.y, 0);
 
-            if (walkableTiles.Contains(newPosition) && !IsObstacle(newPosition))
+            if (floorTilemap.HasTile(tilePosition) && !IsObstacle(newPosition))
             {
                 UpdateCurrentTilePosition(newPosition);
             }
@@ -266,24 +283,32 @@ namespace CoED
             List<Vector2Int> possibleDirections = new List<Vector2Int> { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right }; // Possible movement directions
 
             // Prefer continuing in the last direction if possible
-            Vector2Int randomDirection;
-            if (lastDirection != Vector2Int.zero && Random.Range(0f, 1f) <= 0.75f && walkableTiles.Contains(CurrentPosition + lastDirection) && !IsObstacle(CurrentPosition + lastDirection))
+            Vector2Int randomDirection = Vector2Int.zero;
+
+            if (lastDirection != Vector2Int.zero && Random.Range(0f, 1f) <= 0.75f)
             {
-                randomDirection = lastDirection;
+                Vector2Int preferredPosition = CurrentPosition + lastDirection;
+                Vector3Int preferredTilePosition = new Vector3Int(preferredPosition.x, preferredPosition.y, 0);
+
+                if (floorTilemap.HasTile(preferredTilePosition) && !IsObstacle(preferredPosition))
+                {
+                    randomDirection = lastDirection;
+                }
             }
-            else
+
+            if (randomDirection == Vector2Int.zero)
             {
                 randomDirection = possibleDirections[Random.Range(0, possibleDirections.Count)];
             }
 
             Vector2Int newPosition = CurrentPosition + randomDirection;
+            Vector3Int tilePosition = new Vector3Int(newPosition.x, newPosition.y, 0);
 
-            if (walkableTiles.Contains(newPosition) && !IsObstacle(newPosition))
+            if (floorTilemap.HasTile(tilePosition) && !IsObstacle(newPosition))
             {
                 lastDirection = randomDirection;
                 UpdateCurrentTilePosition(newPosition);
             }
-
         }
 
         private bool IsObstacle(Vector2Int position)
@@ -297,7 +322,7 @@ namespace CoED
 
             CurrentPosition = gridPosition;
             // Convert the grid position back to world coordinates
-            Vector3 worldPosition = tilemap.CellToWorld(new Vector3Int(gridPosition.x, gridPosition.y, 0));
+            Vector3 worldPosition = floorTilemap.CellToWorld(new Vector3Int(gridPosition.x, gridPosition.y, 0));
             worldPosition += new Vector3(-0.5f, -0.5f, 0);
 
             rb.position = new Vector2(worldPosition.x, worldPosition.y);
@@ -306,22 +331,7 @@ namespace CoED
         #endregion
 
         #region Public Methods
-        public void SetWalkableTiles(FloorData floorData)
-        {
-            if (floorData != null)
-            {
-                walkableTiles = new HashSet<Vector2Int>(floorData.FloorTiles);
-                tilemap = floorData.FloorTilemap; // Assign tilemap reference
 
-                // Initialize pathfinding grid
-                var pathfindingGrid = new PathfindingGrid(walkableTiles);
-                pathfinding = new Pathfinder(pathfindingGrid);
-            }
-            else
-            {
-                Debug.LogError($"Enemy [ID: {uniqueID}]: FloorData is null");
-            }
-        }
 
 
         public void SetPatrolPoints(IEnumerable<Vector2Int> points)
@@ -341,7 +351,7 @@ namespace CoED
                 Gizmos.color = Color.blue;
                 foreach (var position in currentPath)
                 {
-                    Vector3 worldPos = tilemap.CellToWorld(new Vector3Int(position.x, position.y, 0)) + new Vector3(0.5f, 0.5f, 0);
+                    Vector3 worldPos = floorTilemap.CellToWorld(new Vector3Int(position.x, position.y, 0)) + new Vector3(0.5f, 0.5f, 0);
                     Gizmos.DrawCube(worldPos, Vector3.one * 0.5f);
                 }
             }

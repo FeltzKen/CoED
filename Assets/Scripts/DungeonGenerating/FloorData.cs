@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -9,9 +10,11 @@ namespace CoED
         public int FloorNumber { get; private set; }
         public HashSet<Vector2Int> FloorTiles { get; private set; } = new HashSet<Vector2Int>();
         public HashSet<Vector2Int> WallTiles { get; private set; } = new HashSet<Vector2Int>();
+        public HashSet<Vector2Int> VoidTiles { get; private set; } = new HashSet<Vector2Int>();
         public HashSet<Vector2Int> StairTiles { get; private set; } = new HashSet<Vector2Int>();   // Added StairTiles  
         public Tilemap FloorTilemap { get; private set; }
         public Tilemap WallTilemap { get; private set; }
+        public Tilemap VoidTilemap { get; private set; }
         public Tilemap StairTilemap { get; private set; }   // Added StairTilemap
         // Constructor
         public FloorData(int floorNumber)
@@ -22,34 +25,30 @@ namespace CoED
         /// <summary>
         /// Sets the tilemaps for the floor.
         /// </summary>
-        public void SetTilemaps(Tilemap floorTilemap, Tilemap wallTilemap)
- 
+        public void SetTilemaps(Tilemap floorTilemap, Tilemap wallTilemap, Tilemap voidTilemap)   // Added VoidTilemap
         {
             FloorTilemap = floorTilemap;
             WallTilemap = wallTilemap;
+            VoidTilemap = voidTilemap;   // Added VoidTilemap
         }
 
-        /// <summary>
-        /// Adds a collection of floor tiles.
-        /// </summary>
-        public void AddFloorTiles(IEnumerable<Vector2Int> tiles)
+
+        public void AddAllFloorTiles(IEnumerable<Vector2Int> floorTiles, IEnumerable<Vector2Int> wallTiles, IEnumerable<Vector2Int> voidTiles)   // Added VoidTiles
         {
-            foreach (var tile in tiles)
+            foreach (var tile in floorTiles)
             {
                 FloorTiles.Add(tile);
             }
-        }
-
-        /// <summary>
-        /// Adds a collection of wall tiles.
-        /// </summary>
-        public void AddWallTiles(IEnumerable<Vector2Int> tiles)
-        {
-            foreach (var tile in tiles)
+            foreach (var tile in wallTiles)
             {
                 WallTiles.Add(tile);
             }
+            foreach (var tile in voidTiles)
+            {
+                VoidTiles.Add(tile);
+            }
         }
+
 
         /// <summary>
         /// Checks if a tile is part of the floor.
@@ -70,7 +69,7 @@ namespace CoED
             }
 
             List<Vector2Int> tileList = new List<Vector2Int>(FloorTiles);
-            return tileList[Random.Range(0, tileList.Count)];
+            return tileList[UnityEngine.Random.Range(0, tileList.Count)];
         }
 
         /// <summary>
@@ -87,7 +86,7 @@ namespace CoED
             List<Vector2Int> selectedTiles = new List<Vector2Int>();
             for (int i = 0; i < count; i++)
             {
-                selectedTiles.Add(tileList[Random.Range(0, tileList.Count)]);
+                selectedTiles.Add(tileList[UnityEngine.Random.Range(0, tileList.Count)]);
             }
 
             return selectedTiles;

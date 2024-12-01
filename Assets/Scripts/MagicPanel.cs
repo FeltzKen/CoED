@@ -25,7 +25,16 @@ namespace CoED
                 Debug.LogWarning("MagicPanel instance already exists. Destroying duplicate.");
             }
         }
+        public Spell GetSpellAtIndex(int index)
+        {
+            if (index < 0 || index >= spellSlots.Count)
+            {
+                Debug.LogWarning("MagicPanel: Invalid index. Unable to retrieve spell.");
+                return null;
+            }
 
+            return spellSlots[index].GetAssignedSpell();
+        }
         public void EquipSpell(Spell spell)
         {
             if (spell == null)

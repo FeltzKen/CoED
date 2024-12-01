@@ -41,6 +41,7 @@ namespace CoED
             if (!floors.ContainsKey(floor.FloorNumber))
             {
                 floors[floor.FloorNumber] = floor;
+                Debug.Log($"Floor_{floor.FloorNumber} added to the dungeon.");
             }
             else
             {
@@ -97,5 +98,14 @@ namespace CoED
             return Vector2Int.zero; // Default if not found
         }
 
+        public FloorData GetFloorData(int floorNumber)
+        {
+            if (floors.TryGetValue(floorNumber, out FloorData floorData))
+            {
+                return floorData;
+            }
+            Debug.LogError($"DungeonManager: Floor {floorNumber} not found.");
+            return null;
+        }
     }
 }

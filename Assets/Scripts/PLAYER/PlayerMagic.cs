@@ -84,6 +84,11 @@ namespace CoED
             return currentMagic >= cost;
         }
 
+
+        public void ConsumeMagic(int amount)
+        {
+            SpendMagic(amount);
+        }
         private void SpendMagic(int amount)
         {
             currentMagic = Mathf.Max(0, currentMagic - amount); // Prevent going below zero

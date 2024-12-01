@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abfbe19fa9711d14185f4ed5efb4cd5f, type: 3}
+  m_Name: FireBall(projectile)
+  m_EditorClassIdentifier: 
+  projectileName: Arrow
+  speed: 1
+  damage: 20
+  range: 7
+  projectilePrefab: {fileID: 6125480342711139553, guid: d1ed4fec1cacc504485a2a7b401017f2, type: 3}
+  impactEffect: {fileID: 0}
+  piercesTargets: 0
+  isHoming: 0
+  isEnemyProjectile: 0
+  isPlayerProjectile: 1
+  isExplosive: 1
+  explosionRadius: 3
+  explosionForce: 2
+  explosionDamage: 5
+  description: 
