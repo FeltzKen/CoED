@@ -1,94 +1,104 @@
 using UnityEngine;
 using CoED;
 using System.Collections;
+using UnityEngine.Tilemaps;
 //using System.Numerics;
 namespace CoED
 {
     public class TransitionFloor : MonoBehaviour
     {
-    public int floorChangeValue; // +1 for down, -1 for up
-    private Transform dungeonParent;
-    private Transform player;
-    public int StairID;
-    private void Start()
-    {
-        // Find the dungeon parent dynamically
-        dungeonParent = GameObject.Find("DungeonParent").transform;
-        player = PlayerMovement.Instance.transform;
-    }
+        public int floorChangeValue; // +1 for down, -1 for up
+        private Transform dungeonParent;
+        private Transform player;
+        public int StairID;
+        private Collider2D targetCollider;
+
+        private void Start()
+        {
+            // Find the dungeon parent dynamically
+            dungeonParent = GameObject.Find("DungeonParent").transform;
+            player = PlayerMovement.Instance.transform;
+        }
+
+        private void Update()
+        {
+            if (targetCollider != null && player != null)
+            {
+                Vector2 playerPosition = new Vector2(player.position.x, player.position.y);
+                Vector2 targetPosition = new Vector2(targetCollider.transform.position.x, targetCollider.transform.position.y);
+
+                if (playerPosition != targetPosition)
+                {
+                    targetCollider.enabled = true;
+                    targetCollider = null;
+                    // Debug.Log("Re-enabled collider for stairs.");
+                }
+            }
+        }
 
 private void OnTriggerEnter2D(Collider2D other)
 {
     if (other.CompareTag("Player"))
     {
-        // Debug.Log("hello from stairs trigger");
-
         // Transition logic
         int currentFloor = PlayerStats.Instance.GetCurrentFloor();
         int newFloor = currentFloor + floorChangeValue;
         PlayerStats.Instance.currentFloor = newFloor;
-        // Debug.Log($"Transitioning player from Floor {currentFloor} to Floor {newFloor}. Updated player's currentFloor value");
 
-        // Find the target floor based on the new floor number
-        Transform targetFloorParent = FindFloor(newFloor);
-        if (targetFloorParent == null)
+        // Find the target floor's data
+        FloorData floorData = DungeonManager.Instance.GetFloorData(newFloor);
+        if (floorData == null)
         {
-            Debug.LogError($"No floor found for Floor {newFloor}");
+            Debug.LogError($"No floor data found for Floor {newFloor}");
             return;
         }
 
-        // Find the corresponding stairs on the target floor and disable its collider
-        foreach (Transform child in targetFloorParent)
+        // Determine the stairs position
+        Vector2Int stairsPosition = Vector2Int.zero;
+        bool stairsFound = false;
+
+        foreach (var stairTile in floorData.StairTiles)
         {
-            if (child.name.Contains("stairsUp") && floorChangeValue < 0 || child.name.Contains("stairsDown") && floorChangeValue > 0)
+            if ((floorChangeValue > 0 && stairTile == Vector2Int.zero) ||
+                (floorChangeValue < 0 && stairTile == Vector2Int.zero))
             {
-                Collider2D targetCollider = child.GetComponent<Collider2D>();
-                if (targetCollider != null)
-                {
-                    targetCollider.enabled = false;
-                    // Debug.Log($"Disabled collider for stairs on Floor {newFloor}.");
-                }
+                stairsPosition = stairTile;
+                stairsFound = true;
+                break;
             }
         }
 
-        // Calculate the position offset between the current floor and the target floor
-        Vector3 offset = targetFloorParent.position - transform.parent.position;
+        if (!stairsFound)
+        {
+            Debug.LogError("Target stairs not found.");
+            return;
+        }
 
-        // Update the player's position
-        Vector3 newPosition = player.position + offset + new Vector3(-0.5f, -0.5f, 0); // Adjust if needed
+        // Find a valid adjacent tile to the stairs
+        Vector2Int[] directions = new Vector2Int[]
+        {
+            Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
+        };
+
+        Vector2Int newTilePosition = stairsPosition;
+
+        foreach (Vector2Int direction in directions)
+        {
+            Vector2Int adjacentTilePosition = stairsPosition + direction;
+            if (floorData.FloorTiles.Contains(adjacentTilePosition))
+            {
+                newTilePosition = adjacentTilePosition;
+                break;
+            }
+        }
+
+        // Update the player's position to the new valid tile next to the stairs
+        Vector3 newPosition = floorData.FloorTilemap.CellToWorld(new Vector3Int(newTilePosition.x, newTilePosition.y, 0)) + new Vector3(-0.5f, -0.5f, 0);
         PlayerMovement.Instance.UpdateCurrentTilePosition(newPosition);
 
         // Debug.Log($"Player transitioned to Floor {newFloor}, Position: {player.position}");
     }
 }
 
-            private IEnumerator WaitForPlayerToMove()
-            {
-                Vector3 originalPosition = player.position;
-
-                // Wait until the player has moved a certain distance away from the original position
-                while (Vector3.Distance(player.position, originalPosition) < 1.5f)
-                {
-                    yield return null;
-                }
-
-                // Re-enable the collider once the player is far enough
-                GetComponent<Collider2D>().enabled = true;
-            }
-        private Transform FindFloor(int floorNumber)
-        {
-            // Search through the dungeon parent for a floor with the matching floor number
-            foreach (Transform floor in dungeonParent)
-            {
-                if (floor.name.Contains($"Floor_{floorNumber}"))
-                {
-                    // Debug.Log($"Floor found: {floor.name}");
-                    return floor;
-                }
-            }
-
-            Debug.LogWarning($"No floor with FloorNumber: {floorNumber} found under dungeon parent.");
-            return null;
-        }
     }
 }

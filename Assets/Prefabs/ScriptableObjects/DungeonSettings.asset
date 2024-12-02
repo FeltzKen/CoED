@@ -74,8 +74,10 @@ MonoBehaviour:
   enableBossFights: 1
   bossSpawnFloorInterval: 1
   enableAmbush: 1
+  numberOfAmbushTiles: 100
   ambushEnemyCount: 3
-  ambushRadius: 3
+  ambushTilePrefab: {fileID: 5594940870504256869, guid: 04caad6111fe60d4e8f0ec112e8577c6, type: 3}
+  ambushRadius: 5
   generateOuterWalls: 1
   enableDebugLogs: 0
   visualizePatrolRoutes: 0

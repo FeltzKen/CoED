@@ -63,6 +63,7 @@ namespace CoED
             if (floorData != null)
             {
                 floorTilemap = floorData.FloorTilemap;
+                Debug.Log($"Enemy [ID: {uniqueID}] floorData accessed isfloor {floorData.FloorTiles}.");
                 SpawningFloor = floorData.FloorNumber;
             }
             else
@@ -124,8 +125,25 @@ namespace CoED
         #endregion
 
         #region State Management
-        public void Act()
+        private void Act()
         {
+            float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
+
+            // Transition between states based on player distance
+            if (distanceToPlayer <= enemyStats.CurrentAttackRange)
+            {
+                ChangeState(EnemyState.Attack);
+            }
+            else if (distanceToPlayer <= enemyStats.CurrentDetectionRange)
+            {
+                ChangeState(EnemyState.Chase);
+            }
+            else
+            {
+                ChangeState(EnemyState.Patrol);
+            }
+
+            // Execute behavior based on the current state
             switch (currentState)
             {
                 case EnemyState.Patrol:
@@ -140,55 +158,23 @@ namespace CoED
             }
         }
 
-        public void PerformAction()
-        {
-            if (currentState == EnemyState.Attack)
-            {
-                PlayerManager playerManager = playerTransform.GetComponent<PlayerManager>();
-                if (playerManager != null)
-                {
-                    playerManager.TakeDamage(enemyStats.CurrentAttack);
-                }
-                ActionPoints = 0f; // Reset action points after attacking
-            }
-        }
-
-        public bool IsActionComplete()
-        {
-            return currentState != EnemyState.Attack;
-        }
-
-        public void ChangeState(EnemyState newState)
+        private void ChangeState(EnemyState newState)
         {
             if (currentState != newState)
             {
                 currentState = newState;
             }
         }
-        #endregion
-
-        #region Patrol Behavior
-    private void PatrolBehavior()
-    {
-        MoveInPreferredDirection();
-
-        // Check if the player is within detection range
-        if (Vector2.Distance(transform.position, playerTransform.position) < enemyStats.CurrentDetectionRange)
-        {
-            currentState = EnemyState.Chase;
-        }
-    }
 
         private void SetNewPatrolDestination()
         {
             if (patrolPoints.Count > 0)
             {
                 patrolDestination = patrolPoints.ElementAt(Random.Range(0, patrolPoints.Count));
-                    Vector3Int tilePosition = new Vector3Int(patrolDestination.x, patrolDestination.y, 0);
-
                 // Loop until we find a valid and different destination (up to 10 tries)
                 int attempts = 0;
-                while ((floorTilemap.HasTile(tilePosition) || patrolDestination == CurrentPosition) && attempts < 10)
+                HashSet<Vector2Int> floorTiles = DungeonManager.Instance.GetFloorData(SpawningFloor).FloorTiles;
+                while ((floorTiles.Contains(patrolDestination) || patrolDestination == CurrentPosition) && attempts < 10)
                 {
                     patrolDestination = patrolPoints.ElementAt(Random.Range(0, patrolPoints.Count));
                     attempts++;
@@ -199,31 +185,20 @@ namespace CoED
                 Debug.LogWarning($"Enemy [ID: {uniqueID}]: No patrol points available.");
             }
         }
+        #endregion
 
+        #region Patrol Behavior
+        private void PatrolBehavior()
+        {
+            MoveInPreferredDirection();
+        }
+        #endregion
 
         #region Chase Behavior
-    private void ChaseBehavior()
-    {
-        Vector3Int playerTilePosition = floorTilemap.WorldToCell(playerTransform.position);
-        Vector2Int direction = new Vector2Int(
-            playerTilePosition.x > CurrentPosition.x ? 1 : (playerTilePosition.x < CurrentPosition.x ? -1 : 0),
-            playerTilePosition.y > CurrentPosition.y ? 1 : (playerTilePosition.y < CurrentPosition.y ? -1 : 0)
-        );
-
-        Vector2Int newPosition = CurrentPosition + direction;
-        Vector3Int tilePosition = new Vector3Int(newPosition.x, newPosition.y, 0);
-
-        if (floorTilemap.HasTile(tilePosition) && !IsObstacle(newPosition))
+        private void ChaseBehavior()
         {
-            UpdateCurrentTilePosition(newPosition);
+            MoveTowardsPlayer();
         }
-
-        // Check if the player is within attack range
-        if (Vector2.Distance(transform.position, playerTransform.position) < enemyStats.CurrentAttackRange)
-        {
-            currentState = EnemyState.Attack;
-        }
-    }
         #endregion
 
         #region Attack Behavior
@@ -233,32 +208,16 @@ namespace CoED
             {
                 return;
             }
-
-            float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
-
-            if (distanceToPlayer > enemyStats.CurrentDetectionRange)
-            {
-                ChangeState(EnemyState.Patrol);
-                SetNewPatrolDestination();
-                return;
-            }
-
-            if (distanceToPlayer > enemyStats.CurrentAttackRange)
-            {
-                ChangeState(EnemyState.Chase);
-                return;
-            }
-
             PlayerManager playerManager = playerTransform.GetComponent<PlayerManager>();
             if (playerManager != null)
             {
-                // Debug.Log($"Enemy [ID: {uniqueID}] is attacking the player.");
                 playerManager.TakeDamage(enemyStats.CurrentAttack);
-                CanAttackPlayer = false; // Set CanAttackPlayer to false after attacking
             }
+            CanAttackPlayer = false;
         }
-
         #endregion
+
+        #region Movement
         private void MoveTowardsPlayer()
         {
             Vector2Int playerTilePosition = Vector2Int.RoundToInt(playerTransform.position);
@@ -268,9 +227,8 @@ namespace CoED
             );
 
             Vector2Int newPosition = CurrentPosition + direction;
-            Vector3Int tilePosition = new Vector3Int(newPosition.x, newPosition.y, 0);
-
-            if (floorTilemap.HasTile(tilePosition) && !IsObstacle(newPosition))
+            HashSet<Vector2Int> floorTiles = DungeonManager.Instance.GetFloorData(SpawningFloor).FloorTiles;
+            if (floorTiles.Contains(newPosition) && !IsObstacle(newPosition))
             {
                 UpdateCurrentTilePosition(newPosition);
             }
@@ -280,6 +238,7 @@ namespace CoED
         #region Movement
         private void MoveInPreferredDirection()
         {
+            HashSet<Vector2Int> floorTiles = DungeonManager.Instance.GetFloorData(SpawningFloor).FloorTiles;    
             List<Vector2Int> possibleDirections = new List<Vector2Int> { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right }; // Possible movement directions
 
             // Prefer continuing in the last direction if possible
@@ -288,9 +247,7 @@ namespace CoED
             if (lastDirection != Vector2Int.zero && Random.Range(0f, 1f) <= 0.75f)
             {
                 Vector2Int preferredPosition = CurrentPosition + lastDirection;
-                Vector3Int preferredTilePosition = new Vector3Int(preferredPosition.x, preferredPosition.y, 0);
-
-                if (floorTilemap.HasTile(preferredTilePosition) && !IsObstacle(preferredPosition))
+                if (floorTiles.Contains(preferredPosition) && !IsObstacle(preferredPosition))
                 {
                     randomDirection = lastDirection;
                 }
@@ -302,9 +259,7 @@ namespace CoED
             }
 
             Vector2Int newPosition = CurrentPosition + randomDirection;
-            Vector3Int tilePosition = new Vector3Int(newPosition.x, newPosition.y, 0);
-
-            if (floorTilemap.HasTile(tilePosition) && !IsObstacle(newPosition))
+            if (floorTiles.Contains(newPosition) && !IsObstacle(newPosition))
             {
                 lastDirection = randomDirection;
                 UpdateCurrentTilePosition(newPosition);

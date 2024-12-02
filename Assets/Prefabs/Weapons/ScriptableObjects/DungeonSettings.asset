@@ -13,57 +13,38 @@ MonoBehaviour:
   m_Name: DungeonSettings
   m_EditorClassIdentifier: 
   dungeonSizeRange: {x: 200, y: 200}
-  maxFloors: 6
+  maxFloors: 5
   tilePalette:
-    floorTiles:
-    - {fileID: 11400000, guid: ef233971b3c0cd44290ee2b4da324666, type: 2}
-    - {fileID: 11400000, guid: ee7fa5e8f35104342a3df0f8d3590061, type: 2}
-    - {fileID: 11400000, guid: 88e2ff96c1954b4449a4a8f652391865, type: 2}
-    - {fileID: 11400000, guid: 7264ba0dbed3cdf439c680642ef7d1c5, type: 2}
-    - {fileID: 11400000, guid: af42529d5d770f7449cea711e3b575d2, type: 2}
-    - {fileID: 11400000, guid: 4400cb8505b270e478d1ca523ce656b1, type: 2}
-    - {fileID: 11400000, guid: 56bbaef0cbd85174c925f557ff8a2248, type: 2}
-    - {fileID: 11400000, guid: 2dfc422ecd4a4464483dbf3d8b48b104, type: 2}
-    - {fileID: 11400000, guid: e580d119173a0074ea955ff6157de190, type: 2}
-    - {fileID: 11400000, guid: 2308adf271198a44fb4f54c1f8bcff76, type: 2}
-    - {fileID: 11400000, guid: e0772d31a8e1e2e4097c57d8d3403b1f, type: 2}
-    wallTiles:
-    - {fileID: 11400000, guid: 1b5ad9b8a40808e4dba59fbaee51d293, type: 2}
-    - {fileID: 11400000, guid: e1b1ee67357ae6748a53a0c7f4a387e9, type: 2}
-    voidTiles:
-    - {fileID: 11400000, guid: ae2bc12a08fee464598a9e77553ca5fc, type: 2}
-    stairsUpTile: {fileID: 1638260800072365795, guid: 6c82c2d46b3613b4a89b278b9901da4d, type: 3}
-    stairsDownTile: {fileID: 926577741634186297, guid: 619db7b191317044e995e508dedd5224, type: 3}
-  itemPrefabs:
-  - {fileID: 0}
-  - {fileID: 0}
+    floorTiles: []
+    wallTiles: []
+    voidTiles: []
+    stairsUpTile: {fileID: 0}
+    stairsDownTile: {fileID: 0}
+  itemPrefabs: []
   seed: 0
   selectedAlgorithm:
     algorithmType: 0
-    initialWallDensity: 0.417
+    initialWallDensity: 0.4
     iterations: 5
     neighborWallThreshold: 4
     edgeBias: 10
-    bspSubdivisions: 7
-    bspCarveChance: 0.795
-    spiralStepSize: 10
-    waveCollapseBias: 5
+    bspSubdivisions: 4
+    bspCarveChance: 0.7
+    spiralStepSize: 1
+    waveCollapseBias: 1
     fractalDepth: 3
-    fractalSplitChance: 0.805
+    fractalSplitChance: 0.5
     lSystemIterations: 3
     branchChance: 0.5
     radialGrowthRadius: 10
     roomGrowthChance: 0.6
     corridorGrowthChance: 0.4
-  spawningRoomPrefab: {fileID: 5500069649626026940, guid: a9bf6527bfeff0b449811bc54c64988e, type: 3}
+  spawningRoomPrefab: {fileID: 6665827154481512502, guid: fdb4880b9593ef847a383bf9c170c60d, type: 3}
   spawnEffectPrefab: {fileID: 4985454231279368892, guid: aed4c3bbbee4901408f729fded73a077, type: 3}
-  enemyPrefabs:
-  - {fileID: 3198391839532095026, guid: e63b6f03d1c9eba448e1a722c613b4e6, type: 3}
-  - {fileID: 3198391839532095026, guid: 04a11b60e34b443448123f1b3fb662f3, type: 3}
-  healthBarPrefab: {fileID: 7920171421989906631, guid: 25e4b1c51ff90d54895cec756acb5a26, type: 3}
-  bossPrefabs:
-  - {fileID: 3198391839532095026, guid: 87ddcf6318ef8eb4688f3af074a97c1a, type: 3}
-  numberOfEnemiesPerFloor: 50
+  enemyPrefabs: []
+  healthBarPrefab: {fileID: 0}
+  bossPrefabs: []
+  numberOfEnemiesPerFloor: 5
   numberOfPatrolPoints: 10
   enableEnemyScaling: 1
   baseHealthMultiplier: 1
@@ -72,11 +53,11 @@ MonoBehaviour:
   playerLevelFactor: 0.1
   maxEnemyLevel: 20
   enableBossFights: 1
-  bossSpawnFloorInterval: 1
+  bossSpawnFloorInterval: 3
   enableAmbush: 1
-  ambushTileCount: 100
-  ambushTile: {fileID: 5594940870504256869, guid: 04caad6111fe60d4e8f0ec112e8577c6, type: 3}
+  numberOfAmbushTiles: 100
   ambushEnemyCount: 3
+  ambushTilePrefab: {fileID: 5594940870504256869, guid: 04caad6111fe60d4e8f0ec112e8577c6, type: 3}
   ambushRadius: 3
   generateOuterWalls: 1
   enableDebugLogs: 0

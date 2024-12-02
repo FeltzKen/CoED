@@ -5,7 +5,7 @@ using System;
 
 namespace CoED
 {
-    [CreateAssetMenu(fileName = "DungeonSettings", menuName = "GameSettings/DungeonSettings")]
+[CreateAssetMenu(fileName = "DungeonSettings", menuName = "ScriptableObjects/DungeonSettings")]
     public class DungeonSettings : ScriptableObject
     {
         [Header("Dungeon Dimensions")]
@@ -14,11 +14,14 @@ namespace CoED
 
         [Tooltip("Maximum number of dungeon floors.")]
         public int maxFloors = 5;
+  
+        [Tooltip("number of stairs to place per floor")]
+        public int numberOfStairs = 5;
 
-    [Header("Tile Palette")]
-    [SerializeField] public TilePalette tilePalette;
+        [Header("Tile Palette")]
+        [SerializeField] public TilePalette tilePalette;
 
-    // Expose the TilePalette instance for access
+        // Expose the TilePalette instance for access
         public TilePalette TilePalette => tilePalette;
 
 
@@ -36,10 +39,10 @@ namespace CoED
         
         [Header("Prefab Settings")]
         [Tooltip("Prefab for the spawning room.")]
-        public GameObject spawningRoomPrefab;
+        [SerializeField] public GameObject spawningRoomPrefab;
 
         [Tooltip("Prefab for spawn effects (e.g., particle effects).")]
-        public GameObject spawnEffectPrefab;
+        [SerializeField] public GameObject spawnEffectPrefab;
 
         [Header("Enemy Settings")]
         [Tooltip("List of enemy prefabs to use in the dungeon.")]
@@ -83,8 +86,14 @@ namespace CoED
         [Tooltip("Enable ambush mechanics where enemies spawn near the player.")]
         public bool enableAmbush = true;
 
+        [Tooltip("number of ambush tiles to spawn per floor.")]
+        public int numberOfAmbushTiles = 100;
+
         [Tooltip("Number of enemies to spawn during an ambush.")]
         public int ambushEnemyCount = 3;
+        
+        [Tooltip("Ambush Tile Prefab")]
+        [SerializeField] public GameObject ambushTilePrefab;
 
         [Tooltip("Radius around the player for ambush enemy spawn points.")]
         public float ambushRadius = 3f;

@@ -10,7 +10,7 @@ namespace CoED
     public class DungeonGenerator : MonoBehaviour
     {
         [Header("Dungeon Settings")]
-        [SerializeField] private DungeonSettings dungeonSettings;
+        [SerializeField] public DungeonSettings dungeonSettings;
 
         private int currentFloorNumber;
         private GameObject dungeonParent;
@@ -45,6 +45,7 @@ namespace CoED
             {
                 Debug.LogError("Spawning room prefab is not assigned in DungeonSettings!");
             }
+            PlaceStairs();
         }
 
 
@@ -129,7 +130,6 @@ namespace CoED
                     // Debug.Log($"Stored floor reference for Floor {currentFloorNumber} in DungeonManager.");
 
                     // Place stairs
-                    PlaceStairs(floorTiles, currentFloorNumber, dungeonSettings.maxFloors, floorTilemap, dungeonSettings.tilePalette.stairsUpTile, dungeonSettings.tilePalette.stairsDownTile);
 
                 }
                 catch (Exception ex)
@@ -148,6 +148,8 @@ namespace CoED
                 Debug.LogError("DungeonManager instance is not available.");
             }
             ApplyOffsetToAllTilemaps(); // Offset all tilemaps to match their parent floor positions
+            Debug.Log($"ambushtileprefab: {dungeonSettings.ambushTilePrefab}");
+            ScatterAmbushTriggers();
         }
 
 
@@ -278,48 +280,38 @@ namespace CoED
 
         }
 
-        private void PlaceStairs(HashSet<Vector2Int> floorTiles, int currentFloor, int totalFloors, Tilemap floorTilemap, GameObject stairsUpPrefab, GameObject stairsDownPrefab)
+        private void PlaceStairs()
         {
-            if (floorTiles == null || floorTiles.Count == 0)
+            var floors = DungeonManager.Instance.floors;
+
+            for (int currentFloor = dungeonSettings.maxFloors; currentFloor > 1; currentFloor--)
             {
-                Debug.LogError($"Floor {currentFloor} has no valid floor tiles for stair placement.");
-                return;
-            }
+                FloorData currentFloorData = floors[currentFloor];
+                HashSet<Vector2Int> currentFloorTiles = currentFloorData.FloorTiles;
 
-            List<Vector2Int> floorTileList = new List<Vector2Int>(floorTiles);
-
-            // Number of stair pairs to place
-            int stairPairs = 5;
-
-            // Handle stairs up (for floors 2 and above)
-            if (currentFloor > 1)
-            {
-                for (int i = 0; i < stairPairs; i++)
+                int stairsPlacedCount = 0;
+                while (stairsPlacedCount < dungeonSettings.numberOfStairs)
                 {
-                    Vector2Int stairsUpPosition = DungeonManager.Instance.GetStairsDownPosition(currentFloor - 1);
-                    if (stairsUpPosition != Vector2Int.zero && floorTiles.Contains(stairsUpPosition))
-                    {
-                        PlaceGameObjectAtTile(stairsUpPosition, floorTilemap, stairsUpPrefab, floorTilemap.transform);
-                        floorData.StairTiles.Add(stairsUpPosition);
+                    Vector2Int randomTile = GetRandomTile(currentFloorTiles);
+                    FloorData aboveFloorData = floors[currentFloor - 1];
 
-                        // Debug.Log($"Stairs up placed on Floor {currentFloor} at {stairsUpPosition}");
+                    // Check if the above floor has a floor tile at the same position
+                    if (aboveFloorData.FloorTiles.Contains(randomTile))
+                    {
+                        // Place stairs up on the current floor
+                        PlaceGameObjectAtTile(randomTile, currentFloorData.FloorTilemap, dungeonSettings.tilePalette.stairsUpTile, currentFloorData.FloorTilemap.transform);
+                        currentFloorData.StairTiles.Add(randomTile);
+
+                        // Place stairs down on the above floor
+                        PlaceGameObjectAtTile(randomTile, aboveFloorData.FloorTilemap, dungeonSettings.tilePalette.stairsDownTile, aboveFloorData.FloorTilemap.transform);
+                        aboveFloorData.StairTiles.Add(randomTile);
+
+                        stairsPlacedCount++;
                     }
                 }
             }
-
-            // Handle stairs down (for all but the last floor)
-            if (currentFloor < totalFloors)
-            {
-                for (int i = 0; i < stairPairs; i++)
-                {
-                    Vector2Int stairsDownPosition = GetRandomTile(floorTiles);
-                    DungeonManager.Instance.StoreStairsDownPosition(currentFloor, stairsDownPosition);
-                    PlaceGameObjectAtTile(stairsDownPosition, floorTilemap, stairsDownPrefab, floorTilemap.transform);
-                    floorData.StairTiles.Add(stairsDownPosition);
-                    // Debug.Log($"Stairs down placed on Floor {currentFloor} at {stairsDownPosition}");
-                }
-            }
         }
+
 
         public void ApplyOffsetToAllTilemaps()
         {
@@ -335,7 +327,7 @@ namespace CoED
                     }
                 }
             }
-}
+        }
 
         public static class Direction2D
         {
@@ -351,17 +343,15 @@ namespace CoED
             }
         }
 
-private void PlaceGameObjectAtTile(Vector2Int tilePosition, Tilemap floorTilemap, GameObject prefab, Transform parent)
-{
-    // Convert tile position to world position using the tilemap
-    Vector3 worldPosition = floorTilemap.CellToWorld(new Vector3Int(tilePosition.x, tilePosition.y, 0));
-    worldPosition += new Vector3(-0.5f, -0.5f, 0); // Offset by half a tile to center the object
-    // Instantiate and position the object
-    GameObject instance = Instantiate(prefab, worldPosition, Quaternion.identity, parent);
-    instance.name = $"{prefab.name}_at_{tilePosition.x}_{tilePosition.y}";
-    
-    // Debug.Log($"Placed {prefab.name} at tile position {tilePosition}, world position {worldPosition}");
-}
+        private GameObject PlaceGameObjectAtTile(Vector2Int tilePosition, Tilemap tilemap, GameObject prefab, Transform parent)
+        {
+            Vector3Int cellPosition = new Vector3Int(tilePosition.x, tilePosition.y, 0);
+            Vector3 worldPosition = tilemap.CellToWorld(cellPosition) + tilemap.tileAnchor;
+
+            GameObject instance = Instantiate(prefab, worldPosition, Quaternion.identity, parent);
+            return instance;
+        }
+
         private Vector2Int GetRandomTile(HashSet<Vector2Int> tiles)
         {
             int index = UnityEngine.Random.Range(0, tiles.Count);
@@ -371,6 +361,55 @@ private void PlaceGameObjectAtTile(Vector2Int tilePosition, Tilemap floorTilemap
                 index--;
             }
             return Vector2Int.zero;
+        }
+
+        // scatter ambush Triggers throughout the dungeon there is only one amush tile prefab saved in dungeon settings. there is also a number of ambush tiles to spawn per floor saved in dungeon settings.
+        // use  the floorData.floorTilemap and generate a random tile positions place the ambush triggers on.  
+        public void ScatterAmbushTriggers()
+        {
+            if (dungeonSettings.ambushTilePrefab == null)
+            {
+                Debug.LogError("Ambush tile prefab is not assigned in DungeonSettings!");
+                return;
+            }
+
+            if (dungeonSettings.numberOfAmbushTiles == 0)
+            {
+                Debug.LogWarning("numberOfAmbushTriggersPerFloor is set to 0. No ambush triggers will be spawned.");
+                return;
+            }
+
+            foreach (FloorData floorData in DungeonManager.Instance.floors.Values)
+            {
+                Tilemap floorTilemap = floorData.FloorTilemap;
+                int floorNumber = floorData.FloorNumber;
+
+                for (int i = 0; i < dungeonSettings.numberOfAmbushTiles; i++)
+                {
+                    Vector2Int ambushTilePosition = GetRandomTile(floorData.FloorTiles);
+
+                    // Place the ambush tile prefab and get the instantiated GameObject
+                    GameObject ambushInstance = PlaceGameObjectAtTile(ambushTilePosition, floorTilemap, dungeonSettings.ambushTilePrefab, floorTilemap.transform);
+
+                    if (ambushInstance != null)
+                    {
+                        // Assign the floorNumber to the ambush trigger component
+                        AmbushTriggerTile ambushTrigger = ambushInstance.GetComponent<AmbushTriggerTile>();
+                        if (ambushTrigger != null)
+                        {
+                            ambushTrigger.floorNumber = floorNumber;
+                        }
+                        else
+                        {
+                            Debug.LogError("AmbushTrigger component not found on the ambush prefab.");
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogError("Failed to instantiate ambush prefab.");
+                    }
+                }
+            }
         }
     }
 }

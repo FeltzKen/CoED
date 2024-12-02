@@ -17,6 +17,7 @@ namespace CoED
         public Dictionary<int, FloorData> floors = new Dictionary<int, FloorData>();
         public GameObject SpawningRoomInstance { get; set; }
         private FloorData floorData;
+        private DungeonSettings dungeonSettings;
         private int currentFloorNumber = 0;
 
     private void Awake()
@@ -47,6 +48,8 @@ namespace CoED
             {
                 Debug.LogWarning($"Floor_{floor.FloorNumber} already exists.");
             }
+            dungeonSettings = FindAnyObjectByType<DungeonGenerator>()?.GetComponent<DungeonGenerator>().dungeonSettings;
+
         }
 
         public void SetSpawningRoomInstance(GameObject instance)
@@ -98,6 +101,20 @@ namespace CoED
             return Vector2Int.zero; // Default if not found
         }
 
+        public Transform GetFloorTransform(int floorNumber)
+        {
+            if (FloorTransforms.TryGetValue(floorNumber, out Transform floorTransform))
+            {
+                return floorTransform;
+            }
+            Debug.LogError($"DungeonManager: Floor {floorNumber} not found.");
+            return null;
+        }
+
+        public int GetCurrentFloor()
+        {
+            return currentFloorNumber;
+        }
         public FloorData GetFloorData(int floorNumber)
         {
             if (floors.TryGetValue(floorNumber, out FloorData floorData))
@@ -105,6 +122,15 @@ namespace CoED
                 return floorData;
             }
             Debug.LogError($"DungeonManager: Floor {floorNumber} not found.");
+            return null;
+        }
+        //get random enemy prefab from the list in dugeon settings.
+        public GameObject GetRandomEnemyPrefab()
+        {
+            if (dungeonSettings.enemyPrefabs.Count > 0)
+            {
+                return dungeonSettings.enemyPrefabs[Random.Range(0, dungeonSettings.enemyPrefabs.Count)];
+            }
             return null;
         }
     }
