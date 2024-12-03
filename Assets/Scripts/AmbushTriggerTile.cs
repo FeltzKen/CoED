@@ -13,6 +13,7 @@ namespace CoED
                 Vector3 spawnLocation = transform.position;
                 int currentFloor = DungeonManager.Instance.GetCurrentFloor();
                 DungeonSpawner.Instance.SpawnAmbush(spawnLocation, floorNumber);
+              //  Destroy(gameObject);
             }
         }
     }

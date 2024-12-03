@@ -75,12 +75,14 @@ namespace CoED
         [SerializeField, Min(0f)]
         private float baseProjectileLifespan = 2f;
         public float CurrentProjectileLifespan { get; set; }
-
+        
+        public bool HasEnteredDungeon { get; set; } = false;
+        public bool transitioningComplete;
         [Header("Currency")]
         [SerializeField, Min(0)]
         private int currency = 0;
 
-        public int currentFloor = 1;
+        [SerializeField] public int currentFloor = 1;
         private PlayerUI playerUI;
         // Events
       //  public event Action OnLevelUp;
@@ -237,7 +239,7 @@ namespace CoED
             FloatingTextManager floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
             floatingTextManager?.ShowFloatingText(effectiveDamage.ToString(), transform.position, Color.red);
 
-            Debug.Log($"PlayerStats: Took {effectiveDamage} damage. Current health: {CurrentHealth}/{MaxHealth}");
+          //  Debug.Log($"PlayerStats: Took {effectiveDamage} damage. Current health: {CurrentHealth}/{MaxHealth}");
 
             if (CurrentHealth <= 0)
             {

@@ -11,7 +11,8 @@ namespace CoED
         {
             if (other.CompareTag("Player"))
             {
-                ExitSpawningRoom(other.gameObject);
+                PlayerStats.Instance.HasEnteredDungeon = true;
+                ExitSpawningRoom(other.transform);
             }
         }
 
@@ -20,22 +21,23 @@ namespace CoED
             // Debug.Log(warningMessage);
         }
 
-        private void ExitSpawningRoom(GameObject player)
+        private void ExitSpawningRoom(Transform player)
         {
 
             DisplayWarning();
 
             // Destroy spawning room instance via DungeonManager
-            if (DungeonManager.Instance.SpawningRoomInstance != null)
-            {
-                Destroy(DungeonManager.Instance.SpawningRoomInstance);
-            }
+            Destroy(DungeonManager.Instance.SpawningRoomInstance);
 
-
-            // Transport player using DungeonManager or DungeonSpawner
             if (DungeonManager.Instance != null)
             {
                 DungeonSpawner.Instance.TransportPlayerToDungeon(player);
+                CameraController cameraController = Camera.main.GetComponent<CameraController>();
+                if (cameraController != null)
+                {
+                    cameraController.ExitSpawningRoom();
+}
+
             }
             else
             {

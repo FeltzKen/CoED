@@ -63,7 +63,7 @@ namespace CoED
             if (floorData != null)
             {
                 floorTilemap = floorData.FloorTilemap;
-                Debug.Log($"Enemy [ID: {uniqueID}] floorData accessed isfloor {floorData.FloorTiles}.");
+            //    Debug.Log($"Enemy [ID: {uniqueID}] floorData accessed isfloor {floorData.FloorTiles}.");
                 SpawningFloor = floorData.FloorNumber;
             }
             else

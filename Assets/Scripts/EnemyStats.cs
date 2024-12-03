@@ -93,7 +93,7 @@ namespace CoED
             FloatingTextManager floatingTextManager = FloatingTextManager.Instance;
             floatingTextManager?.ShowFloatingText(effectiveDamage.ToString(), transform.position, Color.red);
 
-            Debug.Log($"EnemyStats: Took {effectiveDamage} damage. Current health: {CurrentHealth}/{MaxHealth}");
+           // Debug.Log($"EnemyStats: Took {effectiveDamage} damage. Current health: {CurrentHealth}/{MaxHealth}");
 
             if (CurrentHealth <= 0)
             {

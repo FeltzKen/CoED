@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dungeonSizeRange: {x: 200, y: 200}
   maxFloors: 6
+  numberOfStairs: 5
   tilePalette:
     floorTiles:
     - {fileID: 11400000, guid: ef233971b3c0cd44290ee2b4da324666, type: 2}
@@ -55,7 +56,7 @@ MonoBehaviour:
     radialGrowthRadius: 10
     roomGrowthChance: 0.6
     corridorGrowthChance: 0.4
-  spawningRoomPrefab: {fileID: 5500069649626026940, guid: a9bf6527bfeff0b449811bc54c64988e, type: 3}
+  spawningRoomPrefab: {fileID: 5500069649626026940, guid: 836c7b25195eacb41916fcf5dc76305b, type: 3}
   spawnEffectPrefab: {fileID: 4985454231279368892, guid: aed4c3bbbee4901408f729fded73a077, type: 3}
   enemyPrefabs:
   - {fileID: 3198391839532095026, guid: e63b6f03d1c9eba448e1a722c613b4e6, type: 3}
@@ -64,7 +65,7 @@ MonoBehaviour:
   bossPrefabs:
   - {fileID: 3198391839532095026, guid: 87ddcf6318ef8eb4688f3af074a97c1a, type: 3}
   numberOfEnemiesPerFloor: 50
-  numberOfPatrolPoints: 10
+  numberOfPatrolPoints: 20
   enableEnemyScaling: 1
   baseHealthMultiplier: 1
   baseDamageMultiplier: 1

@@ -51,49 +51,34 @@ namespace CoED
         /// <summary>   
         /// Transports the player to a random valid position on the specified floor.
         /// </summary>
-        public void TransportPlayerToDungeon(GameObject player)
+        public void TransportPlayerToDungeon(Transform player)
         {
-            // Debug.Log("Transporting player to the dungeon...");
 
-            // Destroy the spawning room if it exists
             if (DungeonManager.Instance.SpawningRoomInstance != null)
             {
                 Destroy(DungeonManager.Instance.SpawningRoomInstance);
-                // Debug.Log("Spawning room destroyed.");
             }
 
-            // Get the walkable tiles for the first floor and teleport the player
-            if (DungeonManager.Instance.FloorTransforms.ContainsKey(1) && DungeonManager.Instance.FloorTransforms[1] != null)
+            if (DungeonManager.Instance.FloorTransforms[1] != null)
             {
-            DungeonManager.Instance.ShowRenderersForFloor(1);
-            if (DungeonManager.Instance.floors.ContainsKey(1))
+
+                FloorData firstFloorData = DungeonManager.Instance.floors[1];
+                if (firstFloorData.FloorTiles.Count > 0)
                 {
-                    FloorData firstFloorData = DungeonManager.Instance.floors[1];
-                    if (firstFloorData.FloorTiles.Count > 0)
-                    {
-                        // Get a random walkable tile
-                        Vector2Int randomTile = firstFloorData.FloorTiles.OrderBy(t => Random.value).First();
-                        Vector3 exitPosition = new Vector3(randomTile.x, randomTile.y, 0);
+                    // Get a random walkable tile
+                    Vector2Int randomTile = firstFloorData.FloorTiles.OrderBy(t => Random.value).First();
+                    Vector3 exitPosition = new Vector3(randomTile.x, randomTile.y, 0);
 
-                        // Move the player to the selected position
-                        player.transform.position = exitPosition;
-                        rb.position = exitPosition;
-                        PlayerMovement.Instance.UpdateCurrentTilePosition(exitPosition);
+                    // Move the player to the selected position
+                    player.position = exitPosition;
+                    rb.position = exitPosition;
+                    PlayerMovement.Instance.UpdateCurrentTilePosition(exitPosition);
 
-                        // Update camera position
-                        Camera.main.GetComponent<CameraController>().SetPlayerTransform(player.transform);
-
-                        // Debug.Log($"Player transported to position: {exitPosition}");
-                    }
-                }
-                else
-                {
-                    Debug.LogError("First floor data not found. Cannot transport player.");
                 }
             }
             else
             {
-                Debug.LogError("First floor not found. Cannot transport player.");
+                Debug.LogError("First floor Transform not found. Cannot transport player.");
             }
         }
         #endregion

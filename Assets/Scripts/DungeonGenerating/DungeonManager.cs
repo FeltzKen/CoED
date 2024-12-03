@@ -12,6 +12,7 @@ namespace CoED
         public static DungeonManager Instance { get; private set; }
 
         public Dictionary<int, Transform> FloorTransforms { get; private set; } = new Dictionary<int, Transform>();
+        public Dictionary<(int, int), HashSet<Vector2Int>> floorIntersections = new Dictionary<(int, int), HashSet<Vector2Int>>();
 
         [Header("Floors")]
         public Dictionary<int, FloorData> floors = new Dictionary<int, FloorData>();
@@ -52,10 +53,7 @@ namespace CoED
 
         }
 
-        public void SetSpawningRoomInstance(GameObject instance)
-        {
-            SpawningRoomInstance = instance;
-        }
+
 
         public void ShowRenderersForFloor(int floorNumber)
         {

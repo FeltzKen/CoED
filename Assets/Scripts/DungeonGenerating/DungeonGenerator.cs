@@ -45,6 +45,7 @@ namespace CoED
             {
                 Debug.LogError("Spawning room prefab is not assigned in DungeonSettings!");
             }
+            ComputeFloorIntersections();
             PlaceStairs();
         }
 
@@ -59,6 +60,7 @@ namespace CoED
 
         }
 
+        #region Dungeon Generation
         public void GenerateDungeon()
         {
             int gridSize = Mathf.CeilToInt(Mathf.Sqrt(dungeonSettings.maxFloors));
@@ -148,11 +150,12 @@ namespace CoED
                 Debug.LogError("DungeonManager instance is not available.");
             }
             ApplyOffsetToAllTilemaps(); // Offset all tilemaps to match their parent floor positions
-            Debug.Log($"ambushtileprefab: {dungeonSettings.ambushTilePrefab}");
+         //   Debug.Log($"ambushtileprefab: {dungeonSettings.ambushTilePrefab}");
             ScatterAmbushTriggers();
         }
+        #endregion
 
-
+        #region CreateTilemaps
         private Tilemap CreateTilemap(Transform parent, string name, bool addCollider = false)
         {
             GameObject tilemapObject = new GameObject(name);
@@ -171,30 +174,9 @@ namespace CoED
 
             return tilemap;
         }
+        #endregion
 
-
-        public void EnableTilemapsForFloor(int floorNumber)
-        {
-            if (DungeonManager.Instance.FloorTransforms.ContainsKey(floorNumber))
-            {
-                Transform floorParent = DungeonManager.Instance.FloorTransforms[floorNumber];
-
-                // Iterate over all Tilemaps in the floor parent
-                foreach (Tilemap tilemap in floorParent.GetComponentsInChildren<Tilemap>())
-                {
-                    TilemapRenderer renderer = tilemap.GetComponent<TilemapRenderer>();
-                    if (renderer != null)
-                    {
-                        renderer.enabled = true;
-                    }
-                }
-            }
-            else
-            {
-                Debug.LogError($"Floor {floorNumber} not found in DungeonManager.");
-            }
-        }
-
+        #region TileGeneration
         private HashSet<Vector2Int> GenerateFloorTiles()
         {
             RectInt dungeonBounds = new RectInt(0, 0, dungeonSettings.dungeonSizeRange.x, dungeonSettings.dungeonSizeRange.y);
@@ -243,6 +225,28 @@ namespace CoED
 
             return voidTiles;
         }
+        #endregion
+
+
+        private void ComputeFloorIntersections()
+        {
+            var floors = DungeonManager.Instance.floors;
+
+            for (int currentFloor = dungeonSettings.maxFloors; currentFloor > 1; currentFloor--)
+            {
+                FloorData currentFloorData = floors[currentFloor];
+                FloorData aboveFloorData = floors[currentFloor - 1];
+
+                // Compute intersection points between the two floors
+                var commonTiles = new HashSet<Vector2Int>(currentFloorData.FloorTiles);
+                commonTiles.IntersectWith(aboveFloorData.FloorTiles);
+
+                // Store the intersections in the dictionary
+                DungeonManager.Instance.floorIntersections[(currentFloor, currentFloor - 1)] = commonTiles;
+
+            //    Debug.Log($"Intersection computed for Floors {currentFloor} and {currentFloor - 1}: {commonTiles.Count} points");
+            }
+        }
         public void RenderTiles(HashSet<Vector2Int> tiles, Tilemap tilemap, TileBase[] tilePalette)
         {
             if (tiles.Count == 0)
@@ -280,38 +284,44 @@ namespace CoED
 
         }
 
+        #region PlaceStairs
+        private int stairIDCounter = 0;
         private void PlaceStairs()
         {
-            var floors = DungeonManager.Instance.floors;
+            var intersections = DungeonManager.Instance.floorIntersections;
 
             for (int currentFloor = dungeonSettings.maxFloors; currentFloor > 1; currentFloor--)
             {
-                FloorData currentFloorData = floors[currentFloor];
-                HashSet<Vector2Int> currentFloorTiles = currentFloorData.FloorTiles;
+                var commonTiles = intersections[(currentFloor, currentFloor - 1)];
+                if (commonTiles == null || commonTiles.Count == 0)
+                {
+                    Debug.LogError($"No common tiles found between Floors {currentFloor} and {currentFloor - 1}. Cannot place stairs.");
+                    continue;
+                }
 
                 int stairsPlacedCount = 0;
                 while (stairsPlacedCount < dungeonSettings.numberOfStairs)
                 {
-                    Vector2Int randomTile = GetRandomTile(currentFloorTiles);
-                    FloorData aboveFloorData = floors[currentFloor - 1];
+                    Vector2Int randomTile = GetRandomTile(commonTiles);
 
-                    // Check if the above floor has a floor tile at the same position
-                    if (aboveFloorData.FloorTiles.Contains(randomTile))
-                    {
-                        // Place stairs up on the current floor
-                        PlaceGameObjectAtTile(randomTile, currentFloorData.FloorTilemap, dungeonSettings.tilePalette.stairsUpTile, currentFloorData.FloorTilemap.transform);
-                        currentFloorData.StairTiles.Add(randomTile);
-
-                        // Place stairs down on the above floor
-                        PlaceGameObjectAtTile(randomTile, aboveFloorData.FloorTilemap, dungeonSettings.tilePalette.stairsDownTile, aboveFloorData.FloorTilemap.transform);
-                        aboveFloorData.StairTiles.Add(randomTile);
-
-                        stairsPlacedCount++;
-                    }
+                    // Place stairs up on the current floor
+                    GameObject stairsUp = PlaceGameObjectAtTile(randomTile, DungeonManager.Instance.floors[currentFloor].FloorTilemap, dungeonSettings.tilePalette.stairsUpTile, DungeonManager.Instance.floors[currentFloor].FloorTilemap.transform);
+                   // stairsUp.GetComponent<TransitionFloor>().StairID = stairIDCounter;
+                    
+                    GameObject stairsDown = PlaceGameObjectAtTile(randomTile, DungeonManager.Instance.floors[currentFloor - 1].FloorTilemap, dungeonSettings.tilePalette.stairsDownTile, DungeonManager.Instance.floors[currentFloor - 1].FloorTilemap.transform);
+                   // stairsDown.GetComponent<TransitionFloor>().StairID = stairIDCounter;
+                    
+                    DungeonManager.Instance.floors[currentFloor].StairsUp.Add(stairsUp);
+                    DungeonManager.Instance.floors[currentFloor - 1].StairsDown.Add(stairsDown);
+                    
+                    stairIDCounter++;
+                    stairsPlacedCount++;
+                    
+                 //   Debug.Log($"Stairs placed at {randomTile} between Floors {currentFloor} and {currentFloor - 1}");
                 }
             }
         }
-
+        #endregion
 
         public void ApplyOffsetToAllTilemaps()
         {
@@ -363,8 +373,6 @@ namespace CoED
             return Vector2Int.zero;
         }
 
-        // scatter ambush Triggers throughout the dungeon there is only one amush tile prefab saved in dungeon settings. there is also a number of ambush tiles to spawn per floor saved in dungeon settings.
-        // use  the floorData.floorTilemap and generate a random tile positions place the ambush triggers on.  
         public void ScatterAmbushTriggers()
         {
             if (dungeonSettings.ambushTilePrefab == null)

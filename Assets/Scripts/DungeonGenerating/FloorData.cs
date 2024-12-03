@@ -11,11 +11,12 @@ namespace CoED
         public HashSet<Vector2Int> FloorTiles { get; private set; } = new HashSet<Vector2Int>();
         public HashSet<Vector2Int> WallTiles { get; private set; } = new HashSet<Vector2Int>();
         public HashSet<Vector2Int> VoidTiles { get; private set; } = new HashSet<Vector2Int>();
-        public HashSet<Vector2Int> StairTiles { get; private set; } = new HashSet<Vector2Int>();   // Added StairTiles  
         public Tilemap FloorTilemap { get; private set; }
         public Tilemap WallTilemap { get; private set; }
         public Tilemap VoidTilemap { get; private set; }
-        public Tilemap StairTilemap { get; private set; }   // Added StairTilemap
+        public List<GameObject> StairsUp { get; private set; } = new List<GameObject>();
+        public List<GameObject> StairsDown { get; private set; } = new List<GameObject>();
+
         // Constructor
         public FloorData(int floorNumber)
         {
@@ -47,29 +48,6 @@ namespace CoED
             {
                 VoidTiles.Add(tile);
             }
-        }
-
-
-        /// <summary>
-        /// Checks if a tile is part of the floor.
-        /// </summary>
-        public bool IsTilePartOfFloor(Vector2Int tile)
-        {
-            return FloorTiles.Contains(tile);
-        }
-
-        /// <summary>
-        /// Gets a single random floor tile.
-        /// </summary>
-        public Vector2Int GetRandomFloorTile()
-        {
-            if (FloorTiles.Count == 0)
-            {
-                throw new System.InvalidOperationException("No floor tiles available.");
-            }
-
-            List<Vector2Int> tileList = new List<Vector2Int>(FloorTiles);
-            return tileList[UnityEngine.Random.Range(0, tileList.Count)];
         }
 
         /// <summary>
