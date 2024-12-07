@@ -66,11 +66,7 @@ namespace CoED
                 int damage = Mathf.CeilToInt(damagePerSecond * Time.deltaTime);
                 PlayerStats.Instance.TakeDamage(damage);
                 // Debug.Log($"Player taking damage: {damage}");
-                FloatingTextManager.Instance?.ShowFloatingText(
-                    damage.ToString(),
-                    target.transform.position,
-                    Color.red
-                );
+             //   FloatingTextManager.Instance?.ShowFloatingText( damage.ToString(),target.transform,Color.red );              
             }
 
             if (target is PlayerStats playerStats)

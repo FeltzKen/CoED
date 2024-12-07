@@ -47,6 +47,7 @@ namespace CoED
             }
             ComputeFloorIntersections();
             PlaceStairs();
+            DungeonSpawner.Instance.SpawnItemsForAllFloors();
         }
 
 
@@ -94,6 +95,9 @@ namespace CoED
                     // Create the enemy parent object
                     GameObject enemyParentObject = new GameObject("EnemyParent");
                     enemyParentObject.transform.SetParent(floorParent.transform);
+                    
+                    GameObject itemParentObject = new GameObject("ItemParent");
+                    itemParentObject.transform.SetParent(floorParent.transform);
 
                     // Create tilemaps for this floor
                     Tilemap floorTilemap = CreateTilemap(floorParent.transform, "FloorTilemap");
@@ -182,7 +186,8 @@ namespace CoED
             RectInt dungeonBounds = new RectInt(0, 0, dungeonSettings.dungeonSizeRange.x, dungeonSettings.dungeonSizeRange.y);
             HashSet<Vector2Int> floorTiles = CarvingAlgorithm.Execute(dungeonSettings.selectedAlgorithm.algorithmType, dungeonSettings, dungeonBounds);
 
-
+          //  Debug.Log($"Floor tiles: {string.Join(", ", floorTiles)}");
+         //   Debug.Log($"total number of floor tiles: {floorTiles.Count}");
             return floorTiles;
         }
 

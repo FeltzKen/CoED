@@ -10,7 +10,7 @@ namespace CoED
     {
         [Header("Dungeon Dimensions")]
         [Tooltip("The range for the dungeon's width and height.")]
-        public Vector2Int dungeonSizeRange = new Vector2Int(200, 200);
+        public Vector2Int dungeonSizeRange = new Vector2Int(100, 100);
 
         [Tooltip("Maximum number of dungeon floors.")]
         public int maxFloors = 5;
@@ -26,7 +26,8 @@ namespace CoED
 
 
         [Tooltip("List of item prefabs to spawn in the dungeon.")]
-        public List<GameObject> itemPrefabs = new List<GameObject>();
+        public List<ScriptableObject> itemPrefabs = new List<ScriptableObject>();
+        public int numberOfItemsPerFloor = 30;
 
 
         [Tooltip("Random seed for procedural generation. Set to 0 for random seed each run.")]
@@ -119,18 +120,14 @@ namespace CoED
             [Header("Algorithm Type")]
             [Tooltip("Select the carving algorithm to use.")]
             public CarvingAlgorithmType algorithmType;
-
             [Header("Cellular Automata Settings")]
             [Tooltip("Initial wall density (value between 0 and 1).")]
             [Range(0f, 1f)]
             public float initialWallDensity = 0.4f;
-
             [Tooltip("Number of iterations for smoothing the map.")]
             public int iterations = 5;
-
             [Tooltip("Minimum neighbors required for a cell to become a wall.")]
             public int neighborWallThreshold = 4;
-
             [Header("Perlin Noise Settings")]
             [Tooltip("Scale factor for Perlin noise.")]
             public float edgeBias = 10f;
@@ -138,7 +135,6 @@ namespace CoED
             [Header("BSP Settings")]
             [Tooltip("Number of subdivisions for BSP algorithm.")]
             public int bspSubdivisions = 4;
-
             [Tooltip("Chance to carve out a space.")]
             [Range(0f, 1f)]
             public float bspCarveChance = 0.7f;
@@ -146,7 +142,6 @@ namespace CoED
             [Header("Spiral Pattern Settings")]
             [Tooltip("Step size for spiral generation.")]
             public int spiralStepSize = 1;
-
             [Header("Wave Function Collapse Settings")]
             [Tooltip("Weighting factor for tile probabilities.")]
             public float waveCollapseBias = 1.0f;
@@ -154,30 +149,63 @@ namespace CoED
             [Header("Fractal Maze Settings")]
             [Tooltip("Maximum recursion depth for fractal subdivision.")]
             public int fractalDepth = 3;
-
             [Tooltip("Chance to split the area at each depth level.")]
             [Range(0f, 1f)]
-            public float fractalSplitChance = 0.5f;
+            public float fractalMazeSplitChance = 0.5f;
+            [Tooltip("Fractal maze max depth.")]
+            public int fractalMazeMaxDepth = 3;
 
             [Header("L-System Settings")]
             [Tooltip("Number of iterations for the L-system.")]
             public int lSystemIterations = 3;
+            public int lSystemBranchIterations = 2;
+            public Vector2Int lSystemStart;
+            public int lSystemAngle = 25;
+            public int lSystemBranchChance = 45;
 
             [Tooltip("Chance for branching in the L-system.")]
             [Range(0f, 1f)]
             public float branchChance = 0.5f;
+            [Header("Ripple Propagation Settings")]
+            [Tooltip("Number of iterations for ripple propagation.")]
+            public int rippleIterations = 5;
+            [Tooltip("Minimum distance for ripple propagation.")]
+            public int rippleDistance = 3;
+            public int rippleCenters = 7;
+            public int rippleMaxRadius = 5; 
+
+            [Header("Biome Generation Settings")]
+            [Tooltip("Number of biomes to generate.")]
+            public int biomeCount = 5;
+            [Tooltip("Minimum size for a biome.")]
+            public int minBiomeSize = 10;   
+            [Tooltip("Maximum size for a biome.")]  
+            public int maxBiomeSize = 20;
+
+            [Header ("IslandGrowth Settings")]
+            [Tooltip("Number of islands to generate.")]
+            public int islandCount = 5;
+            [Tooltip("Minimum size for an island.")]
+            public int islandSize = 10;
 
             [Header("Radial Growth Settings")]
             [Tooltip("Radius of radial growth.")]
             public int radialGrowthRadius = 10;
-
             [Tooltip("Chance for a cell to grow into a room.")]
             [Range(0f, 1f)]
             public float roomGrowthChance = 0.6f;
-
             [Tooltip("Chance for a cell to grow into a corridor.")]
             [Range(0f, 1f)]
             public float corridorGrowthChance = 0.4f;
+            [Tooltip("Number of radial growth center xy.")]
+            public Vector2Int radialGrowthCenter = new Vector2Int(50, 50);
+            [Tooltip("Chance for a room to grow into a corridor.")]
+            public int radialGrowthRoomChance = 60;
+            [Tooltip("Chance for a corridor to grow into a room.")]
+            public int radialGrowthCorridorChance = 40;
+
+
+
         }
 
 

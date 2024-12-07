@@ -13,9 +13,7 @@ namespace CoED
         public float Speed { get; private set; } = 1f;
         public int uniqueID;
         public float ActionPoints { get; set; } = 0f;
-        private Pathfinder pathfinding;
         private List<Vector2Int> currentPath;
-        private int pathIndex;
         private Tilemap floorTilemap;
 
         public enum EnemyState { Patrol, Chase, Attack }
@@ -24,10 +22,12 @@ namespace CoED
         public HashSet<Vector2Int> patrolPoints { get; private set; } = new HashSet<Vector2Int>();
         private Vector2Int patrolDestination;
         private Transform playerTransform;
-
         private Rigidbody2D rb;
         public Vector2Int CurrentPosition { get; private set; }
         [SerializeField] private LayerMask obstacleLayer;
+        private HashSet<Vector2Int> floorTiles;
+        private HashSet<Vector2Int> wallTiles;
+        private HashSet<Vector2Int> voidTiles;
 
         private float moveCooldown = .25f; // Time between free movements
         private float nextMoveTime = 0f; // Timestamp for next free movement
@@ -37,23 +37,15 @@ namespace CoED
         private bool isPaused = false;
         private float pauseDuration = 0.5f;
         public int SpawningFloor { get; set; } = 1;
-
         #region Setup
         private void Awake()
         {
             uniqueID = nextID++; // Generates a unique identifier
             rb = GetComponent<Rigidbody2D>();
-            if (rb == null)
+            enemyStats = GetComponent<EnemyStats>();
+            if (rb == null || enemyStats == null)
             {
                 Debug.LogError("EnemyAI: Missing Rigidbody2D component. Disabling script.");
-                enabled = false;
-                return;
-            }
-
-            enemyStats = GetComponent<EnemyStats>();
-            if (enemyStats == null)
-            {
-                Debug.LogError("EnemyAI: Missing EnemyStats component. Disabling script.");
                 enabled = false;
                 return;
             }
@@ -77,14 +69,15 @@ namespace CoED
             FloorData floorData = DungeonManager.Instance.GetFloorData(SpawningFloor);
             if (floorData != null)
             {
-                floorTilemap = floorData.FloorTilemap;
+                floorTiles = floorData.FloorTiles;
+                wallTiles = floorData.WallTiles;
+                voidTiles = floorData.VoidTiles;
             }
             else
             {
                 Debug.LogError("EnemyAI: FloorData is null.");
                 return;
             }
-
             // Initialize CurrentPosition using tilemap grid coordinates
             Vector3Int cellPosition = floorTilemap.WorldToCell(transform.position);
             CurrentPosition = new Vector2Int(cellPosition.x, cellPosition.y);
@@ -211,7 +204,7 @@ namespace CoED
             PlayerManager playerManager = playerTransform.GetComponent<PlayerManager>();
             if (playerManager != null)
             {
-                playerManager.TakeDamage(enemyStats.CurrentAttack);
+                PlayerStats.Instance.TakeDamage(enemyStats.CurrentAttack);
             }
             CanAttackPlayer = false;
         }
@@ -227,27 +220,28 @@ namespace CoED
             );
 
             Vector2Int newPosition = CurrentPosition + direction;
-            HashSet<Vector2Int> floorTiles = DungeonManager.Instance.GetFloorData(SpawningFloor).FloorTiles;
-            if (floorTiles.Contains(newPosition) && !IsObstacle(newPosition))
+
+            // vDebug.Log($"Attempting to move to: {newPosition}, Current Position: {CurrentPosition}");
+
+            if (IsValidMove(newPosition))
             {
                 UpdateCurrentTilePosition(newPosition);
             }
         }
-        #endregion
 
-        #region Movement
+  
         private void MoveInPreferredDirection()
         {
-            HashSet<Vector2Int> floorTiles = DungeonManager.Instance.GetFloorData(SpawningFloor).FloorTiles;    
-            List<Vector2Int> possibleDirections = new List<Vector2Int> { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right }; // Possible movement directions
+            HashSet<Vector2Int> wallTiles = DungeonManager.Instance.GetFloorData(SpawningFloor).WallTiles;
+            HashSet<Vector2Int> voidTiles = DungeonManager.Instance.GetFloorData(SpawningFloor).VoidTiles;
+            List<Vector2Int> possibleDirections = new List<Vector2Int> { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
 
-            // Prefer continuing in the last direction if possible
             Vector2Int randomDirection = Vector2Int.zero;
 
             if (lastDirection != Vector2Int.zero && Random.Range(0f, 1f) <= 0.75f)
             {
                 Vector2Int preferredPosition = CurrentPosition + lastDirection;
-                if (floorTiles.Contains(preferredPosition) && !IsObstacle(preferredPosition))
+                if (!wallTiles.Contains(preferredPosition) && !voidTiles.Contains(preferredPosition) && !IsColliderObstacle(preferredPosition))
                 {
                     randomDirection = lastDirection;
                 }
@@ -259,34 +253,54 @@ namespace CoED
             }
 
             Vector2Int newPosition = CurrentPosition + randomDirection;
-            if (floorTiles.Contains(newPosition) && !IsObstacle(newPosition))
+            if (IsValidMove(newPosition))
             {
-                lastDirection = randomDirection;
+            
                 UpdateCurrentTilePosition(newPosition);
+
+                lastDirection = randomDirection;
             }
         }
-
-        private bool IsObstacle(Vector2Int position)
+        private bool IsValidMove(Vector2Int position)
         {
-            Collider2D hitCollider = Physics2D.OverlapBox(new Vector2(position.x, position.y), Vector2.one * 0.8f, 0f, obstacleLayer);
-            return hitCollider != null;
+            if (wallTiles.Contains(position) || voidTiles.Contains(position) || IsColliderObstacle(position))
+            {
+
+                return false;
+            }
+
+
+            return true;
         }
+
+        private bool IsColliderObstacle(Vector2Int position)
+        {
+            Collider2D collider = Physics2D.OverlapBox(new Vector2(position.x, position.y), Vector2.one * 0.8f, 0f, obstacleLayer);
+            return collider != null;
+        }
+
+
 
         private void UpdateCurrentTilePosition(Vector2Int gridPosition)
         {
-
             CurrentPosition = gridPosition;
+
             // Convert the grid position back to world coordinates
             Vector3 worldPosition = floorTilemap.CellToWorld(new Vector3Int(gridPosition.x, gridPosition.y, 0));
-            worldPosition += new Vector3(-0.5f, -0.5f, 0);
+            worldPosition += new Vector3(0.5f, 0.5f, 0); // Adjusted to ensure the enemy is centered in the tile
 
+            // Update Rigidbody and transform position to be exactly at the center of the tile
             rb.position = new Vector2(worldPosition.x, worldPosition.y);
             transform.position = new Vector3(worldPosition.x, worldPosition.y, transform.position.z);
+
+            // Recalculate CurrentPosition based on updated world position to prevent drift
+            Vector3Int updatedCellPosition = floorTilemap.WorldToCell(rb.position);
+            CurrentPosition = new Vector2Int(updatedCellPosition.x, updatedCellPosition.y);
         }
+
         #endregion
 
         #region Public Methods
-
 
 
         public void SetPatrolPoints(IEnumerable<Vector2Int> points)

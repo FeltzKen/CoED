@@ -8,7 +8,6 @@ namespace CoED
     {
         [Header("Health Settings")]
         [SerializeField]
-        private int maxHealth = 100; // Maximum health of the enemy
         public int currentHealth {get; set;} // Current health of the enemy
         private StatusEffectManager statusEffectManager; // Manages enemy status effects
         private FloatingTextManager floatingTextManager; // Manages floating text displays for feedback
@@ -53,10 +52,9 @@ namespace CoED
             }
 
             // Set initial health
-            currentHealth = maxHealth;
         }
 
-        private void DropLoot()
+        public void DropLoot()
         {
             float currentDropRate = baseDropRate;
 
@@ -87,7 +85,7 @@ namespace CoED
                     moneyComponent.SetAmount(moneyAmount);
                     floatingTextManager?.ShowFloatingText(
                         $"Dropped {moneyAmount} gold",
-                        transform.position,
+                        transform,
                         Color.blue
                     );
                 }

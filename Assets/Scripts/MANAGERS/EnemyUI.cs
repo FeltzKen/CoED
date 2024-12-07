@@ -20,7 +20,7 @@ namespace CoED
         private Color normalHealthColor = Color.green;
 
         [SerializeField]
-        private Color lowHealthColor = new Color(0.6f, 0f, 0f, 1f);
+        private Color lowHealthColor = Color.magenta;
 
         [SerializeField]
         private float pulseSpeed = 1f;

@@ -17,7 +17,6 @@ namespace CoED
         [Header("Floors")]
         public Dictionary<int, FloorData> floors = new Dictionary<int, FloorData>();
         public GameObject SpawningRoomInstance { get; set; }
-        private FloorData floorData;
         private DungeonSettings dungeonSettings;
         private int currentFloorNumber = 0;
 
@@ -43,7 +42,7 @@ namespace CoED
             if (!floors.ContainsKey(floor.FloorNumber))
             {
                 floors[floor.FloorNumber] = floor;
-                Debug.Log($"Floor_{floor.FloorNumber} added to the dungeon.");
+        //        Debug.Log($"Floor_{floor.FloorNumber} added to the dungeon.");
             }
             else
             {
@@ -72,14 +71,24 @@ namespace CoED
             }
         }
 
-        public Tilemap GetCurrentFloorTilemap(int currentFloorNumber)
+        public Tilemap GetWallTilemap(int currentFloorNumber)
         {
             // Assuming you have a way to get the current floor number
             if (floors.TryGetValue(currentFloorNumber, out FloorData floorData))
             {
-                return floorData.FloorTilemap;
+                return floorData.WallTilemap;
             }
-            Debug.LogError($"DungeonManager: Floor {currentFloorNumber} not found.");
+            Debug.LogError($"DungeonManager: WallTilemap for floor {currentFloorNumber} not found.");
+            return null;
+        }
+        public Tilemap GetVoidTilemap(int currentFloorNumber)
+        {
+            // Assuming you have a way to get the current floor number
+            if (floors.TryGetValue(currentFloorNumber, out FloorData floorData))
+            {
+                return floorData.VoidTilemap;
+            }
+            Debug.LogError($"DungeonManager: WallTilemap for floor {currentFloorNumber} not found.");
             return null;
         }
 

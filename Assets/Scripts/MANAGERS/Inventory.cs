@@ -26,24 +26,24 @@ namespace CoED
             }
             else
             {
-                Debug.LogWarning(
-                    "Inventory: Duplicate instance detected. Destroying this instance."
-                );
+                Debug.LogWarning("Inventory: Duplicate instance detected. Destroying this instance.");
                 Destroy(gameObject); // Destroy duplicate instance
             }
         }
+ 
 
         // Adds an item to the inventory. Returns true if successful.
         public bool AddItem(Item item)
         {
             if (items.Count >= maxInventorySlots)
             {
-                // Debug.Log("Inventory: Inventory is full, cannot add item.");
+                Debug.Log("Inventory: Inventory is full, cannot add item.");
                 return false;
             }
 
             items.Add(item);
-            // Debug.Log($"Inventory: Added {item.ItemName}.");
+        //    Debug.Log($"Inventory: Added {item.ItemName}.");
+        //    Debug.Log($"Inventory: {string.Join(", ", items)}");
             OnInventoryChanged?.Invoke(); // Notify subscribers that inventory has changed
             return true;
         }
@@ -53,17 +53,14 @@ namespace CoED
             // Add special item from quest.
         }
 
-        // Removes an item from the inventory. Returns true if successful.
+
         public bool RemoveItem(Item item)
         {
             if (items.Remove(item))
             {
-                // Debug.Log($"Inventory: Removed {item.ItemName}.");
-                OnInventoryChanged?.Invoke(); // Notify subscribers that inventory has changed
+                OnInventoryChanged?.Invoke();
                 return true;
             }
-
-            Debug.LogWarning("Inventory: Tried to remove an item that wasn't in inventory.");
             return false;
         }
 
@@ -85,18 +82,6 @@ namespace CoED
             items.Clear();
             // Debug.Log("Inventory: Inventory cleared.");
             OnInventoryChanged?.Invoke(); // Notify subscribers that inventory has changed
-        }
-
-        private void OnValidate()
-        {
-            // Ensure maxInventorySlots is at least 1 in the inspector
-            if (maxInventorySlots < 1)
-            {
-                maxInventorySlots = 1;
-                Debug.LogWarning(
-                    "Inventory: Max inventory slots cannot be less than 1. Setting to 1."
-                );
-            }
         }
     }
 }

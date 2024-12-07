@@ -10,21 +10,21 @@ namespace CoED
 
         [Header("Item Attributes")]
         [SerializeField]
-        private string itemName;
+        public string itemName;
 
         [SerializeField]
-        private Sprite icon;
+        public Sprite icon;
 
         [SerializeField]
-        private int attackBoost = 0;
+        public int attackBoost = 0;
 
         [SerializeField]
-        private int defenseBoost = 0;
+        public int defenseBoost = 0;
         [SerializeField]
-        private int speedBoost = 0;
+        public int speedBoost = 0;
 
         [SerializeField]
-        private int healthBoost = 0;
+        public int healthBoost = 0;
 
         // Gets the name of the item.
         public string ItemName => itemName;

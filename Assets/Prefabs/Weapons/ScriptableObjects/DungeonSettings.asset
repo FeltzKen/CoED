@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dungeonSizeRange: {x: 200, y: 200}
   maxFloors: 5
+  numberOfStairs: 5
   tilePalette:
     floorTiles: []
     wallTiles: []
@@ -23,7 +24,7 @@ MonoBehaviour:
   itemPrefabs: []
   seed: 0
   selectedAlgorithm:
-    algorithmType: 0
+    algorithmType: 2
     initialWallDensity: 0.4
     iterations: 5
     neighborWallThreshold: 4

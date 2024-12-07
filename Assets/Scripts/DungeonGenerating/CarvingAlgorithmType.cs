@@ -14,11 +14,11 @@ namespace CoED
         SpiralPattern,
         WaveFunctionCollapse,
         HybridAlgorithm,
-        IslandGrowth,
-        LSystem,
-        RipplePropagation,
-        BiomeGeneration,
-        FractalMaze,
-        RadialGrowth
+        IslandGrowthAlgorithm,
+        LSystemAlgorithm,
+        RipplePropagationAlgorithm,
+        BiomeGenerationAlgorithm,
+        FractalMazeAlgorithm,
+        RadialGrowthAlgorithm
     }
 }

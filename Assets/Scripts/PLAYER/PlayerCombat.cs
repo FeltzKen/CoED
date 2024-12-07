@@ -88,21 +88,14 @@ public void PerformMeleeAttack(Vector2Int targetPosition)
         if (enemyStats != null)
         {
             int damageDealt = Mathf.Max(playerStats.CurrentAttack, 1);
-            Debug.Log($"PlayerCombat: Melee attacked {enemyStats.name} at {targetPosition} for {damageDealt} damage.");
+        //    Debug.Log($"PlayerCombat: Melee attacked {enemyStats.name} at {targetPosition} for {damageDealt} damage.");
             enemyStats.TakeDamage(damageDealt);
-
-            // Apply status effect to enemy
-           // StatusEffect stunEffect = new StatusEffect("Stun", 3f, 0f, null);
-           // enemyStats.GetComponent<StatusEffectManager>()?.AddStatusEffect(stunEffect);
 
             lastAttackTime = Time.time;
             PlayerManager.Instance.ResetEnemyAttackFlags();
         }
     }
-    else
-    {
-        // Debug.Log($"PlayerCombat: No enemy at position {targetPosition} to attack.");
-    }
+
 }
 
         public void AttemptRangedAttack(Vector3 targetPosition)

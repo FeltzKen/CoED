@@ -7,7 +7,7 @@ namespace CoED
     public class PlayerMovement : MonoBehaviour
     {
         [Header("Movement Settings")]
-        [SerializeField] private float moveSpeed = 5f;
+        //[SerializeField] private float moveSpeed = 5f;
         [SerializeField] private float staminaCostPerRun = 2f;
         [SerializeField] private LayerMask obstacleLayer;
         [SerializeField] private float moveDelay = 0.2f;
@@ -18,8 +18,6 @@ namespace CoED
         public Vector2Int currentTilePosition;
         private float moveCooldown;
         private Rigidbody2D rb;
-      //  private TurnManager turnManager;
-        private bool isActionComplete = false;
         private bool isMoving = false;    
         private Vector2 targetPosition;
 
@@ -72,83 +70,103 @@ namespace CoED
                 if (Vector3.Distance(transform.position, targetPosition) < 0.01f)
                 {
                     isMoving = false;
-                    isActionComplete = true;
-                   // // Debug.Log("PlayerMovement: Movement action completed.");
                 }
             }
         }
 
-
-        public void HandlePlayerTurn()
+        private void HandleMovementInput()
         {
-            isActionComplete = false;
-           // // Debug.Log("PlayerMovement: Handling player turn for movement.");
-        }
+            if (Time.time < moveCooldown) return;
 
-private void HandleMovementInput()
-{
-    if (Time.time < moveCooldown) return;
+            Vector2Int direction = Vector2Int.zero;
 
-    Vector2Int direction = Vector2Int.zero;
-
-    // Determine direction based on player input
-    if (Input.GetKey(KeyCode.UpArrow)) direction += Vector2Int.up;
-    if (Input.GetKey(KeyCode.DownArrow)) direction += Vector2Int.down;
-    if (Input.GetKey(KeyCode.LeftArrow)) direction += Vector2Int.left;
-    if (Input.GetKey(KeyCode.RightArrow)) direction += Vector2Int.right;
-
-    // If a direction is chosen, check if the tile is walkable or contains an enemy
-    if (direction != Vector2Int.zero)
-    {
-        Vector2Int newTilePosition = currentTilePosition + direction;
-        Vector2 newPosition = new Vector2(newTilePosition.x, newTilePosition.y);
-
-        // Check for collisions separately for each axis
-        bool canMoveX = IsMovePossible(new Vector2Int(direction.x, 0));
-        bool canMoveY = IsMovePossible(new Vector2Int(0, direction.y));
-        bool canMoveDiagonal = IsMovePossible(direction);
-
-        if (canMoveDiagonal && canMoveX && canMoveY)
-        {
-            // Move diagonally if both directions are possible
-            currentTilePosition = newTilePosition;
-            targetPosition = newPosition;
-        }
-        else if (canMoveX)
-        {
-            // Move horizontally if only the X direction is possible
-            currentTilePosition += new Vector2Int(direction.x, 0);
-            targetPosition = new Vector2(currentTilePosition.x, currentTilePosition.y);
-        }
-        else if (canMoveY)
-        {
-            // Move vertically if only the Y direction is possible
-            currentTilePosition += new Vector2Int(0, direction.y);
-            targetPosition = new Vector2(currentTilePosition.x, currentTilePosition.y);
-        }
-
-        if (canMoveX || canMoveY || (canMoveDiagonal && canMoveX && canMoveY))
-        {
-            if (IsEnemyAtPosition(newTilePosition))
+            // Determine direction based on player input
+            if (Input.GetKey(KeyCode.UpArrow)) direction += Vector2Int.up;
+            if (Input.GetKey(KeyCode.DownArrow)) direction += Vector2Int.down;
+            if (Input.GetKey(KeyCode.LeftArrow)) direction += Vector2Int.left;
+            if (Input.GetKey(KeyCode.RightArrow)) direction += Vector2Int.right;
+            //
+            //
+            // add logic here to set direction as whatever direct is closet to the mouse position if the mouse button is pressed
+            // or held. do not move the player directly to the mouse position, but rather just set the direction
+            // the player will move in the next frame this should only run if no other direction keys are pressed. it should also
+            // allow for the diagonal movement in the same way holding down 2 arrow keys does if the mouse is in a diagonal position relative to the player. the player should also
+            // come to rest if their current position is the same as the mouse position.
+            //
+            if (direction == Vector2Int.zero && Input.GetMouseButton(0))
             {
-                // Perform attack if an enemy is at the target position
-                PlayerCombat.Instance.PerformMeleeAttack(newTilePosition);
+                Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                mousePosition.z = 0; // Ensure the z-coordinate is zero
+
+                Vector2 directionToMouse = (mousePosition - transform.position).normalized;
+
+                // Determine the closest direction to the mouse position
+                if (Mathf.Abs(directionToMouse.x) > Mathf.Abs(directionToMouse.y))
+                {
+                    direction.x = directionToMouse.x > 0 ? 1 : -1;
+                }
+                else
+                {
+                    direction.y = directionToMouse.y > 0 ? 1 : -1;
+                }
+
+                // Allow diagonal movement
+                if (Mathf.Abs(directionToMouse.x) > 0.5f && Mathf.Abs(directionToMouse.y) > 0.5f)
+                {
+                    direction.x = directionToMouse.x > 0 ? 1 : -1;
+                    direction.y = directionToMouse.y > 0 ? 1 : -1;
+                }
             }
-            else
+            // If a direction is chosen, check if the tile is walkable or contains an enemy
+            if (direction != Vector2Int.zero)
             {
-                // Move to the target position
-                rb.position = targetPosition;
-                transform.position = targetPosition;
-                isMoving = true;
-                moveCooldown = Time.time + moveDelay;
-                PlayerManager.Instance.ResetEnemyAttackFlags();
+                Vector2Int newTilePosition = currentTilePosition + direction;
+                Vector2 newPosition = new Vector2(newTilePosition.x, newTilePosition.y);
+
+                // Check for collisions separately for each axis
+                bool canMoveX = IsMovePossible(new Vector2Int(direction.x, 0));
+                bool canMoveY = IsMovePossible(new Vector2Int(0, direction.y));
+                bool canMoveDiagonal = IsMovePossible(direction);
+
+                if (canMoveDiagonal && canMoveX && canMoveY)
+                {
+                    // Move diagonally if both directions are possible
+                    currentTilePosition = newTilePosition;
+                    targetPosition = newPosition;
+                }
+                else if (canMoveX)
+                {
+                    // Move horizontally if only the X direction is possible
+                    currentTilePosition += new Vector2Int(direction.x, 0);
+                    targetPosition = new Vector2(currentTilePosition.x, currentTilePosition.y);
+                }
+                else if (canMoveY)
+                {
+                    // Move vertically if only the Y direction is possible
+                    currentTilePosition += new Vector2Int(0, direction.y);
+                    targetPosition = new Vector2(currentTilePosition.x, currentTilePosition.y);
+                }
+
+                if (canMoveX || canMoveY || (canMoveDiagonal && canMoveX && canMoveY))
+                {
+                    if (IsEnemyAtPosition(newTilePosition))
+                    {
+                        // Perform attack if an enemy is at the target position
+                        PlayerCombat.Instance.PerformMeleeAttack(newTilePosition);
+                    }
+                    else
+                    {
+                        // Move to the target position
+                        rb.position = targetPosition;
+                        transform.position = targetPosition;
+                        isMoving = true;
+                        moveCooldown = Time.time + moveDelay;
+                        PlayerManager.Instance.ResetEnemyAttackFlags();
+                    }
+                }
+
             }
         }
-        else
-        {
-        }
-    }
-}
 
         private bool IsEnemyAtPosition(Vector2Int position)
         {
@@ -202,11 +220,6 @@ private void HandleMovementInput()
             playerStats.CurrentStamina = Mathf.RoundToInt(Mathf.Max(playerStats.CurrentStamina - amount, 0));
             UpdateStaminaUI();
             // Debug.Log($"PlayerMovement: Deducted {amount} stamina. Current stamina: {playerStats.CurrentStamina}");
-        }
-
-        public bool IsActionComplete()
-        {
-            return isActionComplete && !isMoving;
         }
     }
 }

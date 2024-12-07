@@ -1,5 +1,4 @@
 using UnityEngine;
-using CoED;
 
 namespace CoED
 {

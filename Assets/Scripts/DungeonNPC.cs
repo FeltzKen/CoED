@@ -26,7 +26,7 @@ namespace CoED
                 assignedQuest = questManager.AssignNewQuest();
                 floatingTextManager?.ShowFloatingText(
                     $"Quest Assigned: {assignedQuest.QuestName}",
-                    transform.position,
+                    transform,
                     Color.white
                 );
                 // Debug.Log($"NPC Quest Assigned: {assignedQuest.QuestName}");
@@ -44,7 +44,7 @@ namespace CoED
                 playerInventory.AddItem(rewardItem);
                 floatingTextManager?.ShowFloatingText(
                     $"{rewardItem.ItemName} added to inventory!",
-                    transform.position,
+                    transform,
                     Color.green
                 );
                 // Debug.Log($"{rewardItem.ItemName} has been added to your inventory!");
@@ -61,7 +61,7 @@ namespace CoED
             {
                 floatingTextManager?.ShowFloatingText(
                     assignedQuest.Description,
-                    transform.position,
+                    transform,
                     Color.cyan
                 );
                 // Debug.Log($"{assignedQuest.Description}");
@@ -70,7 +70,7 @@ namespace CoED
             {
                 floatingTextManager?.ShowFloatingText(
                     "No quest assigned to this NPC.",
-                    transform.position,
+                    transform,
                     Color.gray
                 );
                 // Debug.Log("No quest assigned to this NPC.");

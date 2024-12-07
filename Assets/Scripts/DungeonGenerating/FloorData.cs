@@ -16,6 +16,7 @@ namespace CoED
         public Tilemap VoidTilemap { get; private set; }
         public List<GameObject> StairsUp { get; private set; } = new List<GameObject>();
         public List<GameObject> StairsDown { get; private set; } = new List<GameObject>();
+        public Transform itemParent;
 
         // Constructor
         public FloorData(int floorNumber)

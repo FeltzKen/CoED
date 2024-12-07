@@ -10,7 +10,6 @@ namespace CoED
         private Vector2 maxBounds = Vector2.zero;
         private float halfHeight;
         private float halfWidth;
-
         private Camera mainCamera;
         private bool isInSpawningRoom = true;
         private bool boundsClampingEnabled = true;
@@ -93,7 +92,7 @@ namespace CoED
             // Update the camera's position
             transform.position = new Vector3(clampedX, clampedY, transform.position.z);
 
-            Debug.Log($"Camera centered on player at ({clampedX}, {clampedY}) with clamping.");
+           // Debug.Log($"Camera centered on player at ({clampedX}, {clampedY}) with clamping.");
         }
 
         private void CenterCameraOnPlayerWithoutClamping()
@@ -109,7 +108,7 @@ namespace CoED
             // Directly update the camera's position without clamping
             transform.position = new Vector3(playerPosition.x, playerPosition.y, transform.position.z);
 
-            Debug.Log($"Camera centered on player at ({playerPosition.x}, {playerPosition.y}) without clamping.");
+           // Debug.Log($"Camera centered on player at ({playerPosition.x}, {playerPosition.y}) without clamping.");
         }
 
         public void ExitSpawningRoom()
@@ -155,6 +154,7 @@ namespace CoED
             boundsClampingEnabled = true;
 
             Debug.Log($"Camera bounds updated for Floor {floorNumber}: Min({minBounds}), Max({maxBounds})");
+            MinimapController.Instance.UpdateMinimapPosition(transform.position);
         }
     }
 }

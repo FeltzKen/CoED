@@ -27,6 +27,22 @@ namespace CoED
                     return SpiralPattern(settings, bounds);
                 case CarvingAlgorithmType.WaveFunctionCollapse:
                     return WaveFunctionCollapse(settings, bounds);
+                case CarvingAlgorithmType.HybridAlgorithm:
+                    return HybridAlgorithm(settings, bounds);
+                case CarvingAlgorithmType.IslandGrowthAlgorithm:
+                    return IslandGrowthAlgorithm.GenerateDungeon(bounds, settings.selectedAlgorithm.islandCount, settings.selectedAlgorithm.islandSize);
+                case CarvingAlgorithmType.LSystemAlgorithm:
+                    return LSystemAlgorithm.GenerateDungeon(settings.selectedAlgorithm.lSystemStart, settings.selectedAlgorithm.lSystemIterations, settings.selectedAlgorithm.lSystemBranchChance);
+                case CarvingAlgorithmType.RipplePropagationAlgorithm:
+                    return RipplePropagationAlgorithm.GenerateDungeon(bounds, settings.selectedAlgorithm.rippleCenters, settings.selectedAlgorithm.rippleMaxRadius);
+                case CarvingAlgorithmType.BiomeGenerationAlgorithm:
+                    return BiomeGenerationAlgorithm.GenerateDungeon(bounds, settings.selectedAlgorithm.biomeCount);
+                case CarvingAlgorithmType.FractalMazeAlgorithm: 
+                    return FractalMazeAlgorithm.GenerateDungeon(bounds, settings.selectedAlgorithm.fractalMazeMaxDepth, settings.selectedAlgorithm.fractalMazeSplitChance);
+                case CarvingAlgorithmType.RadialGrowthAlgorithm:    
+                    return RadialGrowthAlgorithm.GenerateDungeon(settings.selectedAlgorithm.radialGrowthCenter, settings.selectedAlgorithm.radialGrowthRadius, settings.selectedAlgorithm.radialGrowthRoomChance, settings.selectedAlgorithm.radialGrowthCorridorChance);
+                    
+
                 default:
                     Debug.LogError($"Unknown algorithm type: {algorithmType}");
                     return new HashSet<Vector2Int>();

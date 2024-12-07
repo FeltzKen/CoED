@@ -15,7 +15,7 @@ namespace CoED
 
 
         [SerializeField, Min(0)]
-        private int currentExp = 0;
+        private int CurrentExp = 0;
 
         [SerializeField, Min(1)]
         private int ExpToNextLevel = 100;
@@ -162,14 +162,14 @@ namespace CoED
                 // Debug.Log("PlayerStats: Maximum level reached.");
                 return;
             }
-            currentExp += Mathf.Max(amount, 0);
-            //OnExperienceChanged?.Invoke(currentExp, ExpToNextLevel);
-            // Debug.Log($"PlayerStats: Gained {amount} experience. Total experience: {currentExp}/{ExpToNextLevel}");
+            CurrentExp += Mathf.Max(amount, 0);
+            //OnExperienceChanged?.Invoke(CurrentExp, ExpToNextLevel);
+            // Debug.Log($"PlayerStats: Gained {amount} experience. Total experience: {CurrentExp}/{ExpToNextLevel}");
             UpdateExperienceUI(FindAnyObjectByType<PlayerUI>());
 
-            while (currentExp >= ExpToNextLevel && level < maxLevel)
+            while (CurrentExp >= ExpToNextLevel && level < maxLevel)
             {
-                currentExp -= ExpToNextLevel;
+                CurrentExp -= ExpToNextLevel;
                 LevelUp();
             }
         }
@@ -189,6 +189,13 @@ namespace CoED
                 UpdateExperienceUI(playerUI);
                 UpdateMagicUI(playerUI);
                 UpdateStaminaUI(playerUI);
+                //check if player's level is a multiple of 2 and run spawn boss function in dungeon spawner
+                if (level % 2 == 0)
+                {
+                    DungeonSpawner dungeonSpawner = FindAnyObjectByType<DungeonSpawner>();
+                    dungeonSpawner.SpawnBossOnFloor(currentFloor);
+                }
+
             }
 
             Debug.Log($"PlayerStats: Leveled up to level {level}! Next level at {ExpToNextLevel} experience.");
@@ -237,7 +244,7 @@ namespace CoED
             UpdateHealthUI(FindAnyObjectByType<PlayerUI>());
 
             FloatingTextManager floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
-            floatingTextManager?.ShowFloatingText(effectiveDamage.ToString(), transform.position, Color.red);
+            floatingTextManager?.ShowFloatingText(effectiveDamage.ToString(), transform, Color.red);
 
           //  Debug.Log($"PlayerStats: Took {effectiveDamage} damage. Current health: {CurrentHealth}/{MaxHealth}");
 
@@ -260,18 +267,30 @@ namespace CoED
             UpdateHealthUI(FindAnyObjectByType<PlayerUI>());
 
             FloatingTextManager floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
-            floatingTextManager?.ShowFloatingText($"+{amount}", transform.position, Color.green);
+           // floatingTextManager?.ShowFloatingText($"+{amount}", transform, Color.green);
 
             Debug.Log($"PlayerStats: Healed {amount} health. Current health: {CurrentHealth}/{MaxHealth}");
         }
 
-       
+        public void GainMagic(int amount)
+        {
+            CurrentMagic = Mathf.Clamp(CurrentMagic + amount, 0, MaxMagic);
+            UpdateMagicUI(FindAnyObjectByType<PlayerUI>());
+            // Update magic UI
+        }
+
+        public void GainStamina(int amount)
+        {
+            CurrentStamina = Mathf.Clamp(CurrentStamina + amount, 0, MaxStamina);
+            UpdateStaminaUI(FindAnyObjectByType<PlayerUI>());
+            // Update stamina UI
+        }
 
         private void UpdateExperienceUI(PlayerUI playerUI)
         {
             if (playerUI != null)
             {
-                playerUI.UpdateExperienceBar(currentExp, ExpToNextLevel);
+                playerUI.UpdateExperienceBar(CurrentExp, ExpToNextLevel);
             }
         }
         private void UpdateMagicUI(PlayerUI playerUI){

@@ -200,12 +200,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f96c446ab19ac8148a70147fb636cfa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHealth: 1000
   IsVisible: 1
   possibleDrops: []
   baseDropRate: 0.3
   dropRateDecreaseFactor: 0.5
-  moneyPrefab: {fileID: 0}
+  moneyPrefab: {fileID: 5582355417736950124, guid: 94e565f3443a44a4f8d23c4d5a0dc48f, type: 3}
   minMoneyAmount: 1
   maxMoneyAmount: 20
   moneyDropRate: 0.5

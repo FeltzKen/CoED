@@ -49,22 +49,15 @@ namespace CoED
                     int damage = Mathf.CeilToInt(effect.DamagePerSecond * deltaTime);
                     if (playerStats != null)
                     {
-                        playerStats.TakeDamage(damage);
-                        Debug.Log($"Player taking damage: {damage}");
-                        floatingTextManager?.ShowFloatingText(
-                            damage.ToString(),
-                            transform.position,
-                            Color.red
-                        );
+                    //    playerStats.TakeDamage(damage);
+                     //   Debug.Log($"Player taking damage: {damage}");
+                    //   floatingTextManager?.ShowFloatingText(damage.ToString(),transform,Color.red);
+
                     }
                     else if (enemyStats != null)
                     {
-                        enemyStats.TakeDamage(damage);
-                        floatingTextManager?.ShowFloatingText(
-                            damage.ToString(),
-                            transform.position,
-                            Color.red
-                        );
+                       // enemyStats.TakeDamage(damage);
+                      //  floatingTextManager?.ShowFloatingText(damage.ToString(), transform, Color.red);                  );
                     }
                 }
 

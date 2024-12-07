@@ -57,44 +57,6 @@ namespace CoED
             }
         }
 
-        public void CommitCombatAction(bool isMelee, Vector3 targetPosition)
-        {
-            // Plan a combat action to be executed during the turn
-            lastAction = () =>
-            {
-                if (isMelee)
-                {
-                    playerCombat.PerformMeleeAttack(new Vector2Int((int)targetPosition.x, (int)targetPosition.y));    
-                    // Debug.Log("PlayerManager: Committed melee attack action.");
-                }
-                else
-                {
-                    playerCombat.AttemptRangedAttack(targetPosition);
-                    // Debug.Log("PlayerManager: Committed ranged attack action.");
-                }
-            };
-            actionSelected = true; // Action has been selected
-        }
-
-        public void CommitMagicAction(Vector3 targetPosition, int spellCost, int spellDamage)
-        {
-            // Plan a magic action to be executed during the turn
-            lastAction = () =>
-            {
-                if (playerMagic.HasEnoughMagic(spellCost))
-                {
-                    playerMagic.CastMagicAction(targetPosition, spellCost, spellDamage);
-                    // Debug.Log($"PlayerManager: Cast magic at {targetPosition} with cost {spellCost} and damage {spellDamage}.");
-                }
-                else
-                {
-                    Debug.LogWarning("PlayerManager: Not enough magic to cast the spell.");
-                }
-            };
-            actionSelected = true; // Action has been selected
-        }
-
-
         public void CommitSpecialAction(System.Action specialAction)
         {
             lastAction = specialAction;
@@ -102,17 +64,7 @@ namespace CoED
             // Debug.Log("PlayerManager: Committed special action.");
         }
 
-        public void TakeDamage(int damage)
-        {
-            // Apply damage to the player
-            playerStats.TakeDamage(damage);
-            // Debug.Log($"PlayerManager: Player took {damage} damage.");
-        }
 
-        public bool IsActionComplete()
-        {
-            return isActionComplete;
-        }
         public void ResetEnemyAttackFlags()
         {
             foreach (var enemy in FindObjectsByType<EnemyAI>(FindObjectsSortMode.None))

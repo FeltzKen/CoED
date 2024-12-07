@@ -43,6 +43,7 @@ namespace CoED
         public float CurrentProjectileLifespan { get; set; }
 
         private EnemyUI enemyUI { get; set; }
+        private Enemy enemy { get; set; }
        // public event Action <int> OnHealthChanged;
         public event Action OnEnemyDeath;
         public int spawnFloor { get; set; } // Store the floor this enemy spawned on
@@ -59,6 +60,7 @@ namespace CoED
 
         private void InitializeUI()
         {
+            enemy = GetComponent<Enemy>();
             enemyUI = GetComponent<EnemyUI>();
             if (enemyUI != null)
             {
@@ -87,11 +89,12 @@ namespace CoED
         {
             int effectiveDamage = Mathf.Max(damage - CurrentDefense, 1);
             CurrentHealth = Mathf.Max(CurrentHealth - effectiveDamage, 0);
-           // OnHealthChanged?.Invoke(CurrentHealth);
+            // OnHealthChanged?.Invoke(CurrentHealth);
+            FloatingTextManager.Instance.ShowFloatingText(effectiveDamage.ToString(), transform, Color.red);
+
             UpdateHealthUI();
 
             FloatingTextManager floatingTextManager = FloatingTextManager.Instance;
-            floatingTextManager?.ShowFloatingText(effectiveDamage.ToString(), transform.position, Color.red);
 
            // Debug.Log($"EnemyStats: Took {effectiveDamage} damage. Current health: {CurrentHealth}/{MaxHealth}");
 
@@ -114,7 +117,7 @@ namespace CoED
             UpdateHealthUI();
 
             FloatingTextManager floatingTextManager = FloatingTextManager.Instance;
-            floatingTextManager?.ShowFloatingText($"+{amount}", transform.position, Color.green);
+          //  floatingTextManager?.ShowFloatingText($"+{amount}", transform, Color.green);
 
             Debug.Log($"EnemyStats: Healed {amount} health. Current health: {CurrentHealth}/{MaxHealth}");
         }
@@ -124,6 +127,7 @@ namespace CoED
             AwardExperienceToPlayer();
             Debug.Log("Enemy has died.");
             Destroy(gameObject);
+            enemy.DropLoot();
         }
 
 

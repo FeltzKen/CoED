@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using CoED;
+using UnityEditor.Rendering;
 
 namespace CoED
 {
@@ -12,6 +13,14 @@ namespace CoED
         [SerializeField]
         private int restHealRate = 5;
 
+        private GameObject inventoryUI;
+        private bool isResting = false;
+        private PlayerStats playerStats;
+        private PlayerMagic playerMagic;
+        public Inventory playerInventory;
+        private FloatingTextManager floatingTextManager;
+        private PlayerManager playerManager;
+
         [SerializeField]
         private int restMagicRate = 1;
 
@@ -20,17 +29,6 @@ namespace CoED
 
         [SerializeField]
         private float dangerRadius = 5f;
-
-        [Header("Inventory UI")]
-        [SerializeField]
-        private GameObject inventoryUI;
-
-        private bool isResting = false;
-        private PlayerStats playerStats;
-        private PlayerMagic playerMagic;
-        private Inventory playerInventory;
-        private FloatingTextManager floatingTextManager;
-        private PlayerManager playerManager;
 
         private void Awake()
         {
@@ -48,9 +46,9 @@ namespace CoED
 
         private void Start()
         {
-            playerStats = GetComponent<PlayerStats>();
-            playerMagic = GetComponent<PlayerMagic>();
-            playerInventory = GetComponent<Inventory>();
+            playerStats = PlayerStats.Instance;
+            playerMagic = PlayerMagic.Instance;
+            playerInventory = Inventory.Instance;
             floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
             playerManager = PlayerManager.Instance;
 
@@ -70,7 +68,7 @@ namespace CoED
         {
             if (Input.GetKeyDown(KeyCode.G))
             {
-                playerManager.CommitSpecialAction(CollectItems);
+               // playerManager.CommitSpecialAction(CollectItems);
                 PlayerManager.Instance.ResetEnemyAttackFlags();
             }
             else if (Input.GetKeyDown(KeyCode.S))
@@ -103,8 +101,28 @@ namespace CoED
                 }
             }
         }
+        
+        public void CollectItem(ItemCollectible itemCollectible)
+        {
+            if (itemCollectible.Item is Consumable consumable)
+            {
+                if (playerInventory.AddItem(consumable))
+                {
+                    Destroy(itemCollectible.gameObject);
+                    Debug.Log($"Collected item: {consumable.ItemName}");
+                }
+                else
+                {
+                    Debug.LogWarning("Inventory is full. Cannot collect item.");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Collected item is not a consumable.");
+            }
+        }
 
-        private void CollectItems()
+        public void CollectItems()
         {
             Collider2D[] items = Physics2D.OverlapCircleAll(transform.position, 1f);
             bool collectedAny = false;
@@ -225,7 +243,7 @@ namespace CoED
 
         private void ShowFloatingText(string message)
         {
-            floatingTextManager?.ShowFloatingText(message, transform.position, Color.yellow);
+          //  floatingTextManager?.ShowFloatingText(message, transform, Color.yellow);
         }
 
         private void OnDrawGizmosSelected()
@@ -237,12 +255,4 @@ namespace CoED
             Gizmos.DrawWireSphere(transform.position, dangerRadius);
         }
     }
-    public class ItemCollectible : MonoBehaviour
-    {
-        [SerializeField]
-        private Item item;
-
-        public Item Item => item;
-    }
 }
-
