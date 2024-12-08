@@ -1,7 +1,5 @@
 using System;
 using UnityEngine;
-using CoED;
-using Unity.VisualScripting;
 
 namespace CoED
 {
@@ -12,7 +10,6 @@ namespace CoED
         [Header("Leveling System")]
         [SerializeField, Min(1)]
         public int level = 1;
-
 
         [SerializeField, Min(0)]
         private int CurrentExp = 0;
@@ -49,6 +46,9 @@ namespace CoED
         public int CurrentAttack { get; set; }
         private int equipmentAttack = 0;
 
+        [SerializeField]
+        public float AttackRange = 3f;
+
         [Header("Defense")]
         [SerializeField, Min(0)]
         private int baseDefense = 5;
@@ -75,21 +75,24 @@ namespace CoED
         [SerializeField, Min(0f)]
         private float baseProjectileLifespan = 2f;
         public float CurrentProjectileLifespan { get; set; }
-        
+
         public bool HasEnteredDungeon { get; set; } = false;
         public bool transitioningComplete;
+
         [Header("Currency")]
         [SerializeField, Min(0)]
         private int currency = 0;
 
-        [SerializeField] public int currentFloor = 1;
+        [SerializeField]
+        public int currentFloor = 1;
         private PlayerUI playerUI;
+
         // Events
-      //  public event Action OnLevelUp;
-       // public event Action<int, int> OnExperienceChanged;
-      //  public event Action<int, int> OnHealthChanged;
-       // public event Action<int, int> OnMagicChanged;
-       // public event Action<int, int> OnStaminaChanged;
+        //  public event Action OnLevelUp;
+        // public event Action<int, int> OnExperienceChanged;
+        //  public event Action<int, int> OnHealthChanged;
+        // public event Action<int, int> OnMagicChanged;
+        // public event Action<int, int> OnStaminaChanged;
         public event Action OnPlayerDeath;
 
         private void Awake()
@@ -108,10 +111,10 @@ namespace CoED
                 return;
             }
         }
+
         private void Start()
         {
             CalculateStats();
-            
         }
 
         private void InitializeUI()
@@ -127,14 +130,15 @@ namespace CoED
             }
         }
 
-
         private void CalculateStats()
         {
             MaxStamina = baseStamina + Mathf.RoundToInt(level * 5);
             MaxHealth = baseHealth + level * 20 + equipmentHealth;
             MaxMagic = baseMagic + level * 10 + equipmentMagic;
-            CurrentAttack = baseAttack + Mathf.RoundToInt(baseAttack * level * 0.2f) + equipmentAttack;
-            CurrentDefense = baseDefense + Mathf.RoundToInt(baseDefense * level * 0.15f) + equipmentDefense;
+            CurrentAttack =
+                baseAttack + Mathf.RoundToInt(baseAttack * level * 0.2f) + equipmentAttack;
+            CurrentDefense =
+                baseDefense + Mathf.RoundToInt(baseDefense * level * 0.15f) + equipmentDefense;
             CurrentProjectileRange = baseProjectileRange + level * 0.1f + equipmentRange;
             CurrentSpeed = baseSpeed + level * 0.05f;
             CurrentFireRate = Mathf.Max(baseFireRate - level * 0.02f, 0.1f);
@@ -180,7 +184,7 @@ namespace CoED
             ExpToNextLevel = Mathf.CeilToInt(ExpToNextLevel * 1.25f);
             CalculateStats();
 
-          //  OnLevelUp?.Invoke();
+            //  OnLevelUp?.Invoke();
             if (playerUI != null)
             {
                 playerUI = FindAnyObjectByType<PlayerUI>();
@@ -195,10 +199,11 @@ namespace CoED
                     DungeonSpawner dungeonSpawner = FindAnyObjectByType<DungeonSpawner>();
                     dungeonSpawner.SpawnBossOnFloor(currentFloor);
                 }
-
             }
 
-            Debug.Log($"PlayerStats: Leveled up to level {level}! Next level at {ExpToNextLevel} experience.");
+            Debug.Log(
+                $"PlayerStats: Leveled up to level {level}! Next level at {ExpToNextLevel} experience."
+            );
         }
 
         public void GainCurrency(int amount)
@@ -246,7 +251,7 @@ namespace CoED
             FloatingTextManager floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
             floatingTextManager?.ShowFloatingText(effectiveDamage.ToString(), transform, Color.red);
 
-          //  Debug.Log($"PlayerStats: Took {effectiveDamage} damage. Current health: {CurrentHealth}/{MaxHealth}");
+            //  Debug.Log($"PlayerStats: Took {effectiveDamage} damage. Current health: {CurrentHealth}/{MaxHealth}");
 
             if (CurrentHealth <= 0)
             {
@@ -267,9 +272,11 @@ namespace CoED
             UpdateHealthUI(FindAnyObjectByType<PlayerUI>());
 
             FloatingTextManager floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
-           // floatingTextManager?.ShowFloatingText($"+{amount}", transform, Color.green);
+            // floatingTextManager?.ShowFloatingText($"+{amount}", transform, Color.green);
 
-            Debug.Log($"PlayerStats: Healed {amount} health. Current health: {CurrentHealth}/{MaxHealth}");
+            Debug.Log(
+                $"PlayerStats: Healed {amount} health. Current health: {CurrentHealth}/{MaxHealth}"
+            );
         }
 
         public void GainMagic(int amount)
@@ -293,7 +300,9 @@ namespace CoED
                 playerUI.UpdateExperienceBar(CurrentExp, ExpToNextLevel);
             }
         }
-        private void UpdateMagicUI(PlayerUI playerUI){
+
+        private void UpdateMagicUI(PlayerUI playerUI)
+        {
             if (playerUI != null)
             {
                 playerUI.UpdateMagicBar(CurrentMagic, MaxMagic);
@@ -307,6 +316,7 @@ namespace CoED
                 playerUI.UpdateHealthBar(CurrentHealth, MaxHealth);
             }
         }
+
         private void UpdateStaminaUI(PlayerUI playerUI)
         {
             if (playerUI != null)
@@ -319,10 +329,8 @@ namespace CoED
         {
             return currentFloor;
         }
-    
 
-
-         private void HandleDeath()
+        private void HandleDeath()
         {
             // Debug.Log("PlayerStats: Player has died.");
             GameManager gameManager = FindAnyObjectByType<GameManager>();
@@ -331,5 +339,3 @@ namespace CoED
         }
     }
 }
-
-

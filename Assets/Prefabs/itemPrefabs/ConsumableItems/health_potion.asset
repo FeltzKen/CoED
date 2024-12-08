@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: health_potion
   m_EditorClassIdentifier: 
   itemPrefab: {fileID: 4106867743383400254, guid: 2f0cfc5b91f9d9d4bbc84b36180f56de, type: 3}
-  itemName: Small potion
-  icon: {fileID: 7992534249024974640, guid: 2bf0158144657004485b71f9ff723b13, type: 3}
+  itemName: small health potion
+  icon: {fileID: 1644787379, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   attackBoost: 0
   defenseBoost: 0
   speedBoost: 0

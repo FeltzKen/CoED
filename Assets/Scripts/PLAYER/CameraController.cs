@@ -92,7 +92,7 @@ namespace CoED
             // Update the camera's position
             transform.position = new Vector3(clampedX, clampedY, transform.position.z);
 
-           // Debug.Log($"Camera centered on player at ({clampedX}, {clampedY}) with clamping.");
+            // Debug.Log($"Camera centered on player at ({clampedX}, {clampedY}) with clamping.");
         }
 
         private void CenterCameraOnPlayerWithoutClamping()
@@ -108,7 +108,7 @@ namespace CoED
             // Directly update the camera's position without clamping
             transform.position = new Vector3(playerPosition.x, playerPosition.y, transform.position.z);
 
-           // Debug.Log($"Camera centered on player at ({playerPosition.x}, {playerPosition.y}) without clamping.");
+            // Debug.Log($"Camera centered on player at ({playerPosition.x}, {playerPosition.y}) without clamping.");
         }
 
         public void ExitSpawningRoom()
@@ -155,6 +155,15 @@ namespace CoED
 
             Debug.Log($"Camera bounds updated for Floor {floorNumber}: Min({minBounds}), Max({maxBounds})");
             MinimapController.Instance.UpdateMinimapPosition(transform.position);
+        }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawLine(new Vector3(minBounds.x, minBounds.y, 0), new Vector3(maxBounds.x, minBounds.y, 0));
+            Gizmos.DrawLine(new Vector3(maxBounds.x, minBounds.y, 0), new Vector3(maxBounds.x, maxBounds.y, 0));
+            Gizmos.DrawLine(new Vector3(maxBounds.x, maxBounds.y, 0), new Vector3(minBounds.x, maxBounds.y, 0));
+            Gizmos.DrawLine(new Vector3(minBounds.x, maxBounds.y, 0), new Vector3(minBounds.x, minBounds.y, 0));
         }
     }
 }

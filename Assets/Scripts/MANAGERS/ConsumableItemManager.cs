@@ -14,6 +14,9 @@ namespace CoED
         [SerializeField]
         private Transform consumableItemsPanel;
 
+        [SerializeField]
+        private GameObject inventoryPanel; // Reference to the nested panel
+
         private List<GameObject> consumableItemButtons = new List<GameObject>();
 
         private void Start()
@@ -36,16 +39,17 @@ namespace CoED
                 return;
             }
 
+            if (inventoryPanel == null)
+            {
+                Debug.LogError("ConsumableItemsUIManager: inventoryPanel is not assigned.");
+                return;
+            }
+
             Inventory.Instance.OnInventoryChanged += UpdateConsumableItemsUI;
             UpdateConsumableItemsUI();
-        }
 
-        private void Update()
-        {
-            if (Input.GetKeyDown(KeyCode.C)) // Change 'C' to any key you prefer
-            {
-                ConsumeFirstItem();
-            }
+            // Ensure the inventory panel is hidden by default
+            inventoryPanel.SetActive(false);
         }
 
         public void UpdateConsumableItemsUI()
@@ -70,9 +74,8 @@ namespace CoED
                 {
                     Debug.Log($"ConsumableItemsUIManager: Creating button for {consumable.ItemName}.");
                     GameObject buttonInstance = Instantiate(consumableItemButtonPrefab, consumableItemsPanel);
-                    TextMeshProUGUI buttonText = buttonInstance.GetComponentInChildren<TextMeshProUGUI>();
-                    Button buttonComponent = buttonInstance.GetComponent<Button>();
-                    Image buttonImage = buttonInstance.GetComponent<Image>();
+                    TextMeshProUGUI buttonText = buttonInstance.transform.Find("Name").GetComponent<TextMeshProUGUI>();
+                    Image buttonImage = buttonInstance.transform.Find("Icon").GetComponent<Image>();
 
                     if (buttonText != null)
                     {
@@ -92,18 +95,12 @@ namespace CoED
                         Debug.LogError("ConsumableItemsUIManager: Image component not found in button prefab or icon not assigned.");
                     }
 
-                    if (buttonComponent != null)
-                    {
-                        EventTrigger trigger = buttonInstance.AddComponent<EventTrigger>();
-                        EventTrigger.Entry entry = new EventTrigger.Entry();
-                        entry.eventID = EventTriggerType.PointerClick;
-                        entry.callback.AddListener((data) => { OnRightClick((PointerEventData)data, consumable); });
-                        trigger.triggers.Add(entry);
-                    }
-                    else
-                    {
-                        Debug.LogError("ConsumableItemsUIManager: Button component not found in button prefab.");
-                    }
+                    // Add EventTrigger for right-click
+                    EventTrigger trigger = buttonInstance.AddComponent<EventTrigger>();
+                    EventTrigger.Entry entry = new EventTrigger.Entry();
+                    entry.eventID = EventTriggerType.PointerClick;
+                    entry.callback.AddListener((data) => { OnPointerClick((PointerEventData)data, consumable); });
+                    trigger.triggers.Add(entry);
 
                     consumableItemButtons.Add(buttonInstance);
                     Debug.Log($"ConsumableItemsUIManager: Added button for {consumable.ItemName}");
@@ -111,8 +108,14 @@ namespace CoED
             }
         }
 
-        private void OnRightClick(PointerEventData data, Consumable consumable)
+        private void OnPointerClick(PointerEventData data, Consumable consumable)
         {
+            if (data.button == PointerEventData.InputButton.Left)
+            {
+                // Suppress left-clicks
+                return;
+            }
+
             if (data.button == PointerEventData.InputButton.Right)
             {
                 ConsumeItem(consumable);
@@ -139,6 +142,11 @@ namespace CoED
             {
                 Debug.LogWarning("ConsumableItemsUIManager: No consumable items in the inventory.");
             }
+        }
+
+        public void ToggleInventoryPanel() //call back for button that controls the consumable UI menu
+        {
+            inventoryPanel.SetActive(!inventoryPanel.activeSelf);
         }
     }
 }

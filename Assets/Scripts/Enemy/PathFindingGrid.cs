@@ -29,7 +29,7 @@ namespace CoED.Pathfinding
                 Vector2Int.up,
                 Vector2Int.down,
                 Vector2Int.left,
-                Vector2Int.right
+                Vector2Int.right,
             };
 
             foreach (var dir in directions)

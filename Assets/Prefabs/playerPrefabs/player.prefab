@@ -199,10 +199,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   restHealRate: 5
+  playerInventory: {fileID: 0}
   restMagicRate: 1
   restInterval: 1
   dangerRadius: 5
-  inventoryUI: {fileID: 0}
 --- !u!114 &1948119710454645371
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -265,6 +265,9 @@ MonoBehaviour:
     m_Bits: 384
   moveDelay: 0.25
   staminaBar: {fileID: 8034618581357456614, guid: 4e03e51d2d01fab4aa3632a729ecb472, type: 3}
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 256
   currentTilePosition: {x: 0, y: 0}
 --- !u!114 &7276005580750806224
 MonoBehaviour:
@@ -294,7 +297,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   level: 1
-  currentExp: 0
+  CurrentExp: 0
   ExpToNextLevel: 100
   maxLevel: 50
   baseHealth: 1000
@@ -302,6 +305,7 @@ MonoBehaviour:
   baseMagic: 50
   equipmentMagic: 0
   baseAttack: 10
+  AttackRange: 3
   baseDefense: 5
   baseProjectileRange: 5
   baseSpeed: 5

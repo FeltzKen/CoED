@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca6e961de5fd58040949a231cc2cd335, type: 3}
   m_Name: magic_potion
   m_EditorClassIdentifier: 
-  itemPrefab: {fileID: 4106867743383400254, guid: 2f0cfc5b91f9d9d4bbc84b36180f56de, type: 3}
-  itemName: Small potion
-  icon: {fileID: 7992534249024974640, guid: 2bf0158144657004485b71f9ff723b13, type: 3}
+  itemPrefab: {fileID: 4106867743383400254, guid: bf19b45271bd85e439a6fa931164b95c, type: 3}
+  itemName: small magic potion
+  icon: {fileID: -1019840646, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   attackBoost: 0
   defenseBoost: 0
   speedBoost: 0
-  healthBoost: 100
-  magicBoost: 0
+  healthBoost: 0
+  magicBoost: 100
   staminaBoost: 0

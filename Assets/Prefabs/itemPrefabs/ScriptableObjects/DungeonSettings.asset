@@ -37,6 +37,7 @@ MonoBehaviour:
     stairsDownTile: {fileID: 926577741634186297, guid: 619db7b191317044e995e508dedd5224, type: 3}
   itemPrefabs:
   - {fileID: 11400000, guid: daaccea728ff9e44aa70eb30afe55880, type: 2}
+  - {fileID: 11400000, guid: 7ae50d9337691e24a8ff2b5443bbc717, type: 2}
   numberOfItemsPerFloor: 30
   seed: 568
   selectedAlgorithm:
@@ -49,9 +50,9 @@ MonoBehaviour:
     bspCarveChance: 0.388
     spiralStepSize: 10
     waveCollapseBias: 5
-    fractalDepth: 3
-    fractalMazeSplitChance: 0.5
-    fractalMazeMaxDepth: 3
+    fractalDepth: 5
+    fractalMazeSplitChance: 0.047
+    fractalMazeMaxDepth: 1
     lSystemIterations: 3
     lSystemBranchIterations: 2
     lSystemStart: {x: 0, y: 0}
@@ -62,17 +63,17 @@ MonoBehaviour:
     rippleDistance: 3
     rippleCenters: 7
     rippleMaxRadius: 5
-    biomeCount: 5
-    minBiomeSize: 10
-    maxBiomeSize: 20
+    biomeCount: 10
+    minBiomeSize: 5
+    maxBiomeSize: 15
     islandCount: 5
     islandSize: 10
     radialGrowthRadius: 50
-    roomGrowthChance: 0.559
-    corridorGrowthChance: 0.615
+    roomGrowthChance: 0.699
+    corridorGrowthChance: 0.439
     radialGrowthCenter: {x: 50, y: 50}
-    radialGrowthRoomChance: 60
-    radialGrowthCorridorChance: 40
+    radialGrowthRoomChance: 30
+    radialGrowthCorridorChance: 20
   spawningRoomPrefab: {fileID: 5500069649626026940, guid: 836c7b25195eacb41916fcf5dc76305b, type: 3}
   spawnEffectPrefab: {fileID: 4985454231279368892, guid: aed4c3bbbee4901408f729fded73a077, type: 3}
   enemyPrefabs:

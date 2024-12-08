@@ -4,9 +4,5 @@ using UnityEngine.Tilemaps;
 
 namespace CoED
 {
-    public class DungeonGeneratorMethods
-    {
-
-        
-    }
+    public class DungeonGeneratorMethods { }
 }
