@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using UnityEngine;
 using CoED;
+using UnityEngine;
 
 namespace CoED
 {
@@ -77,7 +77,7 @@ namespace CoED
                         -previousItem.DefenseBoost,
                         -previousItem.HealthBoost
                     );
-                     Debug.Log(
+                    Debug.Log(
                         $"EquipmentManager: Removed '{previousItem.ItemName}', adjusting stats."
                     );
                 }
@@ -110,7 +110,7 @@ namespace CoED
                     -unequippedItem.DefenseBoost,
                     -unequippedItem.HealthBoost
                 );
-                 Debug.Log(
+                Debug.Log(
                     $"EquipmentManager: Unequipped '{unequippedItem.ItemName}', adjusting stats."
                 );
             }

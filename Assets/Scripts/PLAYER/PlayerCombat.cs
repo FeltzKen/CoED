@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Linq;
+using CoED;
 using UnityEngine;
 
 namespace CoED
@@ -8,6 +9,7 @@ namespace CoED
     public class PlayerCombat : MonoBehaviour
     {
         public static PlayerCombat Instance { get; private set; }
+
         [Header("Combat Settings")]
         [SerializeField]
         private float attackRange = 1.5f;
@@ -20,15 +22,14 @@ namespace CoED
 
         private float lastAttackTime = 0f;
         private PlayerStats playerStats;
-        private PlayerMagic playerMagic;
-        private ProjectileManager projectileManager;
-        private PlayerManager playerManager;
+        private Enemy enemy;
 
         private void Awake()
         {
             if (Instance == null)
             {
                 Instance = this;
+                DontDestroyOnLoad(gameObject);
             }
             else
             {
@@ -40,16 +41,16 @@ namespace CoED
 
         private void Start()
         {
-            playerStats = GetComponent<PlayerStats>();
-            playerMagic = GetComponent<PlayerMagic>();
-            projectileManager = FindObjectsByType<ProjectileManager>(FindObjectsSortMode.None).FirstOrDefault();
-            playerManager = PlayerManager.Instance;
+            playerStats = PlayerStats.Instance;
 
-            if (playerStats == null || playerMagic == null || projectileManager == null || playerManager == null)
+            if (playerStats == null)
             {
-                Debug.LogError("PlayerCombat: Missing required components. Disabling PlayerCombat script.");
+                Debug.LogError(
+                    "PlayerCombat: Missing required components. Disabling PlayerCombat script."
+                );
                 enabled = false;
             }
+            enemy = FindAnyObjectByType<Enemy>();
         }
 
         private void Update()
@@ -63,65 +64,40 @@ namespace CoED
             {
                 if (Input.GetKeyDown(KeyCode.F))
                 {
-                 //   PerformMeleeAttack();
+                    //   PerformMeleeAttack();
                 }
                 else if (Input.GetMouseButtonDown(0))
                 {
                     Vector3 targetPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                     targetPosition.z = 0f;
-                    AttemptRangedAttack(targetPosition);
                 }
             }
         }
 
-public void PerformMeleeAttack(Vector2Int targetPosition)
-{
-    //Debug.Log($"PlayerCombat: Attempting melee attack at {targetPosition}.");
-    Vector2 targetWorldPosition = new Vector2(targetPosition.x, targetPosition.y);
-
-    // Use a small overlap circle for better enemy detection coverage
-    Collider2D hitCollider = Physics2D.OverlapCircle(targetWorldPosition, 0f, LayerMask.GetMask("enemies"));
-
-    if (hitCollider != null && hitCollider.CompareTag("Enemy"))
-    {
-        EnemyStats enemyStats = hitCollider.GetComponent<EnemyStats>();
-        if (enemyStats != null)
+        public void PerformMeleeAttack(Vector2Int targetPosition)
         {
-            int damageDealt = Mathf.Max(playerStats.CurrentAttack, 1);
-        //    Debug.Log($"PlayerCombat: Melee attacked {enemyStats.name} at {targetPosition} for {damageDealt} damage.");
-            enemyStats.TakeDamage(damageDealt);
+            //Debug.Log($"PlayerCombat: Attempting melee attack at {targetPosition}.");
+            Vector2 targetWorldPosition = new Vector2(targetPosition.x, targetPosition.y);
 
-            lastAttackTime = Time.time;
-            PlayerManager.Instance.ResetEnemyAttackFlags();
-        }
-    }
+            // Use a small overlap circle for better enemy detection coverage
+            Collider2D hitCollider = Physics2D.OverlapCircle(
+                targetWorldPosition,
+                0f,
+                LayerMask.GetMask("enemies")
+            );
 
-}
-
-        public void AttemptRangedAttack(Vector3 targetPosition)
-        {
-            Vector3 direction = (targetPosition - transform.position).normalized;
-            float distance = Vector3.Distance(transform.position, targetPosition);
-
-            if (distance > projectileRange)
+            if (hitCollider != null && hitCollider.CompareTag("Enemy"))
             {
-                targetPosition = transform.position + direction * projectileRange;
-            }
+                EnemyStats enemyStats = hitCollider.GetComponent<EnemyStats>();
+                if (enemyStats != null)
+                {
+                    int damageDealt = Mathf.Max(playerStats.CurrentAttack, 1);
+                    //    Debug.Log($"PlayerCombat: Melee attacked {enemyStats.name} at {targetPosition} for {damageDealt} damage.");
+                    enemyStats.TakeDamage(damageDealt);
 
-            int spellCost = 20;
-            int spellDamage = playerStats.CurrentAttack;
-
-            if (playerMagic.CurrentMagic >= spellCost)
-            {
-                playerMagic.CurrentMagic -= spellCost;
-                projectileManager.LaunchProjectile(transform.position, targetPosition);
-                Debug.Log($"PlayerCombat: Cast spell towards {targetPosition} for {spellDamage} damage.");
-                lastAttackTime = Time.time;
-                PlayerManager.Instance.ResetEnemyAttackFlags();
-            }
-            else
-            {
-                // Debug.Log("PlayerCombat: Not enough magic to cast the spell.");
+                    lastAttackTime = Time.time;
+                    enemy.ResetEnemyAttackFlags();
+                }
             }
         }
     }

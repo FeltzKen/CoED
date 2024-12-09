@@ -1,7 +1,7 @@
 using System.Collections.Generic;
+using CoED;
 using UnityEngine;
 using UnityEngine.UI;
-using CoED;
 
 namespace CoED
 {
@@ -44,32 +44,33 @@ namespace CoED
                 StatusEffect effect = activeEffect.Effect;
                 float deltaTime = Time.deltaTime;
 
-                if (effect.DamagePerSecond > 0)
+                if (effect.damagePerSecond > 0)
                 {
-                    int damage = Mathf.CeilToInt(effect.DamagePerSecond * deltaTime);
+                    int damage = Mathf.CeilToInt(effect.damagePerSecond * deltaTime);
                     if (playerStats != null)
                     {
-                    //    playerStats.TakeDamage(damage);
-                     //   Debug.Log($"Player taking damage: {damage}");
-                    //   floatingTextManager?.ShowFloatingText(damage.ToString(),transform,Color.red);
-
+                        //    playerStats.TakeDamage(damage);
+                        //   Debug.Log($"Player taking damage: {damage}");
+                        //   floatingTextManager?.ShowFloatingText(damage.ToString(),transform,Color.red);
                     }
                     else if (enemyStats != null)
                     {
-                       // enemyStats.TakeDamage(damage);
-                      //  floatingTextManager?.ShowFloatingText(damage.ToString(), transform, Color.red);                  );
+                        // enemyStats.TakeDamage(damage);
+                        //  floatingTextManager?.ShowFloatingText(damage.ToString(), transform, Color.red);                  );
                     }
                 }
 
-                if (effect.SpeedModifier != 0)
+                if (effect.speedModifier != 0)
                 {
                     if (playerStats != null)
                     {
-                        playerStats.CurrentSpeed += effect.SpeedModifier * deltaTime; // Ensure CurrentSpeed is float
+                        playerStats.CurrentSpeed += effect.speedModifier * deltaTime; // Ensure CurrentSpeed is float
                     }
                     else if (enemyStats != null)
                     {
-                        enemyStats.CurrentSpeed += Mathf.RoundToInt(effect.SpeedModifier * deltaTime); // Ensure patrolSpeed has public setter
+                        enemyStats.CurrentSpeed += Mathf.RoundToInt(
+                            effect.speedModifier * deltaTime
+                        ); // Ensure patrolSpeed has public setter
                     }
                 }
             }
@@ -99,9 +100,9 @@ namespace CoED
 
             foreach (var activeEffect in activeEffects)
             {
-                if (activeEffect.Effect.EffectName == effect.EffectName)
+                if (activeEffect.Effect.effectName == effect.effectName)
                 {
-                    activeEffect.RemainingDuration = effect.Duration;
+                    activeEffect.RemainingDuration = effect.duration;
                     /*Debug.Log(
                         $"StatusEffectManager: Refreshed duration for existing effect '{effect.EffectName}'."
                     );*/
@@ -111,7 +112,7 @@ namespace CoED
 
             activeEffects.Add(new ActiveStatusEffect(effect));
             DisplayEffectIcon(effect);
-            Debug.Log($"StatusEffectManager: Added new status effect '{effect.EffectName}'.");
+            Debug.Log($"StatusEffectManager: Added new status effect '{effect.effectName}'.");
         }
 
         private void RemoveEffect(StatusEffect effect)
@@ -122,7 +123,7 @@ namespace CoED
                 return;
             }
 
-            activeEffects.RemoveAll(ae => ae.Effect.EffectName == effect.EffectName);
+            activeEffects.RemoveAll(ae => ae.Effect.effectName == effect.effectName);
             RemoveEffectIcon(effect);
             // Debug.Log($"StatusEffectManager: Removed status effect '{effect.EffectName}'.");
         }
@@ -165,7 +166,7 @@ namespace CoED
             public ActiveStatusEffect(StatusEffect effect)
             {
                 Effect = effect;
-                RemainingDuration = effect.Duration;
+                RemainingDuration = effect.duration;
             }
         }
     }

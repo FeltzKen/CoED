@@ -21,6 +21,7 @@ namespace CoED
             if (Instance == null)
             {
                 Instance = this;
+                DontDestroyOnLoad(gameObject);
             }
             else
             {
@@ -35,11 +36,15 @@ namespace CoED
             // Only spawn player once at the beginning of the game
             if (PlayerSpawner.Instance != null)
             {
-                PlayerSpawner.Instance.SpawnPlayer();
+                GameObject player = PlayerSpawner.Instance.SpawnPlayer();
+                if (player == null)
+                {
+                    Debug.LogError("GameManager: Failed to spawn player.");
+                }
             }
             else
             {
-                Debug.LogError("GameManager: PlayerSpawner instance or spawnPoint is missing.");
+                Debug.LogError("GameManager: PlayerSpawner instance is missing.");
             }
         }
 

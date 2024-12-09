@@ -1,16 +1,16 @@
 using System.Collections;
-using UnityEngine;
-using UnityEngine.UI;
+using System.Collections.Generic;
 using CoED;
 using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace CoED
 {
     public class PlayerUI : MonoBehaviour
     {
-        private static PlayerUI instance;
-
         public static PlayerUI Instance => instance;
+        private static PlayerUI instance;
 
         [Header("Magic Number UI")]
         [SerializeField]
@@ -18,11 +18,12 @@ namespace CoED
 
         [Header("Step Count UI")]
         [SerializeField]
-        private Text stepCountText;
+        private TextMeshProUGUI stepCountText;
 
         [Header("Health UI")]
         [SerializeField]
         private Slider healthBar;
+
         [SerializeField]
         private TMP_Text healthText;
 
@@ -40,6 +41,15 @@ namespace CoED
         private bool isLowHealth = false;
         private Coroutine healthPulseCoroutine;
 
+        [Header("Spell UI")]
+        [SerializeField]
+        private Transform spellPanel;
+
+        [SerializeField]
+        private GameObject spellButtonPrefab;
+
+        private PlayerSpellCaster spellCaster;
+
         [Header("Experience UI")]
         [SerializeField]
         private Slider experienceBar;
@@ -51,13 +61,12 @@ namespace CoED
         [SerializeField]
         private TMP_Text levelText;
 
-        [Header("Ability UI")]
-        [SerializeField]
-        private Image abilityIcon;
+        //[Header("Ability UI")]
+        //[SerializeField]
+        //private Image abilityIcon;
 
-
-        [SerializeField]
-        private Text abilityNameText;
+        //[SerializeField]
+        //private Text abilityNameText;
 
         [Header("Death UI")]
         [SerializeField]
@@ -66,30 +75,35 @@ namespace CoED
         [Header("Stamina UI")]
         [SerializeField]
         private Slider staminaBar;
+
         [SerializeField]
         private TMP_Text staminaText;
 
         [Header("Magic UI")]
         [SerializeField]
         private Slider magicBar;
+
         [SerializeField]
         private TMP_Text magicText;
 
-        [Header("Quest UI")]
-        [SerializeField]
-        private Text questTitleText;
+        //[Header("Quest UI")]
+        //[SerializeField]
+        //private Text questTitleText;
 
-        [SerializeField]
-        private Text questDescriptionText;
+        //[SerializeField]
+        //private Text questDescriptionText;
 
-        [SerializeField]
-        private Text questProgressText;
+        //[SerializeField]
+        //private Text questProgressText;
 
         private void Awake()
         {
             if (instance == null)
             {
                 instance = this;
+                // Uncomment if needed
+                DontDestroyOnLoad(gameObject);
+                Debug.Log("PlayerSpellCaster: Instance initialized.");
             }
             else
             {
@@ -97,30 +111,76 @@ namespace CoED
                 Debug.LogWarning("PlayerUI instance already exists. Destroying duplicate.");
             }
         }
+
         private void Start()
         {
-         //   PlayerStats.Instance.OnExperienceChanged += UpdateExperienceBar;
-         //   PlayerStats.Instance.OnHealthChanged += UpdateHealthBar;
-        //    PlayerStats.Instance.OnLevelUp += UpdateLevelDisplay;
-        //    PlayerStats.Instance.OnMagicChanged += UpdateMagicBar;
-          //  PlayerStats.Instance.OnStaminaChanged += UpdateStaminaBar;
-            
+            spellCaster = PlayerSpellCaster.Instance;
+            if (spellCaster == null)
+            {
+                Debug.LogError(
+                    "PlayerSpellCaster instance is null. Ensure it's attached to the player prefab and present in the scene."
+                );
+                return;
+            }
+
+            PopulateSpellPanel();
         }
 
-        
-        public void UpdateMagicNumber(int number)
+        private void PopulateSpellPanel()
         {
-            if (magicNumberText != null)
+            if (spellPanel == null)
             {
-                magicNumberText.text = $"Magic Number: {number}";
+                Debug.LogError("spellPanel is not assigned in the Inspector.");
+                return;
+            }
+
+            if (spellButtonPrefab == null)
+            {
+                Debug.LogError("spellButtonPrefab is not assigned in the Inspector.");
+                return;
+            }
+
+            foreach (var spell in spellCaster.AvailableSpells)
+            {
+                if (spell == null)
+                {
+                    Debug.LogWarning("Encountered a null spell in AvailableSpells.");
+                    continue;
+                }
+
+                GameObject buttonObj = Instantiate(spellButtonPrefab, spellPanel);
+                Button button = buttonObj.GetComponent<Button>();
+                Image icon = buttonObj.GetComponentInChildren<Image>();
+
+                if (icon != null)
+                {
+                    icon.sprite = spell.icon;
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        "Spell button prefab is missing an Image component for the icon."
+                    );
+                }
+
+                if (button != null)
+                {
+                    button.onClick.AddListener(() => spellCaster.SelectSpell(spell));
+                }
+                else
+                {
+                    Debug.LogWarning("Spell button prefab is missing a Button component.");
+                }
             }
         }
 
-        public void UpdateStepCount(int current, int total)
+        // Update steps taken by adding 1 to the current step count
+        public void UpdateStepCount()
         {
             if (stepCountText != null)
             {
-                stepCountText.text = $"Steps: {current}/{total}";
+                int currentSteps = int.Parse(stepCountText.text);
+                stepCountText.text = (currentSteps + 1).ToString();
             }
         }
 
@@ -139,8 +199,7 @@ namespace CoED
 
         public void UpdateHealthBar(int currentHealth, int maxHealth)
         {
-         
-           if (healthBar != null)
+            if (healthBar != null)
             {
                 healthBar.maxValue = maxHealth;
                 healthBar.value = currentHealth;
@@ -150,9 +209,8 @@ namespace CoED
             {
                 healthText.text = $"{currentHealth} / {maxHealth}";
             }
-                
+
             CheckLowHealth(currentHealth);
-            
         }
 
         private void CheckLowHealth(float currentHealth)
@@ -206,44 +264,41 @@ namespace CoED
             {
                 levelText.text = $"Level: {PlayerStats.Instance.level}";
             }
-
         }
 
-        public void DisplayAbility(string abilityName, Sprite abilityIconSprite)
-        {
-            if (abilityNameText != null)
-            {
-                abilityNameText.text = abilityName;
-            }
-            if (abilityIcon != null)
-            {
-                abilityIcon.sprite = abilityIconSprite;
-                abilityIcon.enabled = true;
-            }
-
-        }
-
-        public void HideAbilityDisplay()
-        {
-            if (abilityNameText != null)
-            {
-                abilityNameText.text = "";
-            }
-            if (abilityIcon != null)
-            {
-                abilityIcon.sprite = null;
-                abilityIcon.enabled = false;
-            }
-
-        }
-
+        /*
+                public void DisplayAbility(string abilityName, Sprite abilityIconSprite)
+                {
+                    if (abilityNameText != null)
+                    {
+                        abilityNameText.text = abilityName;
+                    }
+                    if (abilityIcon != null)
+                    {
+                        abilityIcon.sprite = abilityIconSprite;
+                        abilityIcon.enabled = true;
+                    }
+                }
+        
+                public void HideAbilityDisplay()
+                {
+                    if (abilityNameText != null)
+                    {
+                        abilityNameText.text = "";
+                    }
+                    if (abilityIcon != null)
+                    {
+                        abilityIcon.sprite = null;
+                        abilityIcon.enabled = false;
+                    }
+                }
+        */
         public void ShowDeathPanel()
         {
             if (deathPanel != null)
             {
                 deathPanel.SetActive(true);
             }
-
         }
 
         public void HideDeathPanel()
@@ -252,7 +307,6 @@ namespace CoED
             {
                 deathPanel.SetActive(false);
             }
-
         }
 
         public void SetStaminaBarMax(float maxStamina)
@@ -267,7 +321,6 @@ namespace CoED
                 staminaText.text = $"{maxStamina} / {maxStamina}";
             }
         }
-
 
         public void UpdateStaminaBar(int currentStamina, int maxStamina)
         {
@@ -301,7 +354,6 @@ namespace CoED
             {
                 magicBar.maxValue = maxMagic;
                 magicBar.value = currentMagic;
-
             }
             if (magicText != null)
             {
@@ -311,22 +363,24 @@ namespace CoED
 
         public void ShowQuestAssigned(Quest quest)
         {
-            if (questTitleText != null && questDescriptionText != null && questProgressText != null)
-            {
-                questTitleText.text = quest.QuestName;
-                questDescriptionText.text = quest.Description;
-                questProgressText.text = quest.GetProgressText();
-            }
+            /*     if (questTitleText != null && questDescriptionText != null && questProgressText != null)
+                 {
+                     questTitleText.text = quest.QuestName;
+                     questDescriptionText.text = quest.Description;
+                     questProgressText.text = quest.GetProgressText();
+                 }
+            */
         }
 
         public void ShowQuestCompleted(Quest quest)
         {
-            if (questTitleText != null && questDescriptionText != null && questProgressText != null)
-            {
-                questTitleText.text = $"{quest.QuestName} - Completed";
-                questDescriptionText.text = "Congratulations! You have completed the quest.";
-                questProgressText.text = "";
-            }
+            /*    if (questTitleText != null && questDescriptionText != null && questProgressText != null)
+                {
+                    questTitleText.text = $"{quest.QuestName} - Completed";
+                    questDescriptionText.text = "Congratulations! You have completed the quest.";
+                    questProgressText.text = "";
+                }
+            */
         }
 
         public void OnSaveButtonClicked()

@@ -1,6 +1,6 @@
 using System;
-using UnityEngine;
 using CoED;
+using UnityEngine;
 
 namespace CoED
 {
@@ -8,7 +8,7 @@ namespace CoED
     {
         [Header("Health Settings")]
         [SerializeField]
-        public int currentHealth {get; set;} // Current health of the enemy
+        public int currentHealth { get; set; } // Current health of the enemy
         private StatusEffectManager statusEffectManager; // Manages enemy status effects
         private FloatingTextManager floatingTextManager; // Manages floating text displays for feedback
         public bool IsVisible = false; // Tracks if the enemy is visible (not covered by fog)
@@ -93,6 +93,14 @@ namespace CoED
                 {
                     Debug.LogWarning("Enemy: Money prefab does not have a Money component.");
                 }
+            }
+        }
+
+        public void ResetEnemyAttackFlags()
+        {
+            foreach (var enemy in FindObjectsByType<EnemyAI>(FindObjectsSortMode.None))
+            {
+                enemy.CanAttackPlayer = true;
             }
         }
     }

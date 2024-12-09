@@ -280,11 +280,8 @@ namespace CoED
             {
                 return;
             }
-            PlayerManager playerManager = playerTransform.GetComponent<PlayerManager>();
-            if (playerManager != null)
-            {
-                PlayerStats.Instance.TakeDamage(enemyStats.CurrentAttack);
-            }
+
+            PlayerStats.Instance.TakeDamage(enemyStats.CurrentAttack);
             CanAttackPlayer = false;
         }
         #endregion

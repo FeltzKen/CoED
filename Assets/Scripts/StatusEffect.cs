@@ -1,94 +1,81 @@
-using System;
+using System.Collections;
 using UnityEngine;
 
 namespace CoED
 {
-    [System.Serializable]
     public class StatusEffect : MonoBehaviour
     {
-        [Header("Effect Details")]
-        [SerializeField]
-        private string effectName;
+        public StatusEffectType effectType;
+        public float damagePerSecond;
+        public float duration;
+        public float speedModifier;
+        public string effectName { get; set; }
+        private EnemyStats enemyStats;
+        private Coroutine effectCoroutine;
+        public Sprite Icon { get; private set; }
 
-        [SerializeField]
-        private Sprite icon;
-
-        [SerializeField]
-        private float duration;
-
-        [SerializeField]
-        private float damagePerSecond;
-
-        [SerializeField]
-        private float speedModifier;
-
-        [SerializeField]
-        private float defenseModifier;
-
-        private float elapsedTime;
-
-        public string EffectName => effectName;
-        public Sprite Icon => icon;
-        public float Duration => duration;
-        public float DamagePerSecond => damagePerSecond;
-        public float SpeedModifier => speedModifier;
-        public float DefenseModifier => defenseModifier;
-        public bool IsExpired => elapsedTime >= duration;
-
-        // Constructor to initialize status effect properties
-        public StatusEffect(
-            string name,
-            float duration,
-            float damagePerSecond,
-            Sprite icon = null,
-            float speedModifier = 0,
-            float defenseModifier = 0
-        )
+        private void Start()
         {
-            this.effectName = name;
-            this.duration = duration;
-            this.damagePerSecond = damagePerSecond;
-            this.icon = icon;
-            this.speedModifier = speedModifier;
-            this.defenseModifier = defenseModifier;
-            elapsedTime = 0f; // Initialize elapsed time to 0
-        }
-
-        public void ApplyEffect(MonoBehaviour target)
-        {
-            if (IsExpired)
-                return; // Prevent applying if the effect has expired
-
-            elapsedTime += Time.deltaTime;
-
-            if (damagePerSecond > 0)
+            enemyStats = GetComponent<EnemyStats>();
+            if (enemyStats != null)
             {
-                int damage = Mathf.CeilToInt(damagePerSecond * Time.deltaTime);
-                PlayerStats.Instance.TakeDamage(damage);
-                // Debug.Log($"Player taking damage: {damage}");
-             //   FloatingTextManager.Instance?.ShowFloatingText( damage.ToString(),target.transform,Color.red );              
+                ApplyEffect();
             }
-
-            if (target is PlayerStats playerStats)
+            else
             {
-                playerStats.CurrentSpeed += speedModifier; // Ensure CurrentSpeed is float
-                playerStats.CurrentDefense += (int)defenseModifier; // Ensure CurrentDefense is float
-            }
-            else if (target is Enemy enemy) // Change to Enemy
-            {
-                EnemyStats enemyStats = enemy.GetComponent<EnemyStats>(); // Access the EnemyAI component for stats
-
-                if (enemyStats != null) // Ensure it's not null
-                {
-                    enemyStats.CurrentSpeed += Mathf.RoundToInt(speedModifier); // Modify the enemy's current speed
-                    enemyStats.CurrentDefense += Mathf.RoundToInt(defenseModifier); // Modify the enemy's current defense
-                }
+                Debug.LogWarning("StatusEffect: EnemyStats component not found.");
+                Destroy(gameObject);
             }
         }
 
-        public void ResetEffect()
+        private void ApplyEffect()
         {
-            elapsedTime = 0f; // Reset elapsed time when effect is applied or refreshed
+            switch (effectType)
+            {
+                case StatusEffectType.Burn:
+                    effectCoroutine = StartCoroutine(BurnEffect());
+                    break;
+                case StatusEffectType.Freeze:
+                    effectCoroutine = StartCoroutine(FreezeEffect());
+                    break;
+                // Handle additional effects here
+                default:
+                    Debug.LogWarning($"StatusEffect: Unknown effect type {effectType}.");
+                    Destroy(gameObject);
+                    break;
+            }
+        }
+
+        private IEnumerator BurnEffect()
+        {
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                enemyStats.TakeDamage(Mathf.RoundToInt(damagePerSecond * Time.deltaTime));
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+            RemoveEffect();
+        }
+
+        private IEnumerator FreezeEffect()
+        {
+            // Example: Reduce enemy speed or stop movement
+            enemyStats.CurrentSpeed = 0;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+            enemyStats.ResetSpeed(); // Assume EnemyStats has a method to reset speed
+            RemoveEffect();
+        }
+
+        private void RemoveEffect()
+        {
+            StopCoroutine(effectCoroutine);
+            Destroy(gameObject);
         }
     }
 }

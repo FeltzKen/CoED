@@ -1,7 +1,7 @@
 using System.Collections;
-using UnityEngine;
 using CoED;
 using UnityEditor.Rendering;
+using UnityEngine;
 
 namespace CoED
 {
@@ -9,6 +9,7 @@ namespace CoED
     public class PlayerActions : MonoBehaviour
     {
         public static PlayerActions Instance { get; private set; }
+
         [Header("Resting Settings")]
         [SerializeField]
         private int restHealRate = 5;
@@ -16,10 +17,9 @@ namespace CoED
         private GameObject inventoryUI;
         private bool isResting = false;
         private PlayerStats playerStats;
-        private PlayerMagic playerMagic;
         public Inventory playerInventory;
         private FloatingTextManager floatingTextManager;
-        private PlayerManager playerManager;
+        private Enemy enemy;
 
         [SerializeField]
         private int restMagicRate = 1;
@@ -35,6 +35,7 @@ namespace CoED
             if (Instance == null)
             {
                 Instance = this;
+                DontDestroyOnLoad(gameObject);
             }
             else
             {
@@ -42,24 +43,30 @@ namespace CoED
                 Debug.LogWarning("PlayerActions instance already exists. Destroying duplicate.");
                 return;
             }
+            enemy = FindAnyObjectByType<Enemy>();
         }
 
         private void Start()
         {
             playerStats = PlayerStats.Instance;
-            playerMagic = PlayerMagic.Instance;
             playerInventory = Inventory.Instance;
             floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
-            playerManager = PlayerManager.Instance;
 
             ValidateComponents();
         }
 
+        private void OnDestroy()
+        {
+            Debug.Log("OnDestroy called.");
+        }
+
         private void ValidateComponents()
         {
-            if (playerStats == null || playerMagic == null || playerInventory == null)
+            if (playerStats == null || playerInventory == null)
             {
-                Debug.LogError("PlayerActions: Missing required components (PlayerStats, PlayerMagic, Inventory). Disabling script.");
+                Debug.LogError(
+                    "PlayerActions: Missing required components (PlayerStats, PlayerMagic, Inventory). Disabling script."
+                );
                 enabled = false;
             }
         }
@@ -68,20 +75,20 @@ namespace CoED
         {
             if (Input.GetKeyDown(KeyCode.G))
             {
-               // playerManager.CommitSpecialAction(CollectItems);
-                PlayerManager.Instance.ResetEnemyAttackFlags();
+                // playerManager.CommitSpecialAction(CollectItems);
+                enemy.ResetEnemyAttackFlags();
             }
             else if (Input.GetKeyDown(KeyCode.S))
             {
-                playerManager.CommitSpecialAction(SearchForSecrets);
-                PlayerManager.Instance.ResetEnemyAttackFlags();
+                SearchForSecrets();
+                enemy.ResetEnemyAttackFlags();
             }
             else if (Input.GetKeyDown(KeyCode.R) && !isResting)
             {
                 if (!IsDangerNearby())
                 {
-                    playerManager.CommitSpecialAction(() => StartCoroutine(RestUntilHealed()));
-                    PlayerManager.Instance.ResetEnemyAttackFlags();
+                    StartCoroutine(RestUntilHealed());
+                    enemy.ResetEnemyAttackFlags();
                 }
                 else
                 {
@@ -92,8 +99,8 @@ namespace CoED
             {
                 if (!IsDangerNearby())
                 {
-                    playerManager.CommitSpecialAction(() => StartCoroutine(RestUntilMagic()));
-                    PlayerManager.Instance.ResetEnemyAttackFlags();
+                    // playerManager.CommitSpecialAction(() => StartCoroutine(RestUntilMagic()));
+                    enemy.ResetEnemyAttackFlags();
                 }
                 else
                 {
@@ -101,7 +108,7 @@ namespace CoED
                 }
             }
         }
-        
+
         public void CollectItem(ItemCollectible itemCollectible)
         {
             if (itemCollectible.Item is Consumable consumable)
@@ -191,23 +198,24 @@ namespace CoED
             // Debug.Log("PlayerActions: Resting completed.");
         }
 
-        private IEnumerator RestUntilMagic()
-        {
-            isResting = true;
-            ShowFloatingText("Resting to regain magic...");
-            // Debug.Log("PlayerActions: Starting to rest and refill magic...");
-
-            while (playerMagic.CurrentMagic < playerMagic.MaxMagic && !IsDangerNearby())
+        /*    private IEnumerator RestUntilMagic()
             {
-                playerMagic.RefillMagic(restMagicRate);
-                ShowFloatingText($"Regained {restMagicRate} MP");
-                yield return new WaitForSeconds(restInterval);
+                isResting = true;
+                ShowFloatingText("Resting to regain magic...");
+                // Debug.Log("PlayerActions: Starting to rest and refill magic...");
+    
+                while (playerMagic.CurrentMagic < playerMagic.MaxMagic && !IsDangerNearby())
+                {
+                    playerMagic.RefillMagic(restMagicRate);
+                    ShowFloatingText($"Regained {restMagicRate} MP");
+                    yield return new WaitForSeconds(restInterval);
+                }
+    
+                isResting = false;
+                ShowFloatingText("Magic refill completed");
+                // Debug.Log("PlayerActions: Magic refill completed.");
             }
-
-            isResting = false;
-            ShowFloatingText("Magic refill completed");
-            // Debug.Log("PlayerActions: Magic refill completed.");
-        }
+        */
 
         private void ToggleInventoryUI()
         {
@@ -243,7 +251,7 @@ namespace CoED
 
         private void ShowFloatingText(string message)
         {
-          //  floatingTextManager?.ShowFloatingText(message, transform, Color.yellow);
+            //  floatingTextManager?.ShowFloatingText(message, transform, Color.yellow);
         }
 
         private void OnDrawGizmosSelected()

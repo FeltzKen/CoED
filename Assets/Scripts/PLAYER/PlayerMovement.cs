@@ -8,6 +8,8 @@ namespace CoED
 {
     public class PlayerMovement : MonoBehaviour
     {
+        public static PlayerMovement Instance { get; private set; }
+
         [Header("Movement Settings")]
         [SerializeField]
         private float staminaCostPerRun = 2f;
@@ -23,8 +25,7 @@ namespace CoED
 
         [SerializeField]
         private LayerMask enemyLayer;
-
-        public static PlayerMovement Instance { get; private set; }
+        private Enemy enemy;
         private PlayerStats playerStats;
         public Vector2Int currentTilePosition;
         private float moveCooldown;
@@ -39,6 +40,7 @@ namespace CoED
             if (Instance == null)
             {
                 Instance = this;
+                DontDestroyOnLoad(gameObject);
             }
             else
             {
@@ -54,6 +56,7 @@ namespace CoED
                 enabled = false;
                 return;
             }
+            enemy = FindAnyObjectByType<Enemy>();
         }
 
         private void Start()
@@ -66,6 +69,11 @@ namespace CoED
             rb.interpolation = RigidbodyInterpolation2D.Interpolate;
 
             UpdateStaminaUI();
+        }
+
+        private void OnDestroy()
+        {
+            Debug.Log("OnDestroy called.");
         }
 
         private void Update()
@@ -221,7 +229,7 @@ namespace CoED
                     transform.position = targetPosition;
                     isMoving = true;
                     moveCooldown = Time.time + moveDelay;
-                    PlayerManager.Instance.ResetEnemyAttackFlags();
+                    enemy.ResetEnemyAttackFlags();
                 }
             }
         }
@@ -343,7 +351,8 @@ namespace CoED
             // Ensure the physical player position is also updated
             rb.position = position;
             transform.position = position;
-            PlayerManager.Instance.ResetEnemyAttackFlags();
+            enemy.ResetEnemyAttackFlags();
+            PlayerUI.Instance.UpdateStepCount();
         }
 
         private void UpdateStaminaUI()

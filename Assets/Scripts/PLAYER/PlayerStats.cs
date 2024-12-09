@@ -35,7 +35,7 @@ namespace CoED
 
         [Header("Magic")]
         [SerializeField, Min(0)]
-        private int baseMagic = 50;
+        private int baseMagic = 100;
         public int CurrentMagic { get; set; }
         public int MaxMagic { get; set; }
         public int equipmentMagic = 0;
@@ -103,6 +103,7 @@ namespace CoED
             if (Instance == null)
             {
                 Instance = this;
+                DontDestroyOnLoad(gameObject);
             }
             else
             {
@@ -110,6 +111,11 @@ namespace CoED
                 Debug.LogWarning("PlayerStats instance already exists. Destroying duplicate.");
                 return;
             }
+        }
+
+        private void OnDestroy()
+        {
+            Debug.Log("OnDestroy called.");
         }
 
         private void Start()
@@ -279,9 +285,23 @@ namespace CoED
             );
         }
 
-        public void GainMagic(int amount)
+        // Method to consume magic
+        public void ConsumeMagic(int amount)
         {
-            CurrentMagic = Mathf.Clamp(CurrentMagic + amount, 0, MaxMagic);
+            CurrentMagic = Mathf.Max(CurrentMagic - amount, 0);
+            // Update UI if needed
+        }
+
+        // Method to refill magic
+        public void RefillMagic(int amount)
+        {
+            CurrentMagic = Mathf.Min(CurrentMagic + amount, MaxMagic);
+            // Update UI if needed
+        }
+
+        public void IncreaseMaxMagic(int amount)
+        {
+            MaxMagic += amount;
             UpdateMagicUI(FindAnyObjectByType<PlayerUI>());
             // Update magic UI
         }

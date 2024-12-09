@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f346ae4d371ef2439c71f3564d02f32, type: 3}
+  m_Name: _iceball
+  m_EditorClassIdentifier: 
+  spellName: Iceball
+  icon: {fileID: -1014011169, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
+  magicCost: 25
+  damage: 60
+  cooldown: 6
+  type: 0
+  range: 0
+  areaOfEffect: 0
+  spellEffectPrefab: {fileID: 0}
+  hasBurnEffect: 0
+  burnDamage: 0
+  burnDuration: 0
+  hasFreezeEffect: 1
+  freezeDuration: 10
+  canChase: 0
+  isInstant: 0

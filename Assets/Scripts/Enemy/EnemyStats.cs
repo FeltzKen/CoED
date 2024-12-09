@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 using CoED;
-
+using System.Collections.Generic;
 namespace CoED
 {
     public class EnemyStats : MonoBehaviour
@@ -30,6 +30,8 @@ namespace CoED
 
         [SerializeField, Min(0f)]
         private float baseProjectileLifespan = 2f;
+
+        private List<StatusEffect> activeStatusEffects = new List<StatusEffect>();
 
         // Current Stats
         public int CurrentAttack { get; set; }
@@ -122,6 +124,24 @@ namespace CoED
             Debug.Log($"EnemyStats: Healed {amount} health. Current health: {CurrentHealth}/{MaxHealth}");
         }
 
+        public void ApplyStatusEffect(StatusEffectType effectType, float damagePerSecond, float duration)
+        {
+            GameObject effectObject = new GameObject($"{effectType}Effect");
+            effectObject.transform.parent = this.transform;
+            StatusEffect statusEffect = effectObject.AddComponent<StatusEffect>();
+            statusEffect.effectType = effectType;
+            statusEffect.damagePerSecond = damagePerSecond;
+            statusEffect.duration = duration;
+            activeStatusEffects.Add(statusEffect);
+        }
+
+        public void ResetSpeed()
+        {
+            // Reset speed to base or modified speed
+            CurrentSpeed = baseSpeed; // Assuming baseSpeed is defined
+        }
+
+        // Optionally, handle removing or managing multiple effects
         private void HandleDeath()
         {
             AwardExperienceToPlayer();

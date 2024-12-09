@@ -9,11 +9,15 @@ namespace CoED
         private Transform player;
         private Collider2D targetCollider;
 
+        [SerializeField]
+        private Transform playerTransform;
+
         private void Start()
         {
             // Dynamically find dungeon parent and player
             dungeonParent = GameObject.Find("DungeonParent").transform;
-            player = PlayerMovement.Instance.transform;
+            player = playerTransform;
+            ;
         }
 
         private void Update()
@@ -24,8 +28,13 @@ namespace CoED
 
                 // Compare player and target positions
                 Vector2 playerPosition = new Vector2(player.position.x, player.position.y);
-                Vector2 targetPosition = new Vector2(targetCollider.transform.position.x, targetCollider.transform.position.y);
-                Debug.Log($"Player Xposition: {playerPosition.x}, Player Yposition: {playerPosition.y}, Target Xposition: {targetPosition.x}, Target Yposition: {targetPosition.y}");
+                Vector2 targetPosition = new Vector2(
+                    targetCollider.transform.position.x,
+                    targetCollider.transform.position.y
+                );
+                Debug.Log(
+                    $"Player Xposition: {playerPosition.x}, Player Yposition: {playerPosition.y}, Target Xposition: {targetPosition.x}, Target Yposition: {targetPosition.y}"
+                );
 
                 if (playerPosition != targetPosition)
                 {
@@ -64,10 +73,16 @@ namespace CoED
                 }
 
                 // Calculate the new position
-                Vector3 triggeringStairsLocalPosition = triggeringStairsWorldPosition - transform.parent.position;
-                Vector3 targetWorldPosition = triggeringStairsLocalPosition + targetFloorTransform.position + new Vector3(-0.5f, -0.5f, 0);
+                Vector3 triggeringStairsLocalPosition =
+                    triggeringStairsWorldPosition - transform.parent.position;
+                Vector3 targetWorldPosition =
+                    triggeringStairsLocalPosition
+                    + targetFloorTransform.position
+                    + new Vector3(-0.5f, -0.5f, 0);
 
-                Vector3Int targetCellPosition = floorData.FloorTilemap.WorldToCell(targetWorldPosition);
+                Vector3Int targetCellPosition = floorData.FloorTilemap.WorldToCell(
+                    targetWorldPosition
+                );
 
                 // Define directions for adjacent tiles
                 Vector2Int[] directions = new Vector2Int[]
@@ -75,15 +90,20 @@ namespace CoED
                     Vector2Int.up,
                     Vector2Int.down,
                     Vector2Int.left,
-                    Vector2Int.right
+                    Vector2Int.right,
                 };
 
                 // Find a valid adjacent tile
                 Vector3Int adjacentTile = targetCellPosition;
                 foreach (Vector2Int direction in directions)
                 {
-                    Vector3Int checkPosition = targetCellPosition + new Vector3Int(direction.x, direction.y, 0);
-                    if (floorData.FloorTiles.Contains(new Vector2Int(checkPosition.x, checkPosition.y)))
+                    Vector3Int checkPosition =
+                        targetCellPosition + new Vector3Int(direction.x, direction.y, 0);
+                    if (
+                        floorData.FloorTiles.Contains(
+                            new Vector2Int(checkPosition.x, checkPosition.y)
+                        )
+                    )
                     {
                         adjacentTile = checkPosition;
                         break;
@@ -91,19 +111,20 @@ namespace CoED
                 }
 
                 // Convert the adjacent tile to world space
-                Vector3 adjacentWorldPosition = floorData.FloorTilemap.CellToWorld(adjacentTile) + new Vector3(-0.5f, -0.5f, 0);
+                Vector3 adjacentWorldPosition =
+                    floorData.FloorTilemap.CellToWorld(adjacentTile) + new Vector3(-0.5f, -0.5f, 0);
                 // Update the player's position
-                    PlayerMovement.Instance.UpdateCurrentTilePosition(adjacentWorldPosition);
+                PlayerMovement.Instance.UpdateCurrentTilePosition(adjacentWorldPosition);
                 CameraController cameraController = Camera.main.GetComponent<CameraController>();
-if (cameraController != null)
-{
-    cameraController.UpdateBounds(PlayerStats.Instance.GetCurrentFloor());
-}
+                if (cameraController != null)
+                {
+                    cameraController.UpdateBounds(PlayerStats.Instance.GetCurrentFloor());
+                }
 
-                Debug.Log($"Trigger stairs world position: {triggeringStairsWorldPosition}, Target Parent position: {targetFloorTransform.position}, Target world position: {targetWorldPosition}");
+                Debug.Log(
+                    $"Trigger stairs world position: {triggeringStairsWorldPosition}, Target Parent position: {targetFloorTransform.position}, Target world position: {targetWorldPosition}"
+                );
             }
         }
-
-
     }
 }

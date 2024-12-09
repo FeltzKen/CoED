@@ -10,7 +10,7 @@ public class Consumable : Item
     public void Consume(PlayerStats playerStats)
     {
         playerStats.Heal(healthBoost);
-        playerStats.GainMagic(magicBoost);
+        playerStats.RefillMagic(magicBoost);
         playerStats.GainStamina(staminaBoost);
     }
 }
