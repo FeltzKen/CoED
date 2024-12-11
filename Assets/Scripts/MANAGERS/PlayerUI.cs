@@ -9,8 +9,7 @@ namespace CoED
 {
     public class PlayerUI : MonoBehaviour
     {
-        public static PlayerUI Instance => instance;
-        private static PlayerUI instance;
+        public static PlayerUI Instance { get; private set; }
 
         [Header("Magic Number UI")]
         [SerializeField]
@@ -48,7 +47,13 @@ namespace CoED
         [SerializeField]
         private GameObject spellButtonPrefab;
 
+        [Header("Available Spells")]
+        [SerializeField]
+        private List<PlayerSpell> availableSpells;
+
         private PlayerSpellCaster spellCaster;
+        private Dictionary<PlayerSpell, SpellUIElement> spellUIMap =
+            new Dictionary<PlayerSpell, SpellUIElement>();
 
         [Header("Experience UI")]
         [SerializeField]
@@ -98,9 +103,9 @@ namespace CoED
 
         private void Awake()
         {
-            if (instance == null)
+            if (Instance == null)
             {
-                instance = this;
+                Instance = this;
                 // Uncomment if needed
                 DontDestroyOnLoad(gameObject);
                 Debug.Log("PlayerSpellCaster: Instance initialized.");
@@ -140,41 +145,189 @@ namespace CoED
                 return;
             }
 
-            foreach (var spell in spellCaster.AvailableSpells)
+            foreach (PlayerSpell spell in availableSpells)
             {
-                if (spell == null)
-                {
-                    Debug.LogWarning("Encountered a null spell in AvailableSpells.");
-                    continue;
-                }
+                AddSpellToUI(spell);
+            }
+        }
 
-                GameObject buttonObj = Instantiate(spellButtonPrefab, spellPanel);
-                Button button = buttonObj.GetComponent<Button>();
-                Image icon = buttonObj.GetComponentInChildren<Image>();
+        private void AddSpellToUI(PlayerSpell spell)
+        {
+            if (spellUIMap.ContainsKey(spell))
+            {
+                Debug.LogWarning($"Spell {spell.spellName} is already in the UI.");
+                return;
+            }
 
-                if (icon != null)
-                {
-                    icon.sprite = spell.icon;
-                }
-                else
-                {
-                    Debug.LogWarning(
-                        "Spell button prefab is missing an Image component for the icon."
-                    );
-                }
+            GameObject buttonObj = Instantiate(spellButtonPrefab, spellPanel);
+            buttonObj.name = $"{spell.spellName}_Button";
 
-                if (button != null)
+            Button spellButton = buttonObj.GetComponent<Button>();
+            if (spellButton == null)
+            {
+                Debug.LogError("Spell button prefab is missing a Button component.");
+                Destroy(buttonObj);
+                return;
+            }
+
+            // Assign the spell's icon to the button's Image component
+            if (spell.icon != null)
+            {
+                spellButton.image.sprite = spell.icon;
+            }
+            else
+            {
+                Debug.LogWarning($"Spell {spell.spellName} does not have an icon assigned.");
+            }
+
+            // Get the cooldown text component
+            TextMeshProUGUI cooldownText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
+            if (cooldownText == null)
+            {
+                Debug.LogError(
+                    "Spell button prefab is missing a TextMeshProUGUI component for cooldown text."
+                );
+                Destroy(buttonObj);
+                return;
+            }
+
+            // Get the border Image component
+            Image borderImage = buttonObj.transform.Find("Border")?.GetComponent<Image>();
+            if (borderImage == null)
+            {
+                Debug.LogError("Spell button prefab is missing a Border Image component.");
+                Destroy(buttonObj);
+                return;
+            }
+            borderImage.enabled = false; // Initially disable the border
+
+            // Assign the spell to the button's click event
+            spellButton.onClick.AddListener(() => OnSpellSelected(spell));
+
+            // Create and store the UI element
+            SpellUIElement uiElement = new SpellUIElement
+            {
+                button = spellButton,
+                cooldownText = cooldownText,
+                borderImage = borderImage,
+                cooldownTimer = 0,
+            };
+
+            spellUIMap.Add(spell, uiElement);
+        }
+
+        public void UpdateSpellList(List<PlayerSpell> newSpells)
+        {
+            foreach (var spell in newSpells)
+            {
+                if (!availableSpells.Contains(spell))
                 {
-                    button.onClick.AddListener(() => spellCaster.SelectSpell(spell));
-                }
-                else
-                {
-                    Debug.LogWarning("Spell button prefab is missing a Button component.");
+                    availableSpells.Add(spell);
+                    AddSpellToUI(spell);
                 }
             }
         }
 
-        // Update steps taken by adding 1 to the current step count
+        private void OnSpellSelected(PlayerSpell spell)
+        {
+            spellCaster.SelectSpell(spell);
+            HighlightSelectedSpell(spell);
+        }
+
+        private void HighlightSelectedSpell(PlayerSpell selectedSpell)
+        {
+            foreach (var pair in spellUIMap)
+            {
+                if (pair.Key == selectedSpell)
+                {
+                    pair.Value.borderImage.enabled = true; // Enable border for selected spell
+                }
+                else
+                {
+                    pair.Value.borderImage.enabled = false; // Disable border for other spells
+                }
+            }
+        }
+
+        public void OnSpellCast(PlayerSpell spell)
+        {
+            if (spellUIMap.TryGetValue(spell, out SpellUIElement uiElement))
+            {
+                uiElement.cooldownTimer = (int)spell.cooldown; // Set cooldown timer
+                uiElement.button.interactable = false;
+                uiElement.cooldownText.text = uiElement.cooldownTimer.ToString();
+                SetButtonAlpha(uiElement.button, 0.2f); // Start faded
+
+                // Start the cooldown coroutine
+                StartCoroutine(CooldownCoroutine(spell, uiElement));
+            }
+
+            // Update the magic bar
+            UpdateMagicBar(PlayerStats.Instance.CurrentMagic, PlayerStats.Instance.MaxMagic);
+        }
+
+        private IEnumerator CooldownCoroutine(PlayerSpell spell, SpellUIElement uiElement)
+        {
+            while (uiElement.cooldownTimer > 0)
+            {
+                yield return new WaitForSeconds(1f);
+                uiElement.cooldownTimer -= 1;
+                uiElement.cooldownText.text = uiElement.cooldownTimer.ToString();
+
+                // Update fade effect
+                float alpha = Mathf.Lerp(0.2f, 1f, (float)uiElement.cooldownTimer / spell.cooldown);
+                SetButtonAlpha(uiElement.button, alpha);
+            }
+
+            // Cooldown completed
+            uiElement.cooldownText.text = "";
+            uiElement.button.interactable = true;
+            SetButtonAlpha(uiElement.button, 1f); // Reset alpha
+        }
+
+        private void SetButtonAlpha(Button button, float alpha)
+        {
+            // Update the alpha of the button's image
+            Color color = button.image.color;
+            color.a = alpha;
+            button.image.color = color;
+
+            // Update the alpha of child images (e.g., icon)
+            Image[] childImages = button.GetComponentsInChildren<Image>();
+            foreach (var img in childImages)
+            {
+                color = img.color;
+                color.a = alpha;
+                img.color = color;
+            }
+
+            // Update the alpha of the cooldown text
+            TextMeshProUGUI[] texts = button.GetComponentsInChildren<TextMeshProUGUI>();
+            foreach (var text in texts)
+            {
+                color = text.color;
+                color.a = alpha;
+                text.color = color;
+            }
+        }
+
+        public bool IsSpellOnCooldown(PlayerSpell spell)
+        {
+            if (spellUIMap.TryGetValue(spell, out SpellUIElement uiElement))
+            {
+                return uiElement.cooldownTimer > 0;
+            }
+            return false;
+        }
+
+        private class SpellUIElement
+        {
+            public Button button;
+            public TextMeshProUGUI cooldownText;
+            public Image borderImage; // Image component for the border
+            public int cooldownTimer; // Cooldown timer in integer steps
+        }
+
         public void UpdateStepCount()
         {
             if (stepCountText != null)

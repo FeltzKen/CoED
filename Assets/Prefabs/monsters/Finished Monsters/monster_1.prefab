@@ -254,7 +254,7 @@ MonoBehaviour:
   baseAttack: 10
   baseDefense: 7
   baseHealth: 100
-  baseSpeed: 3
+  baseSpeed: 1
   baseAttackRange: 1.4
   baseDetectionRange: 5
   baseFireRate: 5

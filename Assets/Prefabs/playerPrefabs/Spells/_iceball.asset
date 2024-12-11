@@ -14,13 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spellName: Iceball
   icon: {fileID: -1014011169, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
-  magicCost: 25
-  damage: 60
-  cooldown: 6
+  magicCost: 2
+  damage: 15
+  speed: 10
+  cooldown: 5
   type: 0
   range: 0
   areaOfEffect: 0
-  spellEffectPrefab: {fileID: 0}
+  spellEffectPrefab: {fileID: 120242553412648062, guid: 9f849c1587a2e994ab6f74842cebee07, type: 3}
   hasBurnEffect: 0
   burnDamage: 0
   burnDuration: 0

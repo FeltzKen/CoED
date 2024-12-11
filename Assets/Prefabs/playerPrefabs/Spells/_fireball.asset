@@ -14,13 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spellName: Fireball
   icon: {fileID: -1080549867, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
-  magicCost: 20
-  damage: 50
-  cooldown: 5
+  magicCost: 1
+  damage: 10
+  speed: 6
+  cooldown: 2
   type: 0
   range: 15
   areaOfEffect: 0
-  spellEffectPrefab: {fileID: 4985454231279368892, guid: aed4c3bbbee4901408f729fded73a077, type: 3}
+  spellEffectPrefab: {fileID: 120242553412648062, guid: 9f849c1587a2e994ab6f74842cebee07, type: 3}
   hasBurnEffect: 1
   burnDamage: 5
   burnDuration: 5

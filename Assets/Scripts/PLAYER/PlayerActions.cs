@@ -198,24 +198,23 @@ namespace CoED
             // Debug.Log("PlayerActions: Resting completed.");
         }
 
-        /*    private IEnumerator RestUntilMagic()
+        private IEnumerator RestUntilMagic()
+        {
+            isResting = true;
+            ShowFloatingText("Resting to regain magic...");
+            // Debug.Log("PlayerActions: Starting to rest and refill magic...");
+
+            while (playerStats.CurrentMagic < playerStats.MaxMagic && !IsDangerNearby())
             {
-                isResting = true;
-                ShowFloatingText("Resting to regain magic...");
-                // Debug.Log("PlayerActions: Starting to rest and refill magic...");
-    
-                while (playerMagic.CurrentMagic < playerMagic.MaxMagic && !IsDangerNearby())
-                {
-                    playerMagic.RefillMagic(restMagicRate);
-                    ShowFloatingText($"Regained {restMagicRate} MP");
-                    yield return new WaitForSeconds(restInterval);
-                }
-    
-                isResting = false;
-                ShowFloatingText("Magic refill completed");
-                // Debug.Log("PlayerActions: Magic refill completed.");
+                playerStats.RefillMagic(restMagicRate);
+                ShowFloatingText($"Regained {restMagicRate} MP");
+                yield return new WaitForSeconds(restInterval);
             }
-        */
+
+            isResting = false;
+            ShowFloatingText("Magic refill completed");
+            // Debug.Log("PlayerActions: Magic refill completed.");
+        }
 
         private void ToggleInventoryUI()
         {

@@ -1,29 +1,29 @@
+using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace CoED
 {
     public class PlayerSpellCaster : MonoBehaviour
     {
+        // Singleton Instance
         public static PlayerSpellCaster Instance { get; private set; }
 
-        [Header("Spell Settings")]
         [SerializeField]
-        private List<PlayerSpell> availableSpells;
+        private Transform spellSpawnPoint; // Point where spells are spawned
+        private PlayerStats playerStats; // Reference to the PlayerStats component
+        private PlayerSpell selectedSpell; // Currently selected spell
 
-        [SerializeField]
-        private Transform spellSpawnPoint;
-
-        private PlayerStats playerStats;
-        private float[] spellCooldownTimers;
-        private PlayerSpell selectedSpell;
-
+        /// <summary>
+        /// Initializes the Singleton instance and essential components.
+        /// </summary>
         private void Awake()
         {
             if (Instance == null)
             {
                 Instance = this;
-                // Uncomment if you want this instance to persist across scenes
                 DontDestroyOnLoad(gameObject);
             }
             else
@@ -38,7 +38,6 @@ namespace CoED
             playerStats = GetComponent<PlayerStats>();
             if (playerStats == null)
             {
-                // Fallback to Singleton if not found on the same GameObject
                 playerStats = PlayerStats.Instance;
                 if (playerStats == null)
                 {
@@ -47,31 +46,17 @@ namespace CoED
                     return;
                 }
             }
-
-            if (availableSpells == null || availableSpells.Count == 0)
-            {
-                Debug.LogWarning("No spells assigned to PlayerSpellCaster.");
-            }
-
-            spellCooldownTimers = new float[availableSpells.Count];
-        }
-
-        private void OnDestroy()
-        {
-            Debug.Log("PlayerSpellCaster: OnDestroy called.");
         }
 
         private void Update()
         {
-            if (Input.GetMouseButtonDown(1) && selectedSpell != null)
+            // Detect right mouse button click
+            if (Input.GetMouseButton(1)) // 1 corresponds to the right mouse button
             {
-                CastSelectedSpell();
+                //Debug.Log("Right mouse button clicked.");
+                CastSelectedSpell(GetMouseWorldPosition());
             }
-
-            UpdateCooldownTimers();
         }
-
-        public List<PlayerSpell> AvailableSpells => availableSpells;
 
         public void SelectSpell(PlayerSpell spell)
         {
@@ -79,35 +64,57 @@ namespace CoED
             Debug.Log($"Selected Spell: {spell.spellName}");
         }
 
-        private void CastSelectedSpell()
+        /// <summary>
+        /// Casts the currently selected spell, handling cooldowns and UI updates.
+        /// </summary>
+        private void CastSelectedSpell(Vector3 targetPosition)
         {
-            Debug.Log("Casting selected spell.");
-            int spellIndex = availableSpells.IndexOf(selectedSpell);
-            if (spellIndex == -1)
-                return;
-
-            if (spellCooldownTimers[spellIndex] > 0f)
+            Debug.Log("Casting selected spell...");
+            if (selectedSpell == null)
             {
-                Debug.Log($"SpellCaster: {selectedSpell.spellName} is on cooldown.");
+                Debug.LogWarning("No spell selected to cast.");
                 return;
             }
 
             if (playerStats.CurrentMagic < selectedSpell.magicCost)
             {
-                Debug.Log($"SpellCaster: Not enough magic to cast {selectedSpell.spellName}.");
+                Debug.Log("Not enough magic to cast the spell.");
                 return;
             }
 
-            playerStats.ConsumeMagic(selectedSpell.magicCost);
-            spellCooldownTimers[spellIndex] = selectedSpell.cooldown;
+            if (IsSpellOnCooldown(selectedSpell))
+            {
+                Debug.Log("Spell is on cooldown.");
+                return;
+            }
 
-            Vector3 targetPosition = GetMouseWorldPosition();
+            // Consume mana and set cooldown
+            playerStats.ConsumeMagic(selectedSpell.magicCost);
+
+            // Execute the spell's effect
             ExecuteSpell(selectedSpell, targetPosition);
+
+            // Notify PlayerUI to start cooldown and fade effects
+            PlayerUI.Instance.OnSpellCast(selectedSpell);
         }
 
+        /// <summary>
+        /// Checks if the selected spell is on cooldown.
+        /// </summary>
+        /// <param name="spell">The spell to check.</param>
+        /// <returns>True if the spell is on cooldown, false otherwise.</returns>
+        private bool IsSpellOnCooldown(PlayerSpell spell)
+        {
+            return PlayerUI.Instance.IsSpellOnCooldown(spell);
+        }
+
+        /// <summary>
+        /// Executes the effect of the cast spell based on its type.
+        /// </summary>
+        /// <param name="spell">The spell to execute.</param>
+        /// <param name="targetPosition">Position where the spell is targeted.</param>
         private void ExecuteSpell(PlayerSpell spell, Vector3 targetPosition)
         {
-            Debug.Log($"Casting {spell.spellName} at {targetPosition}.");
             switch (spell.type)
             {
                 case SpellType.Projectile:
@@ -123,50 +130,13 @@ namespace CoED
                     Debug.LogWarning($"Unsupported spell type: {spell.type}");
                     break;
             }
-
-            selectedSpell = null; // Reset after casting
         }
 
-        private void CastInstantSpell(PlayerSpell spell, Vector3 targetPosition)
-        {
-            Collider2D hitCollider = Physics2D.OverlapPoint(
-                targetPosition,
-                LayerMask.GetMask("Enemy")
-            );
-            if (hitCollider != null)
-            {
-                EnemyStats enemyStats = hitCollider.GetComponent<EnemyStats>();
-                if (enemyStats != null)
-                {
-                    enemyStats.TakeDamage(spell.damage);
-
-                    if (spell.hasBurnEffect)
-                    {
-                        enemyStats.ApplyStatusEffect(
-                            StatusEffectType.Burn,
-                            spell.burnDamage,
-                            spell.burnDuration
-                        );
-                    }
-
-                    if (spell.hasFreezeEffect)
-                    {
-                        enemyStats.ApplyStatusEffect(
-                            StatusEffectType.Freeze,
-                            0,
-                            spell.freezeDuration
-                        );
-                    }
-                }
-            }
-
-            // Instantiate instant spell effect
-            if (spell.spellEffectPrefab != null)
-            {
-                Instantiate(spell.spellEffectPrefab, targetPosition, Quaternion.identity);
-            }
-        }
-
+        /// <summary>
+        /// Casts a projectile-type spell.
+        /// </summary>
+        /// <param name="spell">The projectile spell to cast.</param>
+        /// <param name="targetPosition">Target position of the projectile.</param>
         private void CastProjectileSpell(PlayerSpell spell, Vector3 targetPosition)
         {
             if (spell.spellEffectPrefab == null)
@@ -186,22 +156,14 @@ namespace CoED
             {
                 Vector2 direction = (targetPosition - spellSpawnPoint.position).normalized;
                 projectile.direction = direction;
+                projectile.speed = spell.speed; // Ensure the speed is set
                 projectile.damage = spell.damage;
-
-                // Set the target position for the projectile
                 projectile.SetTargetPosition(targetPosition);
-
-                // Handle chasing ability
-                if (spell.canChase)
-                {
-                    // Implement chasing logic if needed
-                    // projectile.SetChaseMode(true);
-                }
             }
             else
             {
                 Debug.LogWarning(
-                    $"The spellEffectPrefab for {spell.spellName} does not have a PlayerProjectile component."
+                    $"The prefab for {spell.spellName} does not have a PlayerProjectile component."
                 );
             }
         }
@@ -226,7 +188,7 @@ namespace CoED
                 if (enemyStats != null)
                 {
                     enemyStats.TakeDamage(spell.damage);
-
+                    ///
                     if (spell.hasBurnEffect)
                     {
                         enemyStats.ApplyStatusEffect(
@@ -248,6 +210,10 @@ namespace CoED
             }
         }
 
+        /// <summary>
+        /// Casts a healing-type spell.
+        /// </summary>
+        /// <param name="spell">The healing spell to cast.</param>
         private void CastHealSpell(PlayerSpell spell)
         {
             playerStats.Heal(spell.damage);
@@ -257,24 +223,15 @@ namespace CoED
             }
         }
 
+        /// <summary>
+        /// Retrieves the mouse position in the world space.
+        /// </summary>
+        /// <returns>World position of the mouse.</returns>
         private Vector3 GetMouseWorldPosition()
         {
             Vector3 mousePos = Input.mousePosition;
             mousePos.z = Camera.main.nearClipPlane;
             return Camera.main.ScreenToWorldPoint(mousePos);
-        }
-
-        private void UpdateCooldownTimers()
-        {
-            for (int i = 0; i < spellCooldownTimers.Length; i++)
-            {
-                if (spellCooldownTimers[i] > 0f)
-                {
-                    spellCooldownTimers[i] -= Time.deltaTime;
-                    if (spellCooldownTimers[i] < 0f)
-                        spellCooldownTimers[i] = 0f;
-                }
-            }
         }
     }
 }

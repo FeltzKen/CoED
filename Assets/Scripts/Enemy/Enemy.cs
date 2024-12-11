@@ -102,6 +102,16 @@ namespace CoED
             {
                 enemy.CanAttackPlayer = true;
             }
+            // Update spell cooldowns after an action
+            if (PlayerSpellCaster.Instance != null)
+            {
+                Debug.Log("Spell cooldowns updated based on player action.");
+                // PlayerUI.Instance.UpdateCooldownTimers();
+            }
+            else
+            {
+                Debug.LogWarning("PlayerSpellCaster instance not found. Cooldowns not updated.");
+            }
         }
     }
 }

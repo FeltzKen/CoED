@@ -10,6 +10,7 @@ namespace CoED
         public Sprite icon;
         public int magicCost;
         public int damage;
+        public float speed; // Speed of the projectile
         public float cooldown; // Time in seconds before the spell can be used again
 
         [Header("Advanced Attributes")]
