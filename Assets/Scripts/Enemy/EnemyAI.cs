@@ -12,6 +12,7 @@ namespace CoED
     {
         private static int nextID = 0; // Shared across all instances
         public float Speed { get; private set; } = 1f;
+        public float PatrolSpeed { get; private set; } = 0.5f; // New patrol speed
         public int uniqueID;
         public float ActionPoints { get; set; } = 0f;
         private List<Vector2Int> currentPath;
@@ -187,6 +188,14 @@ namespace CoED
             if (currentState != newState)
             {
                 currentState = newState;
+                if (newState == EnemyState.Patrol)
+                {
+                    moveCooldown = 1f / PatrolSpeed; // Adjust move cooldown for patrol speed
+                }
+                else if (newState == EnemyState.Chase)
+                {
+                    moveCooldown = 1f / Speed; // Adjust move cooldown for chase speed
+                }
             }
         }
 
@@ -360,6 +369,7 @@ namespace CoED
                 wallTiles.Contains(position)
                 || voidTiles.Contains(position)
                 || IsColliderObstacle(position)
+                || IsEnemyAtPosition(position) // Check if another enemy is at the position
             )
             {
                 return false;
@@ -377,6 +387,17 @@ namespace CoED
                 obstacleLayer
             );
             return collider != null;
+        }
+
+        private bool IsEnemyAtPosition(Vector2Int position)
+        {
+            Collider2D hitCollider = Physics2D.OverlapBox(
+                new Vector2(position.x, position.y),
+                Vector2.one * 0.8f,
+                0f,
+                LayerMask.GetMask("Enemy")
+            );
+            return hitCollider != null;
         }
 
         private void UpdateCurrentTilePosition(Vector2Int gridPosition)

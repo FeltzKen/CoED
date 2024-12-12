@@ -1,7 +1,8 @@
 using System;
-using UnityEngine;
-using CoED;
 using System.Collections.Generic;
+using CoED;
+using UnityEngine;
+
 namespace CoED
 {
     public class EnemyStats : MonoBehaviour
@@ -46,14 +47,12 @@ namespace CoED
 
         private EnemyUI enemyUI { get; set; }
         private Enemy enemy { get; set; }
-       // public event Action <int> OnHealthChanged;
+
+        // public event Action <int> OnHealthChanged;
         public event Action OnEnemyDeath;
         public int spawnFloor { get; set; } // Store the floor this enemy spawned on
 
-        private void Awake()
-        {
-
-        }
+        private void Awake() { }
 
         private void Start()
         {
@@ -92,13 +91,17 @@ namespace CoED
             int effectiveDamage = Mathf.Max(damage - CurrentDefense, 1);
             CurrentHealth = Mathf.Max(CurrentHealth - effectiveDamage, 0);
             // OnHealthChanged?.Invoke(CurrentHealth);
-            FloatingTextManager.Instance.ShowFloatingText(effectiveDamage.ToString(), transform, Color.red);
+            FloatingTextManager.Instance.ShowFloatingText(
+                effectiveDamage.ToString(),
+                transform,
+                Color.red
+            );
 
             UpdateHealthUI();
 
             FloatingTextManager floatingTextManager = FloatingTextManager.Instance;
 
-           // Debug.Log($"EnemyStats: Took {effectiveDamage} damage. Current health: {CurrentHealth}/{MaxHealth}");
+            // Debug.Log($"EnemyStats: Took {effectiveDamage} damage. Current health: {CurrentHealth}/{MaxHealth}");
 
             if (CurrentHealth <= 0)
             {
@@ -119,12 +122,18 @@ namespace CoED
             UpdateHealthUI();
 
             FloatingTextManager floatingTextManager = FloatingTextManager.Instance;
-          //  floatingTextManager?.ShowFloatingText($"+{amount}", transform, Color.green);
+            //  floatingTextManager?.ShowFloatingText($"+{amount}", transform, Color.green);
 
-            Debug.Log($"EnemyStats: Healed {amount} health. Current health: {CurrentHealth}/{MaxHealth}");
+            Debug.Log(
+                $"EnemyStats: Healed {amount} health. Current health: {CurrentHealth}/{MaxHealth}"
+            );
         }
 
-        public void ApplyStatusEffect(StatusEffectType effectType, float damagePerSecond, float duration)
+        public void ApplyStatusEffect(
+            StatusEffectType effectType,
+            float damagePerSecond,
+            float duration
+        )
         {
             GameObject effectObject = new GameObject($"{effectType}Effect");
             effectObject.transform.parent = this.transform;
@@ -149,7 +158,6 @@ namespace CoED
             Destroy(gameObject);
             enemy.DropLoot();
         }
-
 
         private void UpdateHealthUI()
         {
@@ -176,10 +184,14 @@ namespace CoED
             int randomRange = 3;
 
             // Calculate experience points with some randomness
-            int experiencePoints = baseExperience + (spawnFloor * scalingFactor) + UnityEngine.Random.Range(baseExperience * spawnFloor, randomRange * spawnFloor);
+            int experiencePoints =
+                baseExperience
+                + (spawnFloor * scalingFactor)
+                + UnityEngine.Random.Range(baseExperience * spawnFloor, randomRange * spawnFloor);
 
             return experiencePoints;
         }
+
         private void AwardExperienceToPlayer()
         {
             int experiencePoints = CalculateExperiencePoints();
@@ -188,4 +200,3 @@ namespace CoED
         }
     }
 }
-

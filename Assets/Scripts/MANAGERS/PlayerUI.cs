@@ -170,28 +170,7 @@ namespace CoED
                 return;
             }
 
-            // Assign the spell's icon to the button's Image component
-            if (spell.icon != null)
-            {
-                spellButton.image.sprite = spell.icon;
-            }
-            else
-            {
-                Debug.LogWarning($"Spell {spell.spellName} does not have an icon assigned.");
-            }
-
-            // Get the cooldown text component
-            TextMeshProUGUI cooldownText = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
-            if (cooldownText == null)
-            {
-                Debug.LogError(
-                    "Spell button prefab is missing a TextMeshProUGUI component for cooldown text."
-                );
-                Destroy(buttonObj);
-                return;
-            }
-
-            // Get the border Image component
+            // Get the border image component
             Image borderImage = buttonObj.transform.Find("Border")?.GetComponent<Image>();
             if (borderImage == null)
             {
@@ -199,7 +178,37 @@ namespace CoED
                 Destroy(buttonObj);
                 return;
             }
-            borderImage.enabled = false; // Initially disable the border
+            borderImage.enabled = false; // Disable border by default
+            // Get the base image component
+            Image baseImage = buttonObj.transform.Find("BaseImage")?.GetComponent<Image>();
+            if (baseImage == null)
+            {
+                Debug.LogError("Spell button prefab is missing a BaseImage component.");
+                Destroy(buttonObj);
+                return;
+            }
+
+            // Get the mask image component
+            RectTransform maskImageRect = buttonObj
+                .transform.Find("MaskImage")
+                ?.GetComponent<RectTransform>();
+            if (maskImageRect == null)
+            {
+                Debug.LogError("Spell button prefab is missing a MaskImage component.");
+                Destroy(buttonObj);
+                return;
+            }
+
+            // Assign the spell's icon to the base image
+            if (spell.icon != null)
+            {
+                baseImage.sprite = spell.icon;
+                baseImage.color = Color.white; // Set to white or any other default color
+            }
+            else
+            {
+                Debug.LogWarning($"Spell {spell.spellName} does not have an icon assigned.");
+            }
 
             // Assign the spell to the button's click event
             spellButton.onClick.AddListener(() => OnSpellSelected(spell));
@@ -208,30 +217,12 @@ namespace CoED
             SpellUIElement uiElement = new SpellUIElement
             {
                 button = spellButton,
-                cooldownText = cooldownText,
+                maskImageRect = maskImageRect,
                 borderImage = borderImage,
-                cooldownTimer = 0,
+                cooldownTimer = 0f,
             };
 
             spellUIMap.Add(spell, uiElement);
-        }
-
-        public void UpdateSpellList(List<PlayerSpell> newSpells)
-        {
-            foreach (var spell in newSpells)
-            {
-                if (!availableSpells.Contains(spell))
-                {
-                    availableSpells.Add(spell);
-                    AddSpellToUI(spell);
-                }
-            }
-        }
-
-        private void OnSpellSelected(PlayerSpell spell)
-        {
-            spellCaster.SelectSpell(spell);
-            HighlightSelectedSpell(spell);
         }
 
         private void HighlightSelectedSpell(PlayerSpell selectedSpell)
@@ -253,10 +244,12 @@ namespace CoED
         {
             if (spellUIMap.TryGetValue(spell, out SpellUIElement uiElement))
             {
-                uiElement.cooldownTimer = (int)spell.cooldown; // Set cooldown timer
+                uiElement.cooldownTimer = spell.cooldown; // Set cooldown timer
                 uiElement.button.interactable = false;
-                uiElement.cooldownText.text = uiElement.cooldownTimer.ToString();
-                SetButtonAlpha(uiElement.button, 0.2f); // Start faded
+                uiElement.maskImageRect.offsetMin = new Vector2(
+                    0,
+                    uiElement.maskImageRect.offsetMin.y
+                ); // Start with an empty mask
 
                 // Start the cooldown coroutine
                 StartCoroutine(CooldownCoroutine(spell, uiElement));
@@ -268,47 +261,24 @@ namespace CoED
 
         private IEnumerator CooldownCoroutine(PlayerSpell spell, SpellUIElement uiElement)
         {
+            float initialWidth = uiElement.maskImageRect.rect.width;
             while (uiElement.cooldownTimer > 0)
             {
-                yield return new WaitForSeconds(1f);
-                uiElement.cooldownTimer -= 1;
-                uiElement.cooldownText.text = uiElement.cooldownTimer.ToString();
-
-                // Update fade effect
-                float alpha = Mathf.Lerp(0.2f, 1f, (float)uiElement.cooldownTimer / spell.cooldown);
-                SetButtonAlpha(uiElement.button, alpha);
+                yield return null; // Wait for the next frame
+                uiElement.cooldownTimer -= Time.deltaTime;
+                float left = 1 - (uiElement.cooldownTimer / spell.cooldown);
+                uiElement.maskImageRect.offsetMin = new Vector2(
+                    left * initialWidth,
+                    uiElement.maskImageRect.offsetMin.y
+                );
             }
 
             // Cooldown completed
-            uiElement.cooldownText.text = "";
+            uiElement.maskImageRect.offsetMin = new Vector2(
+                initialWidth,
+                uiElement.maskImageRect.offsetMin.y
+            );
             uiElement.button.interactable = true;
-            SetButtonAlpha(uiElement.button, 1f); // Reset alpha
-        }
-
-        private void SetButtonAlpha(Button button, float alpha)
-        {
-            // Update the alpha of the button's image
-            Color color = button.image.color;
-            color.a = alpha;
-            button.image.color = color;
-
-            // Update the alpha of child images (e.g., icon)
-            Image[] childImages = button.GetComponentsInChildren<Image>();
-            foreach (var img in childImages)
-            {
-                color = img.color;
-                color.a = alpha;
-                img.color = color;
-            }
-
-            // Update the alpha of the cooldown text
-            TextMeshProUGUI[] texts = button.GetComponentsInChildren<TextMeshProUGUI>();
-            foreach (var text in texts)
-            {
-                color = text.color;
-                color.a = alpha;
-                text.color = color;
-            }
         }
 
         public bool IsSpellOnCooldown(PlayerSpell spell)
@@ -320,12 +290,31 @@ namespace CoED
             return false;
         }
 
+        private void OnSpellSelected(PlayerSpell spell)
+        {
+            spellCaster.SelectSpell(spell);
+            HighlightSelectedSpell(spell);
+        }
+
+        public void UpdateMagicBar(int currentMagic, int maxMagic)
+        {
+            if (magicBar != null)
+            {
+                magicBar.maxValue = maxMagic;
+                magicBar.value = currentMagic;
+            }
+            if (magicText != null)
+            {
+                magicText.text = $"{currentMagic} / {maxMagic}";
+            }
+        }
+
         private class SpellUIElement
         {
             public Button button;
-            public TextMeshProUGUI cooldownText;
+            public RectTransform maskImageRect; // RectTransform component for the mask image
             public Image borderImage; // Image component for the border
-            public int cooldownTimer; // Cooldown timer in integer steps
+            public float cooldownTimer; // Cooldown timer in float
         }
 
         public void UpdateStepCount()
@@ -498,19 +487,6 @@ namespace CoED
             if (magicText != null)
             {
                 magicText.text = $"{maxMagic} / {maxMagic}";
-            }
-        }
-
-        public void UpdateMagicBar(int currentMagic, int maxMagic)
-        {
-            if (magicBar != null)
-            {
-                magicBar.maxValue = maxMagic;
-                magicBar.value = currentMagic;
-            }
-            if (magicText != null)
-            {
-                magicText.text = $"{currentMagic} / {maxMagic}";
             }
         }
 
