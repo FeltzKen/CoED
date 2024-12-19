@@ -148,4 +148,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   floorChangeValue: 1
-  StairID: 0
+  playerTransform: {fileID: 0}

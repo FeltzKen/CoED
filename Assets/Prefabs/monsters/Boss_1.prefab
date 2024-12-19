@@ -225,7 +225,7 @@ MonoBehaviour:
   currentState: 0
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 456
+    m_Bits: 4552
 --- !u!114 &5710572630327944031
 MonoBehaviour:
   m_ObjectHideFlags: 0

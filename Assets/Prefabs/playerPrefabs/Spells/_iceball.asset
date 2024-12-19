@@ -16,6 +16,8 @@ MonoBehaviour:
   icon: {fileID: -1014011169, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   magicCost: 2
   damage: 15
+  lifetime: 5
+  collisionRadius: 0.5
   speed: 10
   cooldown: 5
   type: 0
@@ -27,5 +29,6 @@ MonoBehaviour:
   burnDuration: 0
   hasFreezeEffect: 1
   freezeDuration: 10
+  selfTargeting: 0
   canChase: 0
   isInstant: 0

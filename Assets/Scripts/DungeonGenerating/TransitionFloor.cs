@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEngine;
 
 namespace CoED
@@ -95,10 +96,19 @@ namespace CoED
 
                 // Find a valid adjacent tile
                 Vector3Int adjacentTile = targetCellPosition;
-                foreach (Vector2Int direction in directions)
+
+                // Create a randomized order of directions
+                Vector2Int[] randomizedDirections = directions
+                    .OrderBy(_ => UnityEngine.Random.value)
+                    .ToArray();
+
+                // Loop through the randomized directions to find a valid tile
+                foreach (Vector2Int direction in randomizedDirections)
                 {
                     Vector3Int checkPosition =
                         targetCellPosition + new Vector3Int(direction.x, direction.y, 0);
+
+                    // Check if the position is a valid floor tile
                     if (
                         floorData.FloorTiles.Contains(
                             new Vector2Int(checkPosition.x, checkPosition.y)
@@ -112,7 +122,7 @@ namespace CoED
 
                 // Convert the adjacent tile to world space
                 Vector3 adjacentWorldPosition =
-                    floorData.FloorTilemap.CellToWorld(adjacentTile) + new Vector3(-0.5f, -0.5f, 0);
+                    floorData.FloorTilemap.CellToWorld(adjacentTile) + new Vector3(+1.5f, +1.5f, 0);
                 // Update the player's position
                 PlayerMovement.Instance.UpdateCurrentTilePosition(adjacentWorldPosition);
                 CameraController cameraController = Camera.main.GetComponent<CameraController>();

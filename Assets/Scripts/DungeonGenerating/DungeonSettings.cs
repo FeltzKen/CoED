@@ -1,11 +1,11 @@
-using UnityEngine;
-using System.Collections.Generic;
-using UnityEngine.Tilemaps;
 using System;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Tilemaps;
 
 namespace CoED
 {
-[CreateAssetMenu(fileName = "DungeonSettings", menuName = "ScriptableObjects/DungeonSettings")]
+    [CreateAssetMenu(fileName = "DungeonSettings", menuName = "ScriptableObjects/DungeonSettings")]
     public class DungeonSettings : ScriptableObject
     {
         [Header("Dungeon Dimensions")]
@@ -14,21 +14,20 @@ namespace CoED
 
         [Tooltip("Maximum number of dungeon floors.")]
         public int maxFloors = 5;
-  
+
         [Tooltip("number of stairs to place per floor")]
         public int numberOfStairs = 5;
 
         [Header("Tile Palette")]
-        [SerializeField] public TilePalette tilePalette;
+        [SerializeField]
+        public TilePalette tilePalette;
 
         // Expose the TilePalette instance for access
         public TilePalette TilePalette => tilePalette;
 
-
         [Tooltip("List of item prefabs to spawn in the dungeon.")]
         public List<ScriptableObject> itemPrefabs = new List<ScriptableObject>();
         public int numberOfItemsPerFloor = 30;
-
 
         [Tooltip("Random seed for procedural generation. Set to 0 for random seed each run.")]
         public int seed;
@@ -36,20 +35,24 @@ namespace CoED
         [Header("Generation Algorithms")]
         [Tooltip("Prioritized list of algorithms for generating the dungeon.")]
         [Header("Selected Algorithm")]
-        public AlgorithmConfig selectedAlgorithm = new AlgorithmConfig();  
-        
+        public AlgorithmConfig selectedAlgorithm = new AlgorithmConfig();
+
         [Header("Prefab Settings")]
         [Tooltip("Prefab for the spawning room.")]
-        [SerializeField] public GameObject spawningRoomPrefab;
+        [SerializeField]
+        public GameObject spawningRoomPrefab;
 
         [Tooltip("Prefab for spawn effects (e.g., particle effects).")]
-        [SerializeField] public GameObject spawnEffectPrefab;
+        [SerializeField]
+        public GameObject spawnEffectPrefab;
 
         [Header("Enemy Settings")]
         [Tooltip("List of enemy prefabs to use in the dungeon.")]
         public List<GameObject> enemyPrefabs = new List<GameObject>();
+
         [Header("UI Elements")]
-        [SerializeField] public GameObject healthBarPrefab;
+        [SerializeField]
+        public GameObject healthBarPrefab;
 
         [Tooltip("List of boss prefabs to use for special encounters.")]
         public List<GameObject> bossPrefabs = new List<GameObject>();
@@ -57,6 +60,7 @@ namespace CoED
         [Tooltip("Default number of enemies to spawn per floor.")]
         public int numberOfEnemiesPerFloor = 5;
         public int numberOfPatrolPoints = 10;
+
         [Header("Scaling Settings")]
         [Tooltip("Enable adaptive difficulty scaling for enemies.")]
         public bool enableEnemyScaling = true;
@@ -92,9 +96,10 @@ namespace CoED
 
         [Tooltip("Number of enemies to spawn during an ambush.")]
         public int ambushEnemyCount = 3;
-        
+
         [Tooltip("Ambush Tile Prefab")]
-        [SerializeField] public GameObject ambushTilePrefab;
+        [SerializeField]
+        public GameObject ambushTilePrefab;
 
         [Tooltip("Radius around the player for ambush enemy spawn points.")]
         public float ambushRadius = 3f;
@@ -113,21 +118,24 @@ namespace CoED
         [Tooltip("Enable visualization for enemy spawn positions.")]
         public bool visualizeSpawnPositions = false;
 
-
         [System.Serializable]
         public class AlgorithmConfig
         {
             [Header("Algorithm Type")]
             [Tooltip("Select the carving algorithm to use.")]
             public CarvingAlgorithmType algorithmType;
+
             [Header("Cellular Automata Settings")]
             [Tooltip("Initial wall density (value between 0 and 1).")]
             [Range(0f, 1f)]
             public float initialWallDensity = 0.4f;
+
             [Tooltip("Number of iterations for smoothing the map.")]
             public int iterations = 5;
+
             [Tooltip("Minimum neighbors required for a cell to become a wall.")]
             public int neighborWallThreshold = 4;
+
             [Header("Perlin Noise Settings")]
             [Tooltip("Scale factor for Perlin noise.")]
             public float edgeBias = 10f;
@@ -135,6 +143,7 @@ namespace CoED
             [Header("BSP Settings")]
             [Tooltip("Number of subdivisions for BSP algorithm.")]
             public int bspSubdivisions = 4;
+
             [Tooltip("Chance to carve out a space.")]
             [Range(0f, 1f)]
             public float bspCarveChance = 0.7f;
@@ -142,6 +151,7 @@ namespace CoED
             [Header("Spiral Pattern Settings")]
             [Tooltip("Step size for spiral generation.")]
             public int spiralStepSize = 1;
+
             [Header("Wave Function Collapse Settings")]
             [Tooltip("Weighting factor for tile probabilities.")]
             public float waveCollapseBias = 1.0f;
@@ -149,9 +159,11 @@ namespace CoED
             [Header("Fractal Maze Settings")]
             [Tooltip("Maximum recursion depth for fractal subdivision.")]
             public int fractalDepth = 3;
+
             [Tooltip("Chance to split the area at each depth level.")]
             [Range(0f, 1f)]
             public float fractalMazeSplitChance = 0.5f;
+
             [Tooltip("Fractal maze max depth.")]
             public int fractalMazeMaxDepth = 3;
 
@@ -166,48 +178,53 @@ namespace CoED
             [Tooltip("Chance for branching in the L-system.")]
             [Range(0f, 1f)]
             public float branchChance = 0.5f;
+
             [Header("Ripple Propagation Settings")]
             [Tooltip("Number of iterations for ripple propagation.")]
             public int rippleIterations = 5;
+
             [Tooltip("Minimum distance for ripple propagation.")]
             public int rippleDistance = 3;
             public int rippleCenters = 7;
-            public int rippleMaxRadius = 5; 
+            public int rippleMaxRadius = 5;
 
             [Header("Biome Generation Settings")]
             [Tooltip("Number of biomes to generate.")]
             public int biomeCount = 5;
+
             [Tooltip("Minimum size for a biome.")]
-            public int minBiomeSize = 10;   
-            [Tooltip("Maximum size for a biome.")]  
+            public int minBiomeSize = 10;
+
+            [Tooltip("Maximum size for a biome.")]
             public int maxBiomeSize = 20;
 
-            [Header ("IslandGrowth Settings")]
+            [Header("IslandGrowth Settings")]
             [Tooltip("Number of islands to generate.")]
             public int islandCount = 5;
+
             [Tooltip("Minimum size for an island.")]
             public int islandSize = 10;
 
             [Header("Radial Growth Settings")]
             [Tooltip("Radius of radial growth.")]
             public int radialGrowthRadius = 10;
+
             [Tooltip("Chance for a cell to grow into a room.")]
             [Range(0f, 1f)]
             public float roomGrowthChance = 0.6f;
+
             [Tooltip("Chance for a cell to grow into a corridor.")]
             [Range(0f, 1f)]
             public float corridorGrowthChance = 0.4f;
+
             [Tooltip("Number of radial growth center xy.")]
             public Vector2Int radialGrowthCenter = new Vector2Int(50, 50);
+
             [Tooltip("Chance for a room to grow into a corridor.")]
             public int radialGrowthRoomChance = 60;
+
             [Tooltip("Chance for a corridor to grow into a room.")]
             public int radialGrowthCorridorChance = 40;
-
-
-
         }
-
-
     }
 }

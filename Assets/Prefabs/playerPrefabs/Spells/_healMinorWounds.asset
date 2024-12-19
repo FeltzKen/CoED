@@ -10,25 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f346ae4d371ef2439c71f3564d02f32, type: 3}
-  m_Name: _fireball
+  m_Name: _healMinorWounds
   m_EditorClassIdentifier: 
-  spellName: Fireball
-  icon: {fileID: -1080549867, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
-  magicCost: 1
-  damage: 200
-  lifetime: 5
-  collisionRadius: 0.5
-  speed: 6
-  cooldown: 1
-  type: 0
-  range: 15
+  spellName: HealMinorWounds
+  icon: {fileID: -1259839820, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
+  magicCost: 20
+  damage: 100
+  speed: 0
+  cooldown: 20
+  type: 2
+  range: 0
   areaOfEffect: 0
-  spellEffectPrefab: {fileID: 120242553412648062, guid: 9f849c1587a2e994ab6f74842cebee07, type: 3}
-  hasBurnEffect: 1
-  burnDamage: 5
-  burnDuration: 5
+  spellEffectPrefab: {fileID: 4996319237994903159, guid: cdbf24be1af1533428f5fcac741c088e, type: 3}
+  hasBurnEffect: 0
+  burnDamage: 0
+  burnDuration: 0
   hasFreezeEffect: 0
   freezeDuration: 0
-  selfTargeting: 0
+  selfTargeting: 1
   canChase: 0
   isInstant: 0

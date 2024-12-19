@@ -34,12 +34,20 @@ namespace CoED
 
         [SerializeField]
         private float moneyDropRate = 0.5f; // Chance to drop money
+        private SpriteRenderer spriteRenderer;
+
+        [SerializeField]
+        private Color normalColor = Color.white;
+
+        [SerializeField]
+        private Color highlightedColor = Color.red;
 
         // Property to get the name of the enemy
         public string ActorName => name;
 
         private void Start()
         {
+            spriteRenderer = GetComponent<SpriteRenderer>();
             // Initialize necessary components
             statusEffectManager = GetComponent<StatusEffectManager>();
             floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
@@ -96,21 +104,19 @@ namespace CoED
             }
         }
 
+        public void SetHighlighted(bool isHighlighted)
+        {
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.color = isHighlighted ? highlightedColor : normalColor;
+            }
+        }
+
         public void ResetEnemyAttackFlags()
         {
             foreach (var enemy in FindObjectsByType<EnemyAI>(FindObjectsSortMode.None))
             {
                 enemy.CanAttackPlayer = true;
-            }
-            // Update spell cooldowns after an action
-            if (PlayerSpellCaster.Instance != null)
-            {
-                Debug.Log("Spell cooldowns updated based on player action.");
-                // PlayerUI.Instance.UpdateCooldownTimers();
-            }
-            else
-            {
-                Debug.LogWarning("PlayerSpellCaster instance not found. Cooldowns not updated.");
             }
         }
     }

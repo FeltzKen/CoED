@@ -77,6 +77,17 @@ namespace CoED
                     Vector2Int randomTile = firstFloorData
                         .FloorTiles.OrderBy(t => UnityEngine.Random.value)
                         .First();
+                    // while exit tile is not walkable or is a wall tile or is a void tile
+                    while (
+                        !firstFloorData.FloorTiles.Contains(randomTile)
+                        || firstFloorData.WallTiles.Contains(randomTile)
+                        || firstFloorData.VoidTiles.Contains(randomTile)
+                    )
+                    {
+                        randomTile = firstFloorData
+                            .FloorTiles.OrderBy(t => UnityEngine.Random.value)
+                            .First();
+                    }
                     Vector3 exitPosition = new Vector3(randomTile.x, randomTile.y, 0);
 
                     // Move the player to the selected position
@@ -126,6 +137,16 @@ namespace CoED
             }
         }
 
+        /// <summary>
+        /// Checks if the given position is a valid spawn point.
+        /// </summary>
+        private bool IsValidSpawnPosition(FloorData floorData, Vector2Int position)
+        {
+            return floorData.FloorTiles.Contains(position)
+                && !floorData.WallTiles.Contains(position)
+                && !floorData.VoidTiles.Contains(position);
+        }
+
         private IEnumerator SpawnEnemiesForFloor(
             FloorData floorData,
             Transform floorParent,
@@ -134,8 +155,10 @@ namespace CoED
         {
             int enemyCount = dungeonSettings.numberOfEnemiesPerFloor;
             List<Vector3> spawnPositions = floorData
-                .GetRandomFloorTiles(enemyCount)
+                .GetRandomFloorTiles(enemyCount * 2) // Retrieve extra tiles to ensure enough valid positions
+                .Where(tile => IsValidSpawnPosition(floorData, tile))
                 .Select(tile => new Vector3(tile.x, tile.y, 0))
+                .Take(enemyCount)
                 .ToList();
 
             if (spawnPositions == null || spawnPositions.Count == 0)
@@ -151,8 +174,8 @@ namespace CoED
             foreach (var position in spawnPositions)
             {
                 Vector3 snappedPosition = new Vector3(
-                    Mathf.Round(position.x + 0.5f),
-                    Mathf.Round(position.y + 0.5f),
+                    Mathf.Round(position.x),
+                    Mathf.Round(position.y),
                     position.z
                 );
                 Vector3 worldPosition = floorParentPosition + snappedPosition;
@@ -329,60 +352,127 @@ namespace CoED
                 Debug.LogError("DungeonSpawner: FloorTiles is null. Cannot spawn ambush.");
                 return;
             }
+
+            // Align center to tilemap grid for consistent tile placement
+            Vector3Int centerTile = floorData.FloorTilemap.WorldToCell(center);
+
+            // Get valid spawn positions within the grid-aligned radius
             List<Vector2Int> spawnPositions = GetValidSpawnPositions(
                 dungeonSettings.ambushEnemyCount,
                 dungeonSettings.ambushRadius,
-                center,
+                centerTile,
                 floorData
             );
+            // log spawn positions
+            foreach (var pos in spawnPositions)
+            {
+                Debug.Log("Spawn position: " + pos);
+            }
 
             if (spawnPositions.Count == 0)
             {
-                Debug.LogError(
-                    "DungeonSpawner: No valid spawn positions found for ambush. Cannot spawn enemies."
-                );
+                Debug.LogError("DungeonSpawner: No valid spawn positions found for ambush.");
                 return;
             }
 
-            foreach (var tilePosition in spawnPositions)
+            // Instantiate enemies and effects at valid positions
+            foreach (Vector2Int tilePosition in spawnPositions)
             {
-                Vector3 worldPosition = floorData.FloorTilemap.CellToWorld(
-                    new Vector3Int(tilePosition.x, tilePosition.y, 0)
-                ); // + new Vector3(0.5f, 0.5f, 0);
-                Instantiate(dungeonSettings.spawnEffectPrefab, worldPosition, Quaternion.identity);
-                SpawnEnemy(worldPosition, enemyParent, floorData);
+                // Instantiate spawn effect at aligned position
+                PositionHelper.InstantiateOnTile(
+                    floorData.FloorTilemap,
+                    new Vector3Int(tilePosition.x, tilePosition.y, 0),
+                    dungeonSettings.spawnEffectPrefab,
+                    enemyParent
+                );
+
+                // Spawn enemy and initialize its AI
+                GameObject enemy = SpawnEnemyAtTile(tilePosition, floorData, enemyParent);
+                if (enemy != null)
+                {
+                    EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
+                    if (enemyAI != null)
+                    {
+                        enemyAI.Initialize(floorData);
+                        enemyAI.SetPatrolPoints(
+                            floorData.GetRandomFloorTiles(dungeonSettings.numberOfPatrolPoints)
+                        );
+                    }
+                }
             }
+        }
+
+        private GameObject SpawnEnemyAtTile(
+            Vector2Int tilePosition,
+            FloorData floorData,
+            Transform parent
+        )
+        {
+            if (dungeonSettings.enemyPrefabs == null || dungeonSettings.enemyPrefabs.Count == 0)
+            {
+                Debug.LogError("DungeonSpawner: No enemy prefabs available.");
+                return null;
+            }
+
+            // Select a random enemy prefab
+            GameObject enemyPrefab = dungeonSettings.enemyPrefabs[
+                UnityEngine.Random.Range(0, dungeonSettings.enemyPrefabs.Count)
+            ];
+
+            // Instantiate enemy at the aligned tile position
+            return PositionHelper.InstantiateOnTile(
+                floorData.FloorTilemap,
+                new Vector3Int(tilePosition.x, tilePosition.y, 0),
+                enemyPrefab,
+                parent
+            );
         }
 
         private List<Vector2Int> GetValidSpawnPositions(
             int count,
             float radius,
-            Vector3 center,
+            Vector3Int centerTile,
             FloorData floorData
         )
         {
             List<Vector2Int> positions = new List<Vector2Int>();
             int attempts = 0;
-            int maxAttempts = count * 10; // Limit the number of attempts to avoid infinite loops
+            int maxAttempts = count * 10; // Limit attempts to prevent infinite loops
 
             while (positions.Count < count && attempts < maxAttempts)
             {
-                Vector2 randomDirection = UnityEngine.Random.insideUnitCircle * radius;
-                Vector3 randomPosition =
-                    center + new Vector3(randomDirection.x, randomDirection.y, 0);
-                Vector3Int cellPosition = floorData.FloorTilemap.WorldToCell(
-                    new Vector3(Mathf.Round(randomPosition.x), Mathf.Round(randomPosition.y), 0)
+                // Generate a random offset within the radius
+                int offsetX = UnityEngine.Random.Range(
+                    -Mathf.CeilToInt(radius),
+                    Mathf.CeilToInt(radius) + 1
                 );
-                Vector2Int tilePosition = new Vector2Int(cellPosition.x, cellPosition.y);
+                int offsetY = UnityEngine.Random.Range(
+                    -Mathf.CeilToInt(radius),
+                    Mathf.CeilToInt(radius) + 1
+                );
 
+                Vector2Int candidateTile = new Vector2Int(
+                    centerTile.x + offsetX,
+                    centerTile.y + offsetY
+                );
+
+                // Ensure the candidate is a valid floor tile and not already chosen
                 if (
-                    floorData.FloorTiles.Contains(tilePosition) && !positions.Contains(tilePosition)
+                    floorData.FloorTiles.Contains(candidateTile)
+                    && !positions.Contains(candidateTile)
                 )
                 {
-                    positions.Add(tilePosition);
+                    positions.Add(candidateTile);
                 }
 
                 attempts++;
+            }
+
+            if (positions.Count < count)
+            {
+                Debug.LogWarning(
+                    "GetValidSpawnPositions: Unable to find enough valid spawn positions."
+                );
             }
 
             return positions;

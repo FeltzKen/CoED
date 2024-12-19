@@ -59,6 +59,7 @@ namespace CoED
         [SerializeField, Min(0f)]
         private float baseProjectileRange = 5f;
         public float CurrentProjectileRange { get; set; }
+        public float targetingRange = 0f;
         private float equipmentRange = 0;
 
         [Header("Speed")]

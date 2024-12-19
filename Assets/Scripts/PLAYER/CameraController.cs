@@ -86,8 +86,16 @@ namespace CoED
             Vector3 playerPosition = playerTransform.position;
 
             // Clamp the player's position to the bounds of the floor
-            float clampedX = Mathf.Clamp(playerPosition.x, minBounds.x + halfWidth, maxBounds.x - halfWidth);
-            float clampedY = Mathf.Clamp(playerPosition.y, minBounds.y + halfHeight, maxBounds.y - halfHeight);
+            float clampedX = Mathf.Clamp(
+                playerPosition.x,
+                minBounds.x + halfWidth,
+                maxBounds.x - halfWidth
+            );
+            float clampedY = Mathf.Clamp(
+                playerPosition.y,
+                minBounds.y + halfHeight,
+                maxBounds.y - halfHeight
+            );
 
             // Update the camera's position
             transform.position = new Vector3(clampedX, clampedY, transform.position.z);
@@ -106,7 +114,11 @@ namespace CoED
             Vector3 playerPosition = playerTransform.position;
 
             // Directly update the camera's position without clamping
-            transform.position = new Vector3(playerPosition.x, playerPosition.y, transform.position.z);
+            transform.position = new Vector3(
+                playerPosition.x,
+                playerPosition.y,
+                transform.position.z
+            );
 
             // Debug.Log($"Camera centered on player at ({playerPosition.x}, {playerPosition.y}) without clamping.");
         }
@@ -148,22 +160,42 @@ namespace CoED
             Bounds floorBounds = floorData.FloorTilemap.localBounds;
             Vector3 floorOffset = floorData.FloorTilemap.transform.parent.position;
 
-            minBounds = new Vector2(floorBounds.min.x + floorOffset.x, floorBounds.min.y + floorOffset.y);
-            maxBounds = new Vector2(floorBounds.max.x + floorOffset.x, floorBounds.max.y + floorOffset.y);
+            minBounds = new Vector2(
+                floorBounds.min.x + floorOffset.x,
+                floorBounds.min.y + floorOffset.y
+            );
+            maxBounds = new Vector2(
+                floorBounds.max.x + floorOffset.x,
+                floorBounds.max.y + floorOffset.y
+            );
 
             boundsClampingEnabled = true;
 
-            Debug.Log($"Camera bounds updated for Floor {floorNumber}: Min({minBounds}), Max({maxBounds})");
+            Debug.Log(
+                $"Camera bounds updated for Floor {floorNumber}: Min({minBounds}), Max({maxBounds})"
+            );
             MinimapController.Instance.UpdateMinimapPosition(transform.position);
         }
 
         private void OnDrawGizmos()
         {
             Gizmos.color = Color.red;
-            Gizmos.DrawLine(new Vector3(minBounds.x, minBounds.y, 0), new Vector3(maxBounds.x, minBounds.y, 0));
-            Gizmos.DrawLine(new Vector3(maxBounds.x, minBounds.y, 0), new Vector3(maxBounds.x, maxBounds.y, 0));
-            Gizmos.DrawLine(new Vector3(maxBounds.x, maxBounds.y, 0), new Vector3(minBounds.x, maxBounds.y, 0));
-            Gizmos.DrawLine(new Vector3(minBounds.x, maxBounds.y, 0), new Vector3(minBounds.x, minBounds.y, 0));
+            Gizmos.DrawLine(
+                new Vector3(minBounds.x, minBounds.y, 0),
+                new Vector3(maxBounds.x, minBounds.y, 0)
+            );
+            Gizmos.DrawLine(
+                new Vector3(maxBounds.x, minBounds.y, 0),
+                new Vector3(maxBounds.x, maxBounds.y, 0)
+            );
+            Gizmos.DrawLine(
+                new Vector3(maxBounds.x, maxBounds.y, 0),
+                new Vector3(minBounds.x, maxBounds.y, 0)
+            );
+            Gizmos.DrawLine(
+                new Vector3(minBounds.x, maxBounds.y, 0),
+                new Vector3(minBounds.x, minBounds.y, 0)
+            );
         }
     }
 }

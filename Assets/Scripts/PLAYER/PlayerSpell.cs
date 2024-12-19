@@ -10,6 +10,8 @@ namespace CoED
         public Sprite icon;
         public int magicCost;
         public int damage;
+        public float lifetime;
+        public float collisionRadius; // Radius for collision detection
         public float speed; // Speed of the projectile
         public float cooldown; // Time in seconds before the spell can be used again
 
@@ -28,6 +30,7 @@ namespace CoED
         public float freezeDuration;
 
         [Header("Special Attributes")]
+        public bool selfTargeting; // If true, projectile will chase targets
         public bool canChase; // If true, projectile will chase targets
         public bool isInstant; // If true, instantly affects the target
     }

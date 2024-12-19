@@ -71,11 +71,6 @@ namespace CoED
             UpdateStaminaUI();
         }
 
-        private void OnDestroy()
-        {
-            Debug.Log("OnDestroy called.");
-        }
-
         private void Update()
         {
             HandleMovementInput();
@@ -107,9 +102,6 @@ namespace CoED
                 isMouseHeld && IsMouseOverEnemy(Camera.main.ScreenToWorldPoint(Input.mousePosition))
             )
             {
-                Debug.Log(
-                    $"Attacking enemy from the start HandleMovementInput: {Camera.main.ScreenToWorldPoint(Input.mousePosition)}"
-                );
                 PerformContinuousAttack(Camera.main.ScreenToWorldPoint(Input.mousePosition));
                 return;
             }
@@ -191,13 +183,17 @@ namespace CoED
         {
             Vector2Int newTilePosition = currentTilePosition + direction;
             Vector2 newPosition = new Vector2(newTilePosition.x, newTilePosition.y);
-
+            if (IsEnemyAtPosition(newTilePosition))
+            {
+                PlayerCombat.Instance.PerformMeleeAttack(newTilePosition);
+                return;
+            }
             // Check each axis for move possibility
             bool canMoveX = IsMovePossible(new Vector2Int(direction.x, 0));
             bool canMoveY = IsMovePossible(new Vector2Int(0, direction.y));
             bool canMoveDiagonal = IsMovePossible(direction);
 
-            if (canMoveDiagonal && canMoveX && canMoveY)
+            if (canMoveDiagonal) // && canMoveX && canMoveY)
             {
                 currentTilePosition = newTilePosition;
                 targetPosition = newPosition;
@@ -214,23 +210,13 @@ namespace CoED
             }
 
             // If movement is possible along any axis
-            if (canMoveX || canMoveY || (canMoveDiagonal && canMoveX && canMoveY))
+            if (canMoveX || canMoveY || canMoveDiagonal) // && canMoveX && canMoveY))
             {
-                if (IsEnemyAtPosition(newTilePosition))
-                {
-                    // Attack if enemy is at the target position
-                    Debug.Log($"Attacking enemy from MoveInDirection: {newTilePosition}");
-                    PlayerCombat.Instance.PerformMeleeAttack(newTilePosition);
-                }
-                else
-                {
-                    // Move player to the target position
-                    rb.position = targetPosition;
-                    transform.position = targetPosition;
-                    isMoving = true;
-                    moveCooldown = Time.time + moveDelay;
-                    enemy.ResetEnemyAttackFlags();
-                }
+                // Move player to the target position
+                UpdateCurrentTilePosition(targetPosition);
+                isMoving = true;
+                moveCooldown = Time.time + moveDelay;
+                enemy.ResetEnemyAttackFlags();
             }
         }
 
@@ -308,9 +294,6 @@ namespace CoED
                 hitCollider != null
                 && Vector2.Distance(transform.position, roundedMousePosition)
                     <= playerStats.AttackRange;
-            Debug.Log(
-                $"IsMouseOverEnemy: {isOverEnemy}, Mouse Position: {roundedMousePosition}, Player Position: {transform.position}, Attack Range: {playerStats.AttackRange}"
-            );
             return isOverEnemy;
         }
 
@@ -319,7 +302,6 @@ namespace CoED
             Vector2Int targetTile = Vector2Int.RoundToInt(targetPosition);
             if (IsEnemyAtPosition(targetTile))
             {
-                Debug.Log($"Performing continuous attack on: {targetTile}");
                 PlayerCombat.Instance.PerformMeleeAttack(targetTile);
             }
         }
@@ -334,7 +316,6 @@ namespace CoED
                 enemyLayer
             );
             bool isEnemyAtPos = hitCollider != null;
-            Debug.Log($"IsEnemyAtPosition: {isEnemyAtPos}, Position: {position}");
             return isEnemyAtPos;
         }
 

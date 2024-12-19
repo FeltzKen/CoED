@@ -42,7 +42,7 @@ MonoBehaviour:
   seed: 568
   selectedAlgorithm:
     algorithmType: 0
-    initialWallDensity: 0.465
+    initialWallDensity: 0.4
     iterations: 5
     neighborWallThreshold: 3
     edgeBias: 10
@@ -97,7 +97,7 @@ MonoBehaviour:
   ambushEnemyCount: 4
   ambushTilePrefab: {fileID: 5594940870504256869, guid: 04caad6111fe60d4e8f0ec112e8577c6, type: 3}
   ambushRadius: 5
-  generateOuterWalls: 1
+  generateOuterWalls: 0
   enableDebugLogs: 0
   visualizePatrolRoutes: 0
   visualizeSpawnPositions: 0

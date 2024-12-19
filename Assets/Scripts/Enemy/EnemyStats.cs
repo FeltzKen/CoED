@@ -18,7 +18,7 @@ namespace CoED
         private int baseHealth = 100;
 
         [SerializeField, Min(0)]
-        private int baseSpeed = 5;
+        private float baseSpeed = 5;
 
         [SerializeField, Min(0f)]
         private float baseAttackRange = 1.0f;
@@ -39,7 +39,7 @@ namespace CoED
         public int CurrentDefense { get; set; }
         public int CurrentHealth { get; set; }
         public int MaxHealth { get; set; }
-        public int CurrentSpeed { get; set; }
+        public float CurrentSpeed { get; set; }
         public float CurrentAttackRange { get; set; }
         public float CurrentDetectionRange { get; set; }
         public float CurrentFireRate { get; set; }
@@ -51,13 +51,14 @@ namespace CoED
         // public event Action <int> OnHealthChanged;
         public event Action OnEnemyDeath;
         public int spawnFloor { get; set; } // Store the floor this enemy spawned on
+        public float BaseSpeed => baseSpeed;
 
-        private void Awake() { }
-
-        private void Start()
+        private void Awake()
         {
             CalculateStats();
         }
+
+        private void Start() { }
 
         private void InitializeUI()
         {
@@ -71,12 +72,12 @@ namespace CoED
 
         private void CalculateStats()
         {
-            float floorMultiplier = 1 + (spawnFloor * 0.1f); // Example: each floor increases stats by 10%
+            float floorMultiplier = 1 + (spawnFloor * 0.5f); // Example: each floor increases stats by 10%
 
             MaxHealth = Mathf.RoundToInt(baseHealth * floorMultiplier);
             CurrentAttack = Mathf.RoundToInt(baseAttack * floorMultiplier);
             CurrentDefense = Mathf.RoundToInt(baseDefense * floorMultiplier);
-            CurrentSpeed = Mathf.RoundToInt(baseSpeed * floorMultiplier);
+            CurrentSpeed = baseSpeed * floorMultiplier;
             CurrentAttackRange = baseAttackRange * floorMultiplier;
             CurrentDetectionRange = baseDetectionRange * floorMultiplier;
             CurrentFireRate = Mathf.Max(baseFireRate - spawnFloor * 0.02f, 0.1f);
@@ -136,7 +137,7 @@ namespace CoED
         )
         {
             GameObject effectObject = new GameObject($"{effectType}Effect");
-            effectObject.transform.parent = this.transform;
+            effectObject.transform.parent = transform;
             StatusEffect statusEffect = effectObject.AddComponent<StatusEffect>();
             statusEffect.effectType = effectType;
             statusEffect.damagePerSecond = damagePerSecond;

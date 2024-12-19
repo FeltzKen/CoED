@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using CoED;
+using UnityEngine;
 using UnityEngine.Tilemaps;
-
 
 namespace CoED
 {
@@ -11,8 +10,10 @@ namespace CoED
     {
         public static DungeonManager Instance { get; private set; }
 
-        public Dictionary<int, Transform> FloorTransforms { get; private set; } = new Dictionary<int, Transform>();
-        public Dictionary<(int, int), HashSet<Vector2Int>> floorIntersections = new Dictionary<(int, int), HashSet<Vector2Int>>();
+        public Dictionary<int, Transform> FloorTransforms { get; private set; } =
+            new Dictionary<int, Transform>();
+        public Dictionary<(int, int), HashSet<Vector2Int>> floorIntersections =
+            new Dictionary<(int, int), HashSet<Vector2Int>>();
 
         [Header("Floors")]
         public Dictionary<int, FloorData> floors = new Dictionary<int, FloorData>();
@@ -20,19 +21,19 @@ namespace CoED
         private DungeonSettings dungeonSettings;
         private int currentFloorNumber = 0;
 
-    private void Awake()
-    {
-        if (Instance != null && Instance != this)
+        private void Awake()
         {
-            Destroy(gameObject);
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+            }
+            else
+            {
+                Instance = this;
+                DontDestroyOnLoad(gameObject); // Optional: use if this object should persist across scenes.
+                // Debug.Log("DungeonManager: Singleton instance created.");
+            }
         }
-        else
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject); // Optional: use if this object should persist across scenes.
-            // Debug.Log("DungeonManager: Singleton instance created.");
-        }
-    }
 
         /// <summary>
         /// Adds a floor to the dungeon's collection.
@@ -42,17 +43,16 @@ namespace CoED
             if (!floors.ContainsKey(floor.FloorNumber))
             {
                 floors[floor.FloorNumber] = floor;
-        //        Debug.Log($"Floor_{floor.FloorNumber} added to the dungeon.");
+                //        Debug.Log($"Floor_{floor.FloorNumber} added to the dungeon.");
             }
             else
             {
                 Debug.LogWarning($"Floor_{floor.FloorNumber} already exists.");
             }
-            dungeonSettings = FindAnyObjectByType<DungeonGenerator>()?.GetComponent<DungeonGenerator>().dungeonSettings;
-
+            dungeonSettings = FindAnyObjectByType<DungeonGenerator>()
+                ?.GetComponent<DungeonGenerator>()
+                .dungeonSettings;
         }
-
-
 
         public void ShowRenderersForFloor(int floorNumber)
         {
@@ -78,9 +78,12 @@ namespace CoED
             {
                 return floorData.WallTilemap;
             }
-            Debug.LogError($"DungeonManager: WallTilemap for floor {currentFloorNumber} not found.");
+            Debug.LogError(
+                $"DungeonManager: WallTilemap for floor {currentFloorNumber} not found."
+            );
             return null;
         }
+
         public Tilemap GetVoidTilemap(int currentFloorNumber)
         {
             // Assuming you have a way to get the current floor number
@@ -88,7 +91,9 @@ namespace CoED
             {
                 return floorData.VoidTilemap;
             }
-            Debug.LogError($"DungeonManager: WallTilemap for floor {currentFloorNumber} not found.");
+            Debug.LogError(
+                $"DungeonManager: WallTilemap for floor {currentFloorNumber} not found."
+            );
             return null;
         }
 
@@ -122,6 +127,7 @@ namespace CoED
         {
             return currentFloorNumber;
         }
+
         public FloorData GetFloorData(int floorNumber)
         {
             if (floors.TryGetValue(floorNumber, out FloorData floorData))
@@ -131,12 +137,15 @@ namespace CoED
             Debug.LogError($"DungeonManager: Floor {floorNumber} not found.");
             return null;
         }
+
         //get random enemy prefab from the list in dugeon settings.
         public GameObject GetRandomEnemyPrefab()
         {
             if (dungeonSettings.enemyPrefabs.Count > 0)
             {
-                return dungeonSettings.enemyPrefabs[Random.Range(0, dungeonSettings.enemyPrefabs.Count)];
+                return dungeonSettings.enemyPrefabs[
+                    Random.Range(0, dungeonSettings.enemyPrefabs.Count)
+                ];
             }
             return null;
         }

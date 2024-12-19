@@ -45,6 +45,12 @@ namespace CoED
         private Transform spellPanel;
 
         [SerializeField]
+        private Transform leftContainer;
+
+        [SerializeField]
+        private Transform rightContainer;
+
+        [SerializeField]
         private GameObject spellButtonPrefab;
 
         [Header("Available Spells")]
@@ -133,9 +139,9 @@ namespace CoED
 
         private void PopulateSpellPanel()
         {
-            if (spellPanel == null)
+            if (spellPanel == null || leftContainer == null || rightContainer == null)
             {
-                Debug.LogError("spellPanel is not assigned in the Inspector.");
+                Debug.LogError("Spell panel or one of the containers is not assigned.");
                 return;
             }
 
@@ -145,13 +151,31 @@ namespace CoED
                 return;
             }
 
+            // Clear containers
+            foreach (Transform child in leftContainer)
+            {
+                Destroy(child.gameObject);
+            }
+            foreach (Transform child in rightContainer)
+            {
+                Destroy(child.gameObject);
+            }
+
+            // Populate the containers
             foreach (PlayerSpell spell in availableSpells)
             {
-                AddSpellToUI(spell);
+                if (spell.selfTargeting)
+                {
+                    AddSpellToUI(spell, rightContainer); // Add to the right container
+                }
+                else
+                {
+                    AddSpellToUI(spell, leftContainer); // Add to the left container
+                }
             }
         }
 
-        private void AddSpellToUI(PlayerSpell spell)
+        private void AddSpellToUI(PlayerSpell spell, Transform targetSpellPanel)
         {
             if (spellUIMap.ContainsKey(spell))
             {
@@ -159,7 +183,7 @@ namespace CoED
                 return;
             }
 
-            GameObject buttonObj = Instantiate(spellButtonPrefab, spellPanel);
+            GameObject buttonObj = Instantiate(spellButtonPrefab, targetSpellPanel);
             buttonObj.name = $"{spell.spellName}_Button";
 
             Button spellButton = buttonObj.GetComponent<Button>();
@@ -189,15 +213,17 @@ namespace CoED
             }
 
             // Get the mask image component
-            RectTransform maskImageRect = buttonObj
-                .transform.Find("MaskImage")
-                ?.GetComponent<RectTransform>();
-            if (maskImageRect == null)
+            Image maskImage = buttonObj.transform.Find("MaskImage")?.GetComponent<Image>();
+            if (maskImage == null)
             {
                 Debug.LogError("Spell button prefab is missing a MaskImage component.");
                 Destroy(buttonObj);
                 return;
             }
+
+            // Set the mask image type to filled and radial360
+            maskImage.type = Image.Type.Filled;
+            maskImage.fillMethod = Image.FillMethod.Radial360;
 
             // Assign the spell's icon to the base image
             if (spell.icon != null)
@@ -217,7 +243,7 @@ namespace CoED
             SpellUIElement uiElement = new SpellUIElement
             {
                 button = spellButton,
-                maskImageRect = maskImageRect,
+                maskImage = maskImage,
                 borderImage = borderImage,
                 cooldownTimer = 0f,
             };
@@ -246,10 +272,7 @@ namespace CoED
             {
                 uiElement.cooldownTimer = spell.cooldown; // Set cooldown timer
                 uiElement.button.interactable = false;
-                uiElement.maskImageRect.offsetMin = new Vector2(
-                    0,
-                    uiElement.maskImageRect.offsetMin.y
-                ); // Start with an empty mask
+                uiElement.maskImage.fillAmount = 0f; // Start with an empty mask
 
                 // Start the cooldown coroutine
                 StartCoroutine(CooldownCoroutine(spell, uiElement));
@@ -261,23 +284,15 @@ namespace CoED
 
         private IEnumerator CooldownCoroutine(PlayerSpell spell, SpellUIElement uiElement)
         {
-            float initialWidth = uiElement.maskImageRect.rect.width;
             while (uiElement.cooldownTimer > 0)
             {
                 yield return null; // Wait for the next frame
                 uiElement.cooldownTimer -= Time.deltaTime;
-                float left = 1 - (uiElement.cooldownTimer / spell.cooldown);
-                uiElement.maskImageRect.offsetMin = new Vector2(
-                    left * initialWidth,
-                    uiElement.maskImageRect.offsetMin.y
-                );
+                uiElement.maskImage.fillAmount = 1 - (uiElement.cooldownTimer / spell.cooldown);
             }
 
             // Cooldown completed
-            uiElement.maskImageRect.offsetMin = new Vector2(
-                initialWidth,
-                uiElement.maskImageRect.offsetMin.y
-            );
+            uiElement.maskImage.fillAmount = 0f;
             uiElement.button.interactable = true;
         }
 
@@ -292,8 +307,17 @@ namespace CoED
 
         private void OnSpellSelected(PlayerSpell spell)
         {
-            spellCaster.SelectSpell(spell);
-            HighlightSelectedSpell(spell);
+            if (!spell.selfTargeting)
+            {
+                Debug.Log("spell is not self-targeting");
+                HighlightSelectedSpell(spell);
+                spellCaster.SelectSpell(spell);
+            }
+            else
+            {
+                Debug.Log("spell is self-targeting");
+                spellCaster.CastSelfTargetingSpell(spell);
+            }
         }
 
         public void UpdateMagicBar(int currentMagic, int maxMagic)
@@ -312,7 +336,7 @@ namespace CoED
         private class SpellUIElement
         {
             public Button button;
-            public RectTransform maskImageRect; // RectTransform component for the mask image
+            public Image maskImage; // Image component for the mask
             public Image borderImage; // Image component for the border
             public float cooldownTimer; // Cooldown timer in float
         }

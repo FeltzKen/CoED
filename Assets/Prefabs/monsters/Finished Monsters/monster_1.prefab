@@ -208,6 +208,8 @@ MonoBehaviour:
   minMoneyAmount: 1
   maxMoneyAmount: 20
   moneyDropRate: 0.5
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
+  highlightedColor: {r: 1, g: 0.03402513, b: 0.015686274, a: 1}
 --- !u!114 &3984977953762216121
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -224,7 +226,10 @@ MonoBehaviour:
   currentState: 0
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 456
+    m_Bits: 4552
+  visualObstructionLayer:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!114 &5710572630327944031
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -254,7 +259,7 @@ MonoBehaviour:
   baseAttack: 10
   baseDefense: 7
   baseHealth: 100
-  baseSpeed: 1
+  baseSpeed: 0.5
   baseAttackRange: 1.4
   baseDetectionRange: 5
   baseFireRate: 5

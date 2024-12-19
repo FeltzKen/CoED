@@ -27,15 +27,18 @@ namespace CoED
         /// <summary>
         /// Sets the tilemaps for the floor.
         /// </summary>
-        public void SetTilemaps(Tilemap floorTilemap, Tilemap wallTilemap, Tilemap voidTilemap)   // Added VoidTilemap
+        public void SetTilemaps(Tilemap floorTilemap, Tilemap wallTilemap, Tilemap voidTilemap) // Added VoidTilemap
         {
             FloorTilemap = floorTilemap;
             WallTilemap = wallTilemap;
-            VoidTilemap = voidTilemap;   // Added VoidTilemap
+            VoidTilemap = voidTilemap; // Added VoidTilemap
         }
 
-
-        public void AddAllFloorTiles(IEnumerable<Vector2Int> floorTiles, IEnumerable<Vector2Int> wallTiles, IEnumerable<Vector2Int> voidTiles)   // Added VoidTiles
+        public void AddAllFloorTiles(
+            IEnumerable<Vector2Int> floorTiles,
+            IEnumerable<Vector2Int> wallTiles,
+            IEnumerable<Vector2Int> voidTiles
+        ) // Added VoidTiles
         {
             foreach (var tile in floorTiles)
             {
@@ -58,7 +61,9 @@ namespace CoED
         {
             if (FloorTiles.Count == 0 || count <= 0)
             {
-                throw new System.InvalidOperationException("No floor tiles available or invalid count.");
+                throw new System.InvalidOperationException(
+                    "No floor tiles available or invalid count."
+                );
             }
 
             List<Vector2Int> tileList = new List<Vector2Int>(FloorTiles);

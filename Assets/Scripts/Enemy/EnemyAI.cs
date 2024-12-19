@@ -11,8 +11,8 @@ namespace CoED
     public class EnemyAI : MonoBehaviour //, IActor
     {
         private static int nextID = 0; // Shared across all instances
-        public float Speed { get; private set; } = 1f;
-        public float PatrolSpeed { get; private set; } = 0.5f; // New patrol speed
+        private float PatrolSpeed; // New patrol speed
+        private float ChaseSpeed; // New patrol speed
         public int uniqueID;
         public float ActionPoints { get; set; } = 0f;
         private List<Vector2Int> currentPath;
@@ -35,11 +35,15 @@ namespace CoED
 
         [SerializeField]
         private LayerMask obstacleLayer;
+
+        [SerializeField]
+        private LayerMask visualObstructionLayer;
+
         private HashSet<Vector2Int> floorTiles;
         private HashSet<Vector2Int> wallTiles;
         private HashSet<Vector2Int> voidTiles;
 
-        private float moveCooldown = .25f; // Time between free movements
+        private float moveCooldown = 3f; // Time between free movements
         private float nextMoveTime = 0f; // Timestamp for next free movement
 
         private Vector2Int lastDirection = Vector2Int.zero;
@@ -53,6 +57,8 @@ namespace CoED
         #region Setup
         private void Awake()
         {
+            PatrolSpeed = GetComponent<EnemyStats>().CurrentSpeed; // New patrol speed
+            ChaseSpeed = PatrolSpeed * 5f; // New chase speed
             uniqueID = nextID++; // Generates a unique identifier
             rb = GetComponent<Rigidbody2D>();
             enemyStats = GetComponent<EnemyStats>();
@@ -93,26 +99,11 @@ namespace CoED
                 Debug.LogError("EnemyAI: FloorData is null.");
                 return;
             }
-            // Initialize CurrentPosition using tilemap grid coordinates
+
+            // Align to the grid (ensure already spawned correctly)
             Vector3Int cellPosition = floorTilemap.WorldToCell(transform.position);
             CurrentPosition = new Vector2Int(cellPosition.x, cellPosition.y);
 
-            // Align the enemy's position to the grid
-            Vector3 worldPosition = floorTilemap.CellToWorld(cellPosition);
-            transform.position = new Vector3(
-                worldPosition.x,
-                worldPosition.y,
-                transform.position.z
-            );
-
-            // perform check if CurrentPosition is an int or not and if not then round up to the nearest int
-            if (CurrentPosition.x % 1 != 0 || CurrentPosition.y % 1 != 0)
-            {
-                CurrentPosition = new Vector2Int(
-                    Mathf.RoundToInt(CurrentPosition.x),
-                    Mathf.RoundToInt(CurrentPosition.y)
-                );
-            }
             currentState = EnemyState.Patrol;
             SetNewPatrolDestination();
             if (patrolDestination == null)
@@ -120,7 +111,7 @@ namespace CoED
                 Debug.LogError("EnemyAI: Patrol destination is null.");
                 return;
             }
-            UpdateCurrentTilePosition(patrolDestination);
+            // SetNewPatrolDestination();
         }
 
         private void Update()
@@ -154,12 +145,12 @@ namespace CoED
         {
             float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
 
-            // Transition between states based on player distance
+            // Transition between states based on player distance and line of sight
             if (distanceToPlayer <= enemyStats.CurrentAttackRange)
             {
                 ChangeState(EnemyState.Attack);
             }
-            else if (distanceToPlayer <= enemyStats.CurrentDetectionRange)
+            else if (HasLineOfSightToPlayer())
             {
                 ChangeState(EnemyState.Chase);
             }
@@ -183,6 +174,20 @@ namespace CoED
             }
         }
 
+        private bool HasLineOfSightToPlayer()
+        {
+            Vector2 directionToPlayer = (playerTransform.position - transform.position).normalized;
+            float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
+
+            RaycastHit2D hit = Physics2D.Raycast(
+                transform.position,
+                directionToPlayer,
+                distanceToPlayer,
+                visualObstructionLayer
+            );
+            return hit.collider == null || hit.collider.CompareTag("Player");
+        }
+
         private void ChangeState(EnemyState newState)
         {
             if (currentState != newState)
@@ -194,7 +199,7 @@ namespace CoED
                 }
                 else if (newState == EnemyState.Chase)
                 {
-                    moveCooldown = 1f / Speed; // Adjust move cooldown for chase speed
+                    moveCooldown = 1f / ChaseSpeed; // Adjust move cooldown for chase speed
                 }
             }
         }
@@ -251,6 +256,7 @@ namespace CoED
             {
                 // Fallback movement if no path is found
                 MoveInPreferredDirection();
+                // Debug.Log("EnemyAI: No path found to patrol destination.");
             }
         }
         #endregion
@@ -278,6 +284,7 @@ namespace CoED
             {
                 // Fallback movement if no path is found
                 MoveInPreferredDirection();
+                // Debug.Log("EnemyAI: No path found to player.");
             }
         }
         #endregion
@@ -395,9 +402,9 @@ namespace CoED
                 new Vector2(position.x, position.y),
                 Vector2.one * 0.8f,
                 0f,
-                LayerMask.GetMask("Enemy")
+                LayerMask.GetMask("enemies")
             );
-            return hitCollider != null;
+            return hitCollider != null && hitCollider.gameObject != this.gameObject;
         }
 
         private void UpdateCurrentTilePosition(Vector2Int gridPosition)

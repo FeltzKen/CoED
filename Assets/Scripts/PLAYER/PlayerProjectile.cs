@@ -4,11 +4,20 @@ namespace CoED
 {
     public class PlayerProjectile : MonoBehaviour
     {
-        public Vector2 direction;
-        public float speed;
-        public float lifetime;
+        [SerializeField]
+        public Vector2 direction { get; set; }
+
+        [SerializeField]
+        public float speed { get; set; } = 2f;
+
+        [SerializeField]
+        public float lifetime { get; set; } = 5f;
+
+        [SerializeField]
         public int damage { get; set; }
-        public float collisionRadius = 0.5f; // Radius for collision detection
+
+        [SerializeField]
+        public float collisionRadius { get; set; } // Radius for collision detection
         private Vector3 targetPosition;
         private bool hasReachedTarget = false;
 

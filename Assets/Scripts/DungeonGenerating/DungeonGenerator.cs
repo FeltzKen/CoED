@@ -89,8 +89,8 @@ namespace CoED
                     int row = (i - 1) / gridSize;
                     int col = (i - 1) % gridSize;
                     Vector3 floorPosition = new Vector3(
-                        col * dungeonSettings.dungeonSizeRange.x,
-                        row * dungeonSettings.dungeonSizeRange.y,
+                        col * (dungeonSettings.dungeonSizeRange.x + 0),
+                        row * (dungeonSettings.dungeonSizeRange.y + 0),
                         0
                     );
                     floorParent.transform.position = floorPosition;
@@ -133,6 +133,7 @@ namespace CoED
                     // Store floor data
                     StoreFloorData(floorTiles, wallTiles, voidTiles);
 
+                    floorData.AddAllFloorTiles(floorTiles, wallTiles, voidTiles);
                     DungeonManager.Instance.FloorTransforms[currentFloorNumber] =
                         floorParent.transform;
                     // Debug.Log($"Stored floor reference for Floor {currentFloorNumber} in DungeonManager.");
@@ -204,17 +205,47 @@ namespace CoED
         {
             HashSet<Vector2Int> wallTiles = new HashSet<Vector2Int>();
 
+            // Define dungeon bounds
+            RectInt dungeonBounds = new RectInt(
+                0,
+                0,
+                dungeonSettings.dungeonSizeRange.x,
+                dungeonSettings.dungeonSizeRange.y
+            );
+
+            // First Pass: Generate wall tiles adjacent to floor tiles
             foreach (var tile in floorTiles)
             {
                 foreach (var direction in Direction2D.GetAllDirections())
                 {
                     Vector2Int neighbor = tile + direction;
-                    if (!floorTiles.Contains(neighbor))
+
+                    // Ensure neighbor is within bounds and not a floor tile
+                    if (!floorTiles.Contains(neighbor) && dungeonBounds.Contains(neighbor))
                     {
                         wallTiles.Add(neighbor);
                     }
                 }
             }
+
+            // Second Pass: Fill void openings
+            // Second pass: Draw walls around the entire floor boundary
+            HashSet<Vector2Int> boundaryWalls = new HashSet<Vector2Int>();
+
+            for (int x = dungeonBounds.xMin - 1; x <= dungeonBounds.xMax; x++)
+            {
+                boundaryWalls.Add(new Vector2Int(x, dungeonBounds.yMin - 1)); // Bottom row
+                boundaryWalls.Add(new Vector2Int(x, dungeonBounds.yMax)); // Top row
+            }
+
+            for (int y = dungeonBounds.yMin - 1; y <= dungeonBounds.yMax; y++)
+            {
+                boundaryWalls.Add(new Vector2Int(dungeonBounds.xMin - 1, y)); // Left column
+                boundaryWalls.Add(new Vector2Int(dungeonBounds.xMax, y)); // Right column
+            }
+
+            // Combine the first pass walls and the boundary walls
+            wallTiles.UnionWith(boundaryWalls);
 
             return wallTiles;
         }
@@ -248,7 +279,6 @@ namespace CoED
             return voidTiles;
         }
         #endregion
-
 
         private void ComputeFloorIntersections()
         {
@@ -393,6 +423,10 @@ namespace CoED
                     new Vector2Int(0, -1), // Down
                     new Vector2Int(1, 0), // Right
                     new Vector2Int(-1, 0), // Left
+                    new Vector2Int(1, 1), // Up-Right
+                    new Vector2Int(-1, 1), // Up-Left
+                    new Vector2Int(1, -1), // Down-Right
+                    new Vector2Int(-1, -1), // Down-Left
                 };
             }
         }

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using UnityEngine;
 using CoED;
+using UnityEngine;
 
 namespace CoED
 {
@@ -31,7 +31,9 @@ namespace CoED
             else
             {
                 Destroy(gameObject);
-                Debug.LogWarning("PlayerProfileManager: Duplicate instance detected. Destroying duplicate.");
+                Debug.LogWarning(
+                    "PlayerProfileManager: Duplicate instance detected. Destroying duplicate."
+                );
             }
         }
 
@@ -51,7 +53,9 @@ namespace CoED
         {
             if (luckyNumbers == null || luckyNumbers.Count == 0)
             {
-                Debug.LogWarning("PlayerProfileManager: Cannot assign cursed number, luckyNumbers list is empty.");
+                Debug.LogWarning(
+                    "PlayerProfileManager: Cannot assign cursed number, luckyNumbers list is empty."
+                );
                 return;
             }
 

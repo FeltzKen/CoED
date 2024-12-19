@@ -258,6 +258,7 @@ MonoBehaviour:
   AttackRange: 3
   baseDefense: 5
   baseProjectileRange: 5
+  targetingRange: 7
   baseSpeed: 5
   baseFireRate: 1
   baseProjectileLifespan: 2
@@ -294,18 +295,15 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8948494598534906761}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ceb16be9f11d566418ce3209cbae823a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  availableSpells:
-  - {fileID: 11400000, guid: a781e18ceab702b4eb978bed1709f647, type: 2}
-  - {fileID: 11400000, guid: c8daa40fa2231734ca539aad4df3701f, type: 2}
   spellSpawnPoint: {fileID: 5452245402053938655}
-  spellButtonsContainer: {fileID: 0}
-  spellButtonPrefab: {fileID: 9134042355877932202, guid: 068df88e05f79904a830810758189aa6, type: 3}
-  cooldownTextPrefab: {fileID: 2225530289343548934, guid: eacaaaeec2936424d9600f9eca04232b, type: 3}
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 256
 --- !u!1001 &8593987073900837000
 PrefabInstance:
   m_ObjectHideFlags: 0
