@@ -98,9 +98,11 @@ namespace CoED
                     // Create the enemy parent object
                     GameObject enemyParentObject = new GameObject("EnemyParent");
                     enemyParentObject.transform.SetParent(floorParent.transform);
+                    enemyParentObject.transform.localPosition = Vector3.zero; // Ensure local position is zero
 
                     GameObject itemParentObject = new GameObject("ItemParent");
                     itemParentObject.transform.SetParent(floorParent.transform);
+                    itemParentObject.transform.localPosition = Vector3.zero; // Ensure local position is zero
 
                     // Create tilemaps for this floor
                     Tilemap floorTilemap = CreateTilemap(floorParent.transform, "FloorTilemap");

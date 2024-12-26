@@ -220,6 +220,11 @@ namespace CoED
             }
         }
 
+        public Vector3 GetPlayerPosition()
+        {
+            return transform.position;
+        }
+
         private bool IsMovePossible(Vector2Int direction)
         {
             Vector2Int targetTile = currentTilePosition + direction;

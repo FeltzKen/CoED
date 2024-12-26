@@ -62,6 +62,8 @@ namespace CoED
             Vector3 spawnPosition = spawnPointObj.transform.position;
             Debug.Log($"PlayerSpawner: Spawning player at SpawnPoint position {spawnPosition}");
             currentPlayer = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
+            GameManager.Instance.RegisterPlayer(currentPlayer);
+            Debug.Log($"PlayerSpawner: Player spawned at {spawnPosition}");
 
             if (currentPlayer != null)
             {

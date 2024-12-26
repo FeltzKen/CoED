@@ -10,7 +10,7 @@ namespace CoED
         private string loreDescription;
 
         [SerializeField]
-        private string itemName;
+        private string _itemName;
 
         [SerializeField]
         private bool isKeyItem;

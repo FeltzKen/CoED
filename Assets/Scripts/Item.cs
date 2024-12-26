@@ -1,5 +1,6 @@
-using UnityEngine;
 using CoED;
+using UnityEngine;
+
 namespace CoED
 {
     // Represents an item that can be held in the player's inventory.
@@ -15,11 +16,14 @@ namespace CoED
         [SerializeField]
         public Sprite icon;
 
+        public bool isHidden; // false by default for normal items
+
         [SerializeField]
         public int attackBoost = 0;
 
         [SerializeField]
         public int defenseBoost = 0;
+
         [SerializeField]
         public int speedBoost = 0;
 
@@ -47,10 +51,7 @@ namespace CoED
             //IsEnchanted = Random.value < enchantmentChance;
             //IsCursed = !IsEnchanted && Random.value < curseChance; // Only assign curse if not enchanted
 
-           // // Debug.Log($"{itemName} initialized: Enchanted = {IsEnchanted}, Cursed = {IsCursed}");
+            // // Debug.Log($"{itemName} initialized: Enchanted = {IsEnchanted}, Cursed = {IsCursed}");
         }
-
     }
-
-
 }

@@ -5,7 +5,9 @@ using UnityEngine;
 
 namespace CoED
 {
-    // Handles player actions such as resting, collecting items, searching for secrets, and using abilities.
+    /// <summary>
+    /// Handles player actions such as resting, collecting items, searching for secrets, etc.
+    /// </summary>
     public class PlayerActions : MonoBehaviour
     {
         public static PlayerActions Instance { get; private set; }
@@ -29,6 +31,17 @@ namespace CoED
 
         [SerializeField]
         private float dangerRadius = 5f;
+
+        // ================== NEW FIELDS FOR SEARCHING ==================
+        [Header("Search Settings")]
+        [SerializeField]
+        private float searchRadius = 5f;
+
+        [Tooltip("Layer mask for objects that can be found. If empty, we'll check all collisions.")]
+        [SerializeField]
+        private LayerMask searchableLayer;
+
+        // ================ End of NEW FIELDS ==========================
 
         private void Awake()
         {
@@ -55,9 +68,9 @@ namespace CoED
             ValidateComponents();
         }
 
-        private void OnDestroy()
+        private void Update()
         {
-            Debug.Log("OnDestroy called.");
+            HandleInput();
         }
 
         private void ValidateComponents()
@@ -65,7 +78,7 @@ namespace CoED
             if (playerStats == null || playerInventory == null)
             {
                 Debug.LogError(
-                    "PlayerActions: Missing required components (PlayerStats, PlayerMagic, Inventory). Disabling script."
+                    "PlayerActions: Missing required components (PlayerStats, Inventory). Disabling script."
                 );
                 enabled = false;
             }
@@ -83,32 +96,25 @@ namespace CoED
                 SearchForSecrets();
                 enemy.ResetEnemyAttackFlags();
             }
-            else if (Input.GetKeyDown(KeyCode.R) && !isResting)
+
+            // Press 'R' to rest for HP
+            if (Input.GetKeyDown(KeyCode.R) && !isResting)
             {
                 if (!IsDangerNearby())
                 {
                     StartCoroutine(RestUntilHealed());
-                    enemy.ResetEnemyAttackFlags();
                 }
                 else
                 {
-                    ShowFloatingText("Cannot rest, danger is nearby");
-                }
-            }
-            else if (Input.GetKeyDown(KeyCode.M) && !isResting)
-            {
-                if (!IsDangerNearby())
-                {
-                    // playerManager.CommitSpecialAction(() => StartCoroutine(RestUntilMagic()));
-                    enemy.ResetEnemyAttackFlags();
-                }
-                else
-                {
-                    ShowFloatingText("Cannot rest, danger is nearby");
+                    Debug.Log("Cannot rest, danger is nearby");
                 }
             }
         }
 
+        /// <summary>
+        /// Overlaps a small circle around the player to find objects that implement ISearchable.
+        /// Calls OnSearch() on any discovered objects.
+        /// </summary>
         public void CollectItem(ItemCollectible itemCollectible)
         {
             if (itemCollectible.Item is Consumable consumable)
@@ -132,7 +138,7 @@ namespace CoED
         public void CollectItems()
         {
             Collider2D[] items = Physics2D.OverlapCircleAll(transform.position, 1f);
-            bool collectedAny = false;
+            //bool collectedAny = false;
 
             foreach (var itemCollider in items)
             {
@@ -142,7 +148,7 @@ namespace CoED
                     if (money != null)
                     {
                         money.Collect();
-                        collectedAny = true;
+                        //collectedAny = true;
                     }
 
                     ItemCollectible collectible = itemCollider.GetComponent<ItemCollectible>();
@@ -150,7 +156,7 @@ namespace CoED
                     {
                         playerInventory.AddItem(collectible.Item);
                         Destroy(itemCollider.gameObject);
-                        collectedAny = true;
+                        //collectedAny = true;
                     }
                 }
             }
@@ -160,23 +166,30 @@ namespace CoED
 
         private void SearchForSecrets()
         {
-            // Debug.Log("PlayerActions: Searching for hidden doors and traps...");
-            Collider2D[] secrets = Physics2D.OverlapCircleAll(transform.position, 1f);
-            bool foundAny = false;
+            Vector2 center = transform.position;
+            Collider2D[] hits = Physics2D.OverlapCircleAll(center, searchRadius, searchableLayer);
 
-            foreach (var secretCollider in secrets)
+            if (hits.Length == 0)
             {
-                if (secretCollider.CompareTag("HiddenDoor") || secretCollider.CompareTag("Trap"))
+                Debug.Log("SearchForSecrets: Nothing was found.");
+                return;
+            }
+
+            // Check each collider for an object implementing ISearchable
+            bool foundSomething = false;
+            foreach (var hit in hits)
+            {
+                var searchable = hit.GetComponent<ISearchable>();
+                if (searchable != null)
                 {
-                    secretCollider.gameObject.SetActive(true);
-                    foundAny = true;
-                    // Debug.Log($"PlayerActions: Revealed {secretCollider.tag}.");
+                    searchable.OnSearch();
+                    foundSomething = true;
                 }
             }
 
-            if (!foundAny)
+            if (!foundSomething)
             {
-                // Debug.Log("PlayerActions: No hidden objects found.");
+                Debug.Log("SearchForSecrets: No searchable objects found in range.");
             }
         }
 
@@ -227,14 +240,15 @@ namespace CoED
             {
                 Debug.LogWarning("PlayerActions: InventoryUI is not assigned.");
             }
+            Debug.Log("PlayerActions: Resting (heal) completed.");
         }
 
         private bool IsDangerNearby()
         {
             Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, dangerRadius);
-            foreach (var collider in colliders)
+            foreach (var col in colliders)
             {
-                if (collider.CompareTag("Enemy"))
+                if (col.CompareTag("Enemy"))
                 {
                     return true;
                 }
@@ -242,6 +256,7 @@ namespace CoED
             return false;
         }
 
+        // Optional: for visual debug in Editor
         private void UseAbility()
         {
             // Debug.Log("PlayerActions: Using ability...");
@@ -255,9 +270,11 @@ namespace CoED
 
         private void OnDrawGizmosSelected()
         {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, 1f);
+            // Show search radius
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireSphere(transform.position, searchRadius);
 
+            // Danger radius
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(transform.position, dangerRadius);
         }

@@ -18,6 +18,8 @@ GameObject:
   - component: {fileID: 5710572630327944031}
   - component: {fileID: 499285718735250053}
   - component: {fileID: -6418701496261444902}
+  - component: {fileID: 5501700731390564415}
+  - component: {fileID: -374340769953024843}
   m_Layer: 8
   m_Name: monster_2
   m_TagString: Enemy
@@ -223,13 +225,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uniqueID: 1
-  currentState: 0
-  obstacleLayer:
-    serializedVersion: 2
-    m_Bits: 4552
-  visualObstructionLayer:
-    serializedVersion: 2
-    m_Bits: 0
 --- !u!114 &5710572630327944031
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -259,11 +254,12 @@ MonoBehaviour:
   baseAttack: 10
   baseDefense: 9
   baseHealth: 100
-  baseSpeed: 0.75
+  PatrolSpeed: 1.5
   baseAttackRange: 1.4
   baseDetectionRange: 6
   baseFireRate: 6
   baseProjectileLifespan: 2
+  ChaseSpeed: 0
 --- !u!114 &-6418701496261444902
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -280,6 +276,37 @@ MonoBehaviour:
   normalHealthColor: {r: 0, g: 1, b: 0, a: 1}
   lowHealthColor: {r: 0.6, g: 0, b: 0, a: 1}
   pulseSpeed: 1
+--- !u!114 &5501700731390564415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3198391839532095026}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1469d0ae262676745bb84743561131a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 2
+--- !u!114 &-374340769953024843
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3198391839532095026}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c87369e3b1304e499f0f41793258f33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerTransform: {fileID: 0}
+  visualObstructionLayer:
+    serializedVersion: 2
+    m_Bits: 136
+  AttackRange: 1.5
+  CanAttackPlayer: 1
 --- !u!1001 &2245403152686551375
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -13,7 +13,7 @@ namespace CoED
         {
             if (other.CompareTag("Player"))
             {
-             //   Debug.Log("ItemCollectible: Player entered trigger.");
+                // Debug.Log("ItemCollectible: Player entered trigger.");
                 CollectItem(PlayerActions.Instance);
             }
         }

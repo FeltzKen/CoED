@@ -1,17 +1,14 @@
-using System.Collections.Generic;
 using UnityEngine;
-using CoED;
 
 namespace CoED
 {
     public class GameManager : MonoBehaviour
     {
         public static GameManager Instance { get; private set; }
-
-        [Header("Player Settings")]
-        [SerializeField]
+        private Transform playerTransform;
+        public bool IsPlayerSpawned => playerTransform != null;
         private GameObject currentPlayer;
- 
+
         [Header("Game Settings")]
         [SerializeField, Min(1)]
         private int difficultyLevel = 1;
@@ -26,18 +23,20 @@ namespace CoED
             else
             {
                 Destroy(gameObject);
-                Debug.LogWarning("GameManager instance already exists. Destroying duplicate.");
-                return;
             }
         }
 
         private void Start()
         {
-            // Only spawn player once at the beginning of the game
+            // Spawn player if needed and store reference
             if (PlayerSpawner.Instance != null)
             {
                 GameObject player = PlayerSpawner.Instance.SpawnPlayer();
-                if (player == null)
+                if (player != null)
+                {
+                    currentPlayer = player;
+                }
+                else
                 {
                     Debug.LogError("GameManager: Failed to spawn player.");
                 }
@@ -48,17 +47,28 @@ namespace CoED
             }
         }
 
+        public void RegisterPlayer(GameObject player)
+        {
+            playerTransform = player.transform;
+            Debug.Log($"Player registered at position: {playerTransform.position}");
+        }
+
+        public Transform GetPlayerTransform()
+        {
+            return playerTransform;
+        }
+
         public void OnPlayerDeath()
         {
             PlayerUI.Instance?.ShowDeathPanel();
-            Time.timeScale = 0f; // Pause the game
+            Time.timeScale = 0f;
             Debug.Log("GameManager: Player has died. Game paused.");
         }
 
         public void QuitGame()
         {
-            Time.timeScale = 1f; // Ensure the game is unpaused
-             Debug.Log("GameManager: Quitting game...");
+            Time.timeScale = 1f;
+            Debug.Log("GameManager: Quitting game...");
             Application.Quit();
 
 #if UNITY_EDITOR
@@ -76,10 +86,11 @@ namespace CoED
             float baseSuperGoblinChance = 0.01f;
             float spawnChance = baseSuperGoblinChance * difficultyLevel;
             bool shouldSpawn = Random.value < spawnChance;
-            Debug.Log($"GameManager: Super Goblin spawn chance: {spawnChance * 100}% - Should Spawn: {shouldSpawn}");
+            Debug.Log(
+                $"GameManager: Super Goblin spawn chance: {spawnChance * 100}% - Should Spawn: {shouldSpawn}"
+            );
             return shouldSpawn;
         }
-
     }
 
     [System.Serializable]

@@ -1,8 +1,9 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.UIElements;
+using CoED.Items; // Assuming HiddenItemController is in the CoED.Items namespace
+using CoED.Pathfinding; // For Pathfinder, PathfindingGrid
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace CoED
@@ -17,12 +18,23 @@ namespace CoED
         public DungeonSettings dungeonSettings;
 
         private Rigidbody2D playerRB;
-        private Rigidbody2D enemyRB;
+
+        [SerializeField]
+        private LayerMask obstacleLayer;
+
+        /// <summary>
+        /// We will maintain a static counter for unique occupant IDs.
+        /// Each newly spawned enemy increments this counter and stores its ID.
+        /// </summary>
+        private static int occupantIDCounter = 0;
+
+        /// <summary>
+        /// Caches a Pathfinder per floorNumber so we only build one per floor.
+        /// </summary>
+        private Dictionary<int, Pathfinder> floorPathfinders = new Dictionary<int, Pathfinder>();
 
         private void Awake()
         {
-            // Debug.Log("DungeonSpawner Awake called");
-
             if (Instance == null)
             {
                 Instance = this;
@@ -34,96 +46,120 @@ namespace CoED
                 Debug.LogWarning("DungeonSpawner instance already exists. Destroying duplicate.");
                 return;
             }
+
+            // Get player reference components
             playerRB = player.GetComponent<Rigidbody2D>();
+
+            // Get DungeonSettings (optional if you already have it set)
             dungeonSettings = FindAnyObjectByType<DungeonGenerator>()
                 ?.GetComponent<DungeonGenerator>()
                 .dungeonSettings;
         }
 
-        public void Start()
-        {
-            // Start by placing the player in the spawning room
-            if (DungeonManager.Instance.SpawningRoomInstance != null)
-            {
-                // Set player position in the spawning room
-                player.transform.position =
-                    DungeonManager.Instance.SpawningRoomInstance.transform.position
-                    + Vector3.up * 2; // Adjust if needed
-                // Debug.Log("Player placed in the spawning room.");
-            }
-            else
-            {
-                Debug.LogError("Spawning room instance not found. Player placement failed.");
-            }
-        }
-
         #region Player Transport
+
         /// <summary>
-        /// Transports the player to a random valid position on the specified floor.
+        /// Transports the player to a random valid position on Floor 1 (or any floor you choose).
         /// </summary>
         public void TransportPlayerToDungeon(Transform player)
         {
+            // Destroy any leftover spawning room
             if (DungeonManager.Instance.SpawningRoomInstance != null)
             {
                 Destroy(DungeonManager.Instance.SpawningRoomInstance);
             }
 
-            if (DungeonManager.Instance.FloorTransforms[1] != null)
-            {
-                FloorData firstFloorData = DungeonManager.Instance.floors[1];
-                if (firstFloorData.FloorTiles.Count > 0)
-                {
-                    // Get a random walkable tile
-                    Vector2Int randomTile = firstFloorData
-                        .FloorTiles.OrderBy(t => UnityEngine.Random.value)
-                        .First();
-                    // while exit tile is not walkable or is a wall tile or is a void tile
-                    while (
-                        !firstFloorData.FloorTiles.Contains(randomTile)
-                        || firstFloorData.WallTiles.Contains(randomTile)
-                        || firstFloorData.VoidTiles.Contains(randomTile)
-                    )
-                    {
-                        randomTile = firstFloorData
-                            .FloorTiles.OrderBy(t => UnityEngine.Random.value)
-                            .First();
-                    }
-                    Vector3 exitPosition = new Vector3(randomTile.x, randomTile.y, 0);
-
-                    // Move the player to the selected position
-                    player.position = exitPosition;
-                    playerRB.position = exitPosition;
-                    PlayerMovement.Instance.UpdateCurrentTilePosition(exitPosition);
-                }
-            }
-            else
+            // Check if floor 1 exists
+            if (!DungeonManager.Instance.FloorTransforms.ContainsKey(1))
             {
                 Debug.LogError("First floor Transform not found. Cannot transport player.");
+                return;
             }
+
+            // Retrieve FloorData for floor 1
+            FloorData firstFloorData = DungeonManager.Instance.GetFloorData(1);
+            if (firstFloorData == null || firstFloorData.FloorTiles.Count == 0)
+            {
+                Debug.LogWarning("No floor tiles found for Floor 1. Cannot transport player.");
+                return;
+            }
+
+            // 1) Get a random valid tile from FloorTiles (i.e., not in WallTiles or VoidTiles)
+            Vector2Int randomTile = GetRandomValidTile(firstFloorData);
+
+            // 2) Convert to actual world position via CellToWorld + offset
+            Vector3Int cellPos = new Vector3Int(randomTile.x, randomTile.y, 0);
+            Vector3 baseWorldPos = firstFloorData.FloorTilemap.CellToWorld(cellPos);
+            Vector3 centeredWorldPos = baseWorldPos + new Vector3(0.5f, 0.5f, 0f);
+
+            // 3) Move the player and its Rigidbody to that position
+            player.position = centeredWorldPos;
+            playerRB.position = centeredWorldPos;
+
+            // 4) Update player's tile position if your system needs that
+            PlayerMovement.Instance.UpdateCurrentTilePosition(centeredWorldPos);
         }
+
+        /// <summary>
+        /// Picks a random tile from FloorTiles that is NOT in WallTiles or VoidTiles.
+        /// Repeats until it finds a valid one, or times out after a set number of tries.
+        /// </summary>
+        private Vector2Int GetRandomValidTile(FloorData floorData)
+        {
+            // Make a copy of FloorTiles in a list
+            List<Vector2Int> floorTileList = floorData.FloorTiles.ToList();
+            int maxAttempts = 100; // Just to avoid infinite loops
+
+            while (maxAttempts > 0 && floorTileList.Count > 0)
+            {
+                // Pick a random tile from floorTileList
+                Vector2Int candidate = floorTileList[Random.Range(0, floorTileList.Count)];
+
+                // Check if it's actually valid
+                if (
+                    !floorData.WallTiles.Contains(candidate)
+                    && !floorData.VoidTiles.Contains(candidate)
+                )
+                {
+                    return candidate;
+                }
+
+                // Remove candidate to avoid picking it again
+                floorTileList.Remove(candidate);
+                maxAttempts--;
+            }
+
+            // Fallback: if we somehow run out of tiles, just return the first floor tile
+            Debug.LogWarning(
+                "GetRandomValidTile: No valid tile found, returning first floor tile as fallback."
+            );
+            return floorData.FloorTiles.First();
+        }
+
         #endregion
 
-        #region Enemy Spawning
+        #region Enemy Spawning (Refactored)
+
         /// <summary>
-        /// Spawns enemies for the specified floor.
+        /// Spawns enemies for all floors in the dungeon,
+        /// using EnemyBrain + EnemyNavigator + TileOccupancyManager approach.
         /// </summary>
         public void SpawnEnemiesForAllFloors()
         {
-            // Debug.Log("Starting enemy spawning for all floors...");
-
             if (DungeonManager.Instance == null)
             {
                 Debug.LogError("DungeonManager is not initialized. Cannot spawn enemies.");
                 return;
             }
 
+            // Iterate over each floor in the DungeonManager
             foreach (var floorEntry in DungeonManager.Instance.floors)
             {
                 FloorData floorData = floorEntry.Value;
-                Transform floorParent = DungeonManager.Instance.FloorTransforms[
+                Transform floorParent = DungeonManager.Instance.GetFloorTransform(
                     floorData.FloorNumber
-                ];
-                Transform enemyParent = floorParent.Find("EnemyParent");
+                );
+                Transform enemyParent = floorParent?.Find("EnemyParent");
 
                 if (enemyParent == null)
                 {
@@ -133,103 +169,157 @@ namespace CoED
                     continue;
                 }
 
+                // Start a coroutine to spawn a batch of enemies for this floor
                 StartCoroutine(SpawnEnemiesForFloor(floorData, floorParent, enemyParent));
             }
         }
 
         /// <summary>
-        /// Checks if the given position is a valid spawn point.
+        /// Spawns a set of enemies on the given floor, at random valid positions.
         /// </summary>
-        private bool IsValidSpawnPosition(FloorData floorData, Vector2Int position)
-        {
-            return floorData.FloorTiles.Contains(position)
-                && !floorData.WallTiles.Contains(position)
-                && !floorData.VoidTiles.Contains(position);
-        }
-
         private IEnumerator SpawnEnemiesForFloor(
             FloorData floorData,
             Transform floorParent,
             Transform enemyParent
         )
         {
+            // Build or retrieve a cached pathfinder for this floor
+            Pathfinder pathfinder = GetOrCreateFloorPathfinder(floorData);
+
             int enemyCount = dungeonSettings.numberOfEnemiesPerFloor;
-            List<Vector3> spawnPositions = floorData
-                .GetRandomFloorTiles(enemyCount * 2) // Retrieve extra tiles to ensure enough valid positions
-                .Where(tile => IsValidSpawnPosition(floorData, tile))
-                .Select(tile => new Vector3(tile.x, tile.y, 0))
+
+            // Pick random spawn positions
+            List<Vector2Int> candidateTiles = floorData.GetRandomFloorTiles(enemyCount * 2);
+            List<Vector2Int> validTiles = candidateTiles
+                .Where(t => IsValidSpawnPosition(floorData, t))
                 .Take(enemyCount)
                 .ToList();
 
-            if (spawnPositions == null || spawnPositions.Count == 0)
+            if (validTiles.Count == 0)
             {
                 Debug.LogWarning(
-                    $"No valid spawn positions found for Floor {floorData.FloorNumber}. Skipping enemy spawning."
+                    $"No valid spawn positions found for Floor {floorData.FloorNumber}. "
+                        + "Skipping enemy spawning."
                 );
                 yield break;
             }
 
             Vector3 floorParentPosition = floorParent.position;
 
-            foreach (var position in spawnPositions)
+            foreach (var tile in validTiles)
             {
-                Vector3 snappedPosition = new Vector3(
-                    Mathf.Round(position.x),
-                    Mathf.Round(position.y),
-                    position.z
-                );
-                Vector3 worldPosition = floorParentPosition + snappedPosition;
+                Vector3Int cellPos = new Vector3Int(tile.x, tile.y, 0);
+                Vector3 worldPos =
+                    floorData.FloorTilemap.CellToWorld(cellPos) + new Vector3(0.5f, 0.5f, 0);
 
-                //yield return PlaySpawnEffect(worldPosition);
+                // Optionally show spawn effect here (commented out for brevity)
+                // yield return PlaySpawnEffect(worldPosition);
 
+                // Pick a random enemy prefab
                 GameObject enemyPrefab = dungeonSettings.enemyPrefabs[
                     UnityEngine.Random.Range(0, dungeonSettings.enemyPrefabs.Count)
                 ];
-                GameObject enemy = Instantiate(
-                    enemyPrefab,
-                    worldPosition,
-                    Quaternion.identity,
-                    enemyParent
-                );
-
-                if (enemy == null)
+                if (enemyPrefab == null)
                 {
-                    Debug.LogError(
-                        $"Failed to instantiate enemy prefab at position {worldPosition}."
-                    );
+                    Debug.LogError($"Enemy prefab is null for floor {floorData.FloorNumber}.");
                     continue;
                 }
 
-                EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
-                if (enemyAI != null)
+                // Instantiate
+                GameObject enemy = Instantiate(
+                    enemyPrefab,
+                    worldPos,
+                    Quaternion.identity,
+                    enemyParent
+                );
+                if (enemy == null)
                 {
-                    enemyAI.Initialize(floorData);
-                    enemyAI.SetPatrolPoints(
-                        floorData.GetRandomFloorTiles(dungeonSettings.numberOfPatrolPoints)
-                    );
-                    enemyAI.SpawningFloor = floorData.FloorNumber;
-                    // enemyAI.walkableTiles = floorData.
+                    Debug.LogError($"Failed to instantiate enemy prefab at {worldPos}.");
+                    continue;
                 }
-                var enemyStats = enemy.GetComponent<EnemyStats>();
+
+                // Set basic floor stats if needed
+                EnemyStats enemyStats = enemy.GetComponent<EnemyStats>();
                 if (enemyStats != null)
                 {
                     enemyStats.spawnFloor = floorData.FloorNumber;
                 }
+
+                // -------- NEW: Add / Initialize EnemyBrain & EnemyNavigator ----------
+
+                // 1) Give each enemy a unique occupant ID
+                int occupantID = occupantIDCounter++;
+
+                // 2) Ensure the enemy has an EnemyNavigator. If your prefab
+                //    doesn't already have one, we add it dynamically:
+                EnemyNavigator navigator = enemy.GetComponent<EnemyNavigator>();
+                if (navigator == null)
+                {
+                    navigator = enemy.GetComponent<EnemyNavigator>();
+                }
+                navigator.Initialize(pathfinder, floorData.FloorTilemap, occupantID);
+
+                // 3) Ensure the enemy has an EnemyBrain
+                EnemyBrain brain = enemy.GetComponent<EnemyBrain>();
+                if (brain == null)
+                {
+                    brain = enemy.GetComponent<EnemyBrain>();
+                }
+                // Example: set random patrol points
+                // Use your existing "floorData.GetRandomFloorTiles(...)" approach:
+                HashSet<Vector2Int> patrolPoints = new HashSet<Vector2Int>(
+                    floorData.GetRandomFloorTiles(dungeonSettings.numberOfPatrolPoints)
+                );
+                brain.Initialize(floorData, patrolPoints);
+
+                // --------------------------------------------------------------------
+
+                yield return null; // (Optional) yield so large spawns don’t block the main thread
             }
+        }
+
+        /// <summary>
+        /// Returns true if the tile is in floorTiles and not in wallTiles or voidTiles.
+        /// </summary>
+        public bool IsValidSpawnPosition(FloorData floorData, Vector2Int position)
+        {
+            return floorData.FloorTiles.Contains(position)
+                && !floorData.WallTiles.Contains(position)
+                && !floorData.VoidTiles.Contains(position);
+        }
+
+        /// <summary>
+        /// Returns a Pathfinder for the given floorData.
+        /// Caches it so we only build once per floor.
+        /// </summary>
+        private Pathfinder GetOrCreateFloorPathfinder(FloorData floorData)
+        {
+            int floorNum = floorData.FloorNumber;
+
+            // If we already built a pathfinder for this floor, reuse it
+            if (floorPathfinders.ContainsKey(floorNum))
+                return floorPathfinders[floorNum];
+
+            // Otherwise, create a new PathfindingGrid from the floor’s walkable tiles
+            HashSet<Vector2Int> walkableTiles = new HashSet<Vector2Int>(floorData.FloorTiles);
+            // If you want to exclude certain special tiles, do so here
+
+            PathfindingGrid grid = new PathfindingGrid(walkableTiles);
+
+            // If you have 8-direction movement, ensure your Node neighbor logic
+            // in PathfindingGrid includes diagonals, and your heuristic is octile/chebyshev
+            Pathfinder pathfinder = new Pathfinder(grid);
+
+            floorPathfinders[floorNum] = pathfinder;
+            return pathfinder;
         }
 
         #endregion
 
-        #region Item Spawning
-        /// <summary>
-        /// Spawns items on the specified floor.
-        /// </summary>
-        // spawn items for all floors
+        #region Item Spawning (unchanged)
+
         public void SpawnItemsForAllFloors()
         {
-            // Debug.Log("Starting item spawning for all floors...");
-
-
             if (DungeonManager.Instance == null)
             {
                 Debug.LogError("DungeonManager is not initialized. Cannot spawn items.");
@@ -239,12 +329,11 @@ namespace CoED
             foreach (var floorEntry in DungeonManager.Instance.floors)
             {
                 FloorData floorData = floorEntry.Value;
-                Transform floorParent = DungeonManager.Instance.FloorTransforms[
+                Transform floorParent = DungeonManager.Instance.GetFloorTransform(
                     floorData.FloorNumber
-                ];
-                //creating a parent for the items
-                Transform itemParent = floorParent.Find("ItemParent");
+                );
 
+                Transform itemParent = floorParent?.Find("ItemParent");
                 if (itemParent == null)
                 {
                     Debug.LogError(
@@ -252,7 +341,9 @@ namespace CoED
                     );
                     continue;
                 }
+
                 StartCoroutine(SpawnItemsForFloor(floorData, floorParent, itemParent));
+                SpawnHiddenItemsForFloor(floorData, floorParent, itemParent);
             }
         }
 
@@ -263,111 +354,130 @@ namespace CoED
         )
         {
             int itemCount = dungeonSettings.numberOfItemsPerFloor;
-            List<Vector3> spawnPositions = floorData
-                .GetRandomFloorTiles(itemCount)
-                .Select(tile => new Vector3(tile.x, tile.y, 0))
-                .ToList();
+            List<Vector2Int> randomFloorTiles = floorData.GetRandomFloorTiles(itemCount);
 
-            if (spawnPositions == null || spawnPositions.Count == 0)
+            foreach (var tilePos in randomFloorTiles)
             {
-                Debug.LogWarning(
-                    $"No valid spawn positions found for Floor {floorData.FloorNumber}. Skipping item spawning."
-                );
-                yield break;
-            }
+                // 1) Convert the tile position to an exact world position via CellToWorld
+                Vector3Int cellPos = new Vector3Int(tilePos.x, tilePos.y, 0);
+                Vector3 baseWorldPos = floorData.FloorTilemap.CellToWorld(cellPos);
 
-            Vector3 floorParentPosition = floorParent.position;
+                // 2) Center the item in the tile
+                Vector3 centeredWorldPos = baseWorldPos + new Vector3(0.5f, 0.5f, 0f);
 
-            foreach (var position in spawnPositions)
-            {
-                Vector3 snappedPosition = new Vector3(
-                    Mathf.Round(position.x + 0.5f),
-                    Mathf.Round(position.y + 0.5f),
-                    position.z
-                );
-                Vector3 worldPosition = floorParentPosition + snappedPosition;
+                // 3) (Optional) If your tilemap is nested under floorParent,
+                //    then you might already have offset. Usually,
+                //    you can just parent the item under itemParent without adding floorParent.position.
+                //    So we omit "floorParentPosition" entirely to avoid double offsets.
 
-                // Instantiate the item prefab at the calculated world position
-                Item itemScriptableObject = (Item)
+                // 4) Pick a random item from your itemPrefabs
+                Item itemSO = (Item)
                     dungeonSettings.itemPrefabs[
                         UnityEngine.Random.Range(0, dungeonSettings.itemPrefabs.Count)
                     ];
-                if (itemScriptableObject == null || itemScriptableObject.itemPrefab == null)
+                if (itemSO == null || itemSO.itemPrefab == null)
                 {
-                    Debug.LogError(
-                        $"Item prefab is null. Skipping item spawning at position {worldPosition}."
-                    );
+                    Debug.LogError($"DungeonSpawner: Item prefab is null, skipping item spawn.");
                     continue;
                 }
 
+                // 5) Instantiate the item
                 GameObject itemInstance = Instantiate(
-                    itemScriptableObject.itemPrefab,
-                    worldPosition,
+                    itemSO.itemPrefab,
+                    centeredWorldPos,
                     Quaternion.identity,
                     itemParent
                 );
+
                 if (itemInstance == null)
                 {
-                    Debug.LogError(
-                        $"Failed to instantiate item prefab at position {worldPosition}."
-                    );
+                    Debug.LogError($"Failed to instantiate item at {centeredWorldPos}.");
                     continue;
                 }
+            }
 
-                // Verify the parent and position
-                if (itemInstance.transform.parent != itemParent)
-                {
-                    Debug.LogError(
-                        $"Item '{itemInstance.name}' is not parented correctly. Expected parent: {itemParent.name}, Actual parent: {itemInstance.transform.parent.name}"
-                    );
-                }
-                else
-                {
-                    //       Debug.Log($"Item '{itemInstance.name}' successfully parented to '{itemParent.name}' at position {worldPosition}.");
-                }
+            yield return null;
+        }
 
-                //  Debug.Log($"Spawned item '{itemInstance.name}' at position {worldPosition} on Floor {floorData.FloorNumber}.");
+        public void SpawnHiddenItemsForFloor(
+            FloorData floorData,
+            Transform floorParent,
+            Transform itemParent
+        )
+        {
+            // 1) Filter out a set of candidate tiles from floorData.WallTiles
+            //    or special "secret" tiles if you prefer.
+            List<Vector2Int> wallTiles = new List<Vector2Int>(floorData.WallTiles);
+
+            // 2) Decide how many hidden items you want.
+            //    Could be a random range or a fixed number
+            int hiddenItemCount = 15;
+
+            // 3) Pick random wall tile positions
+            //    Make sure your list has enough tiles
+            List<Vector2Int> spawnPositions = new List<Vector2Int>();
+            for (int i = 0; i < hiddenItemCount; i++)
+            {
+                // pick random from wallTiles
+                int index = UnityEngine.Random.Range(0, wallTiles.Count);
+                spawnPositions.Add(wallTiles[index]);
+                // Optionally remove the tile from the list so you don't pick it again
+                wallTiles.RemoveAt(index);
+            }
+
+            // 4) For each chosen tile, spawn a hidden item
+            foreach (var tilePos in spawnPositions)
+            {
+                // Grab a hidden item (some item with isHidden = true)
+                Item randomItem = (Item)
+                    dungeonSettings.itemPrefabs[
+                        UnityEngine.Random.Range(0, dungeonSettings.itemPrefabs.Count)
+                    ];
+                if (randomItem == null)
+                    continue; // skip if none found
+
+                // Convert tile coords to world
+                Vector3Int cellPos = new Vector3Int(tilePos.x, tilePos.y, 0);
+                Vector3 baseWorldPos = floorData.WallTilemap.CellToWorld(cellPos);
+                // Possibly shift if you want it centered in the tile:
+                Vector3 worldPos = baseWorldPos + new Vector3(0.5f, 0.5f, 0f);
+
+                // Instantiate
+                GameObject itemInstance = Instantiate(
+                    randomItem.itemPrefab,
+                    worldPos,
+                    Quaternion.identity,
+                    itemParent
+                );
+                // 5) Mark it as hidden in some script
+                HiddenItemController hic = itemInstance.GetComponent<HiddenItemController>();
+                if (hic != null)
+                {
+                    hic.isHidden = true; // The instance is hidden
+                }
             }
         }
+
         #endregion
 
-        #region SpawnAmbush
+        #region Ambush/Boss Spawning (optional partial refactor)
 
         public void SpawnAmbush(Vector3 center, FloorData floorData, Transform enemyParent)
         {
-            if (floorData == null)
+            if (floorData == null || floorData.FloorTilemap == null || floorData.FloorTiles == null)
             {
-                Debug.LogError("DungeonSpawner: FloorData is null. Cannot spawn ambush.");
+                Debug.LogError("DungeonSpawner: Invalid floor data. Cannot spawn ambush.");
                 return;
             }
 
-            if (floorData.FloorTilemap == null)
-            {
-                Debug.LogError("DungeonSpawner: FloorTilemap is null. Cannot spawn ambush.");
-                return;
-            }
-
-            if (floorData.FloorTiles == null)
-            {
-                Debug.LogError("DungeonSpawner: FloorTiles is null. Cannot spawn ambush.");
-                return;
-            }
-
-            // Align center to tilemap grid for consistent tile placement
             Vector3Int centerTile = floorData.FloorTilemap.WorldToCell(center);
 
-            // Get valid spawn positions within the grid-aligned radius
             List<Vector2Int> spawnPositions = GetValidSpawnPositions(
                 dungeonSettings.ambushEnemyCount,
                 dungeonSettings.ambushRadius,
                 centerTile,
                 floorData
             );
-            // log spawn positions
-            foreach (var pos in spawnPositions)
-            {
-                Debug.Log("Spawn position: " + pos);
-            }
 
             if (spawnPositions.Count == 0)
             {
@@ -375,37 +485,66 @@ namespace CoED
                 return;
             }
 
-            // Instantiate enemies and effects at valid positions
-            foreach (Vector2Int tilePosition in spawnPositions)
+            // Reuse or create pathfinder for the floor
+            Pathfinder pathfinder = GetOrCreateFloorPathfinder(floorData);
+
+            foreach (Vector2Int tilePos in spawnPositions)
             {
-                // Instantiate spawn effect at aligned position
+                // Optional effect
                 PositionHelper.InstantiateOnTile(
                     floorData.FloorTilemap,
-                    new Vector3Int(tilePosition.x, tilePosition.y, 0),
+                    new Vector3Int(tilePos.x, tilePos.y, 0),
                     dungeonSettings.spawnEffectPrefab,
-                    enemyParent
+                    enemyParent,
+                    new Vector3(0.5f, 0.5f, 0)
                 );
 
-                // Spawn enemy and initialize its AI
-                GameObject enemy = SpawnEnemyAtTile(tilePosition, floorData, enemyParent);
+                // --------------------- SPOT THE CHANGE HERE ---------------------
+                // We spawn the enemy...
+                GameObject enemy = SpawnEnemyAtTile(tilePos, floorData, enemyParent, pathfinder);
+                // ...Then we do the same "setup" code as normal enemies:
                 if (enemy != null)
                 {
-                    EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
-                    if (enemyAI != null)
+                    // 1) occupant ID
+                    int occupantID = occupantIDCounter++;
+
+                    // 2) get or add EnemyNavigator
+                    EnemyNavigator navigator = enemy.GetComponent<EnemyNavigator>();
+                    if (navigator == null)
                     {
-                        enemyAI.Initialize(floorData);
-                        enemyAI.SetPatrolPoints(
-                            floorData.GetRandomFloorTiles(dungeonSettings.numberOfPatrolPoints)
-                        );
+                        navigator = enemy.GetComponent<EnemyNavigator>();
+                    }
+                    navigator.Initialize(pathfinder, floorData.FloorTilemap, occupantID);
+
+                    // 3) get or add EnemyBrain
+                    EnemyBrain brain = enemy.GetComponent<EnemyBrain>();
+                    if (brain == null)
+                    {
+                        brain = enemy.GetComponent<EnemyBrain>();
+                    }
+
+                    // 4) give some random patrol points (or an empty set if you want them stationary)
+                    HashSet<Vector2Int> patrolPoints = new HashSet<Vector2Int>(
+                        floorData.GetRandomFloorTiles(dungeonSettings.numberOfPatrolPoints)
+                    );
+                    brain.Initialize(floorData, patrolPoints);
+
+                    // 5) set spawn floor on EnemyStats if present
+                    EnemyStats enemyStats = enemy.GetComponent<EnemyStats>();
+                    if (enemyStats != null)
+                    {
+                        enemyStats.spawnFloor = floorData.FloorNumber;
                     }
                 }
+                // -------------------- END CHANGE --------------------
             }
         }
 
         private GameObject SpawnEnemyAtTile(
             Vector2Int tilePosition,
             FloorData floorData,
-            Transform parent
+            Transform parent,
+            Pathfinder pathfinder
         )
         {
             if (dungeonSettings.enemyPrefabs == null || dungeonSettings.enemyPrefabs.Count == 0)
@@ -414,17 +553,16 @@ namespace CoED
                 return null;
             }
 
-            // Select a random enemy prefab
             GameObject enemyPrefab = dungeonSettings.enemyPrefabs[
                 UnityEngine.Random.Range(0, dungeonSettings.enemyPrefabs.Count)
             ];
 
-            // Instantiate enemy at the aligned tile position
             return PositionHelper.InstantiateOnTile(
                 floorData.FloorTilemap,
                 new Vector3Int(tilePosition.x, tilePosition.y, 0),
                 enemyPrefab,
-                parent
+                parent,
+                new Vector3(0.5f, 0.5f, 0)
             );
         }
 
@@ -437,11 +575,10 @@ namespace CoED
         {
             List<Vector2Int> positions = new List<Vector2Int>();
             int attempts = 0;
-            int maxAttempts = count * 10; // Limit attempts to prevent infinite loops
+            int maxAttempts = count * 10;
 
             while (positions.Count < count && attempts < maxAttempts)
             {
-                // Generate a random offset within the radius
                 int offsetX = UnityEngine.Random.Range(
                     -Mathf.CeilToInt(radius),
                     Mathf.CeilToInt(radius) + 1
@@ -451,20 +588,15 @@ namespace CoED
                     Mathf.CeilToInt(radius) + 1
                 );
 
-                Vector2Int candidateTile = new Vector2Int(
+                Vector2Int candidate = new Vector2Int(
                     centerTile.x + offsetX,
                     centerTile.y + offsetY
                 );
 
-                // Ensure the candidate is a valid floor tile and not already chosen
-                if (
-                    floorData.FloorTiles.Contains(candidateTile)
-                    && !positions.Contains(candidateTile)
-                )
+                if (floorData.FloorTiles.Contains(candidate) && !positions.Contains(candidate))
                 {
-                    positions.Add(candidateTile);
+                    positions.Add(candidate);
                 }
-
                 attempts++;
             }
 
@@ -488,7 +620,7 @@ namespace CoED
             }
 
             Transform floorParent = DungeonManager.Instance.GetFloorTransform(floorNumber);
-            Transform enemyParent = floorParent.Find("EnemyParent");
+            Transform enemyParent = floorParent?.Find("EnemyParent");
 
             if (enemyParent == null)
             {
@@ -496,13 +628,11 @@ namespace CoED
                 return;
             }
 
-            SpawnBoss(
-                dungeonSettings.bossPrefabs[
-                    UnityEngine.Random.Range(0, dungeonSettings.bossPrefabs.Count)
-                ],
-                floorData,
-                enemyParent
-            );
+            GameObject bossPrefab = dungeonSettings.bossPrefabs[
+                UnityEngine.Random.Range(0, dungeonSettings.bossPrefabs.Count)
+            ];
+
+            SpawnBoss(bossPrefab, floorData, enemyParent);
         }
 
         private void SpawnBoss(GameObject bossPrefab, FloorData floorData, Transform enemyParent)
@@ -514,54 +644,66 @@ namespace CoED
             }
 
             List<Vector2Int> spawnPositions = floorData.GetRandomFloorTiles(1);
-
             if (spawnPositions.Count == 0)
             {
-                Debug.LogError(
-                    "DungeonSpawner: No valid spawn positions found for boss. Cannot spawn boss."
-                );
+                Debug.LogError("DungeonSpawner: No valid spawn positions found for boss.");
                 return;
             }
 
-            Vector3 position = new Vector3(spawnPositions[0].x, spawnPositions[0].y, 0);
-            Vector3 worldPosition = new Vector3(position.x + 0.5f, position.y + 0.5f, 0);
-            Instantiate(dungeonSettings.spawnEffectPrefab, worldPosition, Quaternion.identity);
-            if (bossPrefab == null)
+            // Reuse or create a pathfinder for the floor
+            Pathfinder pathfinder = GetOrCreateFloorPathfinder(floorData);
+
+            // Pick a valid tile for the boss
+            Vector2Int tilePos = spawnPositions[0];
+            // Convert tile to world coords + 0.5 offset
+            Vector3 pos = new Vector3(tilePos.x, tilePos.y, 0);
+            Vector3 worldPos = new Vector3(pos.x + 0.5f, pos.y + 0.5f, 0);
+
+            // Optional effect
+            Instantiate(dungeonSettings.spawnEffectPrefab, worldPos, Quaternion.identity);
+
+            // Spawn the boss
+            GameObject boss = Instantiate(bossPrefab, pos, Quaternion.identity, enemyParent);
+            if (boss == null)
             {
-                Debug.LogError("DungeonSpawner: No enemy prefab available. Cannot spawn enemy.");
+                Debug.LogError("DungeonSpawner: Failed to instantiate boss.");
                 return;
             }
 
-            GameObject enemy = Instantiate(bossPrefab, position, Quaternion.identity, enemyParent);
-            EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
-            if (enemyAI != null)
+            // ========== The same AI setup logic as normal enemies ==========
+
+            // 1) occupant ID for tile reservation
+            int occupantID = occupantIDCounter++;
+
+            // 2) Navigator
+            EnemyNavigator navigator = boss.GetComponent<EnemyNavigator>();
+            if (navigator == null)
             {
-                enemyAI.Initialize(floorData);
-                enemyAI.SetPatrolPoints(
-                    floorData.GetRandomFloorTiles(dungeonSettings.numberOfPatrolPoints)
-                );
+                navigator = boss.AddComponent<EnemyNavigator>();
+            }
+            navigator.Initialize(pathfinder, floorData.FloorTilemap, occupantID);
+
+            // 3) Brain
+            EnemyBrain brain = boss.GetComponent<EnemyBrain>();
+            if (brain == null)
+            {
+                brain = boss.AddComponent<EnemyBrain>();
+            }
+
+            // If you want the boss to actually have patrol points:
+            HashSet<Vector2Int> bossPatrolPoints = new HashSet<Vector2Int>(
+                floorData.GetRandomFloorTiles(dungeonSettings.numberOfPatrolPoints)
+            );
+            brain.Initialize(floorData, bossPatrolPoints);
+
+            // 4) Stats
+            EnemyStats bossStats = boss.GetComponent<EnemyStats>();
+            if (bossStats != null)
+            {
+                bossStats.spawnFloor = floorData.FloorNumber;
             }
         }
 
-        private void SpawnEnemy(Vector3 position, Transform parent, FloorData floorData)
-        {
-            GameObject enemyPrefab = DungeonManager.Instance.GetRandomEnemyPrefab();
-            if (enemyPrefab == null)
-            {
-                Debug.LogError("DungeonSpawner: No enemy prefab available. Cannot spawn enemy.");
-                return;
-            }
-
-            GameObject enemy = Instantiate(enemyPrefab, position, Quaternion.identity, parent);
-            EnemyAI enemyAI = enemy.GetComponent<EnemyAI>();
-            if (enemyAI != null)
-            {
-                enemyAI.Initialize(floorData);
-                enemyAI.SetPatrolPoints(
-                    floorData.GetRandomFloorTiles(dungeonSettings.numberOfPatrolPoints)
-                );
-            }
-        }
         #endregion
     }
 }

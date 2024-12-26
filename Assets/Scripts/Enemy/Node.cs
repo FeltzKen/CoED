@@ -6,6 +6,7 @@ namespace CoED.Pathfinding
     {
         public Vector2Int GridPosition;
         public bool IsWalkable;
+        public Vector2Int Position { get; set; }
         public int GCost;
         public int HCost;
         public int FCost => GCost + HCost;
@@ -15,6 +16,7 @@ namespace CoED.Pathfinding
         {
             GridPosition = gridPosition;
             IsWalkable = isWalkable;
+            Position = gridPosition;
             GCost = int.MaxValue;
             HCost = 0;
             Parent = null;

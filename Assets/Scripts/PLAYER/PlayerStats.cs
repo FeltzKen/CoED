@@ -78,7 +78,6 @@ namespace CoED
         public float CurrentProjectileLifespan { get; set; }
 
         public bool HasEnteredDungeon { get; set; } = false;
-        public bool transitioningComplete;
 
         [Header("Currency")]
         [SerializeField, Min(0)]

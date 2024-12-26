@@ -6,9 +6,6 @@ namespace CoED
 {
     public class Enemy : MonoBehaviour
     {
-        [Header("Health Settings")]
-        [SerializeField]
-        public int currentHealth { get; set; } // Current health of the enemy
         private StatusEffectManager statusEffectManager; // Manages enemy status effects
         private FloatingTextManager floatingTextManager; // Manages floating text displays for feedback
         public bool IsVisible = false; // Tracks if the enemy is visible (not covered by fog)
@@ -29,8 +26,10 @@ namespace CoED
         [SerializeField]
         private int minMoneyAmount = 1; // Minimum money amount dropped
 
+        private EnemyStats enemyStats;
+
         [SerializeField]
-        private int maxMoneyAmount = 20; // Maximum money amount dropped
+        private int maxMoneyDropAmount = 20; // Maximum money amount dropped
 
         [SerializeField]
         private float moneyDropRate = 0.5f; // Chance to drop money
@@ -42,15 +41,13 @@ namespace CoED
         [SerializeField]
         private Color highlightedColor = Color.red;
 
-        // Property to get the name of the enemy
-        public string ActorName => name;
-
         private void Start()
         {
+            enemyStats = GetComponent<EnemyStats>();
             spriteRenderer = GetComponent<SpriteRenderer>();
             // Initialize necessary components
-            statusEffectManager = GetComponent<StatusEffectManager>();
-            floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
+            //statusEffectManager = GetComponent<StatusEffectManager>();
+            //floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
 
             // Check for required components
             if (statusEffectManager == null)
@@ -79,7 +76,7 @@ namespace CoED
             // Determine if money should be dropped
             if (UnityEngine.Random.value <= moneyDropRate)
             {
-                int moneyAmount = UnityEngine.Random.Range(minMoneyAmount, maxMoneyAmount + 1);
+                int moneyAmount = UnityEngine.Random.Range(minMoneyAmount, maxMoneyDropAmount + 1);
                 GameObject money = Instantiate(
                     moneyPrefab,
                     transform.position,
@@ -104,6 +101,11 @@ namespace CoED
             }
         }
 
+        public void Attack()
+        {
+            PlayerStats.Instance.TakeDamage(enemyStats.CurrentAttack);
+        }
+
         public void SetHighlighted(bool isHighlighted)
         {
             if (spriteRenderer != null)
@@ -114,7 +116,7 @@ namespace CoED
 
         public void ResetEnemyAttackFlags()
         {
-            foreach (var enemy in FindObjectsByType<EnemyAI>(FindObjectsSortMode.None))
+            foreach (var enemy in FindObjectsByType<EnemyBrain>(FindObjectsSortMode.None))
             {
                 enemy.CanAttackPlayer = true;
             }

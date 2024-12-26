@@ -66,12 +66,6 @@ namespace CoED
                     {
                         playerStats.CurrentSpeed += effect.speedModifier * deltaTime; // Ensure CurrentSpeed is float
                     }
-                    else if (enemyStats != null)
-                    {
-                        enemyStats.CurrentSpeed += Mathf.RoundToInt(
-                            effect.speedModifier * deltaTime
-                        ); // Ensure patrolSpeed has public setter
-                    }
                 }
             }
         }

@@ -1,8 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
-using CoED;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 namespace CoED
 {
@@ -19,7 +16,6 @@ namespace CoED
         public Dictionary<int, FloorData> floors = new Dictionary<int, FloorData>();
         public GameObject SpawningRoomInstance { get; set; }
         private DungeonSettings dungeonSettings;
-        private int currentFloorNumber = 0;
 
         private void Awake()
         {
@@ -54,65 +50,6 @@ namespace CoED
                 .dungeonSettings;
         }
 
-        public void ShowRenderersForFloor(int floorNumber)
-        {
-            if (FloorTransforms.TryGetValue(floorNumber, out Transform floorTransform))
-            {
-                Renderer[] renderers = floorTransform.GetComponentsInChildren<Renderer>();
-                foreach (var renderer in renderers)
-                {
-                    renderer.enabled = true;
-                }
-                // Debug.Log($"All renderers for Floor {floorNumber} are now visible.");
-            }
-            else
-            {
-                Debug.LogError($"Floor {floorNumber} not found. Cannot show renderers.");
-            }
-        }
-
-        public Tilemap GetWallTilemap(int currentFloorNumber)
-        {
-            // Assuming you have a way to get the current floor number
-            if (floors.TryGetValue(currentFloorNumber, out FloorData floorData))
-            {
-                return floorData.WallTilemap;
-            }
-            Debug.LogError(
-                $"DungeonManager: WallTilemap for floor {currentFloorNumber} not found."
-            );
-            return null;
-        }
-
-        public Tilemap GetVoidTilemap(int currentFloorNumber)
-        {
-            // Assuming you have a way to get the current floor number
-            if (floors.TryGetValue(currentFloorNumber, out FloorData floorData))
-            {
-                return floorData.VoidTilemap;
-            }
-            Debug.LogError(
-                $"DungeonManager: WallTilemap for floor {currentFloorNumber} not found."
-            );
-            return null;
-        }
-
-        private Dictionary<int, Vector2Int> stairsDownPositions = new Dictionary<int, Vector2Int>();
-
-        public void StoreStairsDownPosition(int floorNumber, Vector2Int position)
-        {
-            stairsDownPositions[floorNumber] = position;
-        }
-
-        public Vector2Int GetStairsDownPosition(int floorNumber)
-        {
-            if (stairsDownPositions.TryGetValue(floorNumber, out Vector2Int position))
-            {
-                return position;
-            }
-            return Vector2Int.zero; // Default if not found
-        }
-
         public Transform GetFloorTransform(int floorNumber)
         {
             if (FloorTransforms.TryGetValue(floorNumber, out Transform floorTransform))
@@ -121,11 +58,6 @@ namespace CoED
             }
             Debug.LogError($"DungeonManager: Floor {floorNumber} not found.");
             return null;
-        }
-
-        public int GetCurrentFloor()
-        {
-            return currentFloorNumber;
         }
 
         public FloorData GetFloorData(int floorNumber)

@@ -44,7 +44,7 @@ MonoBehaviour:
     algorithmType: 0
     initialWallDensity: 0.4
     iterations: 5
-    neighborWallThreshold: 3
+    neighborWallThreshold: 4
     edgeBias: 10
     bspSubdivisions: 2
     bspCarveChance: 0.388
@@ -82,8 +82,8 @@ MonoBehaviour:
   healthBarPrefab: {fileID: 7920171421989906631, guid: 25e4b1c51ff90d54895cec756acb5a26, type: 3}
   bossPrefabs:
   - {fileID: 3198391839532095026, guid: 87ddcf6318ef8eb4688f3af074a97c1a, type: 3}
-  numberOfEnemiesPerFloor: 25
-  numberOfPatrolPoints: 20
+  numberOfEnemiesPerFloor: 20
+  numberOfPatrolPoints: 25
   enableEnemyScaling: 1
   baseHealthMultiplier: 1.75
   baseDamageMultiplier: 1

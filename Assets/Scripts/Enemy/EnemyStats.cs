@@ -18,7 +18,7 @@ namespace CoED
         private int baseHealth = 100;
 
         [SerializeField, Min(0)]
-        private float baseSpeed = 5;
+        public float PatrolSpeed = 1f;
 
         [SerializeField, Min(0f)]
         private float baseAttackRange = 1.0f;
@@ -35,11 +35,11 @@ namespace CoED
         private List<StatusEffect> activeStatusEffects = new List<StatusEffect>();
 
         // Current Stats
+        public float ChaseSpeed { get; set; }
         public int CurrentAttack { get; set; }
         public int CurrentDefense { get; set; }
         public int CurrentHealth { get; set; }
         public int MaxHealth { get; set; }
-        public float CurrentSpeed { get; set; }
         public float CurrentAttackRange { get; set; }
         public float CurrentDetectionRange { get; set; }
         public float CurrentFireRate { get; set; }
@@ -51,7 +51,6 @@ namespace CoED
         // public event Action <int> OnHealthChanged;
         public event Action OnEnemyDeath;
         public int spawnFloor { get; set; } // Store the floor this enemy spawned on
-        public float BaseSpeed => baseSpeed;
 
         private void Awake()
         {
@@ -77,7 +76,7 @@ namespace CoED
             MaxHealth = Mathf.RoundToInt(baseHealth * floorMultiplier);
             CurrentAttack = Mathf.RoundToInt(baseAttack * floorMultiplier);
             CurrentDefense = Mathf.RoundToInt(baseDefense * floorMultiplier);
-            CurrentSpeed = baseSpeed * floorMultiplier;
+            ChaseSpeed = PatrolSpeed * floorMultiplier;
             CurrentAttackRange = baseAttackRange * floorMultiplier;
             CurrentDetectionRange = baseDetectionRange * floorMultiplier;
             CurrentFireRate = Mathf.Max(baseFireRate - spawnFloor * 0.02f, 0.1f);
@@ -143,12 +142,6 @@ namespace CoED
             statusEffect.damagePerSecond = damagePerSecond;
             statusEffect.duration = duration;
             activeStatusEffects.Add(statusEffect);
-        }
-
-        public void ResetSpeed()
-        {
-            // Reset speed to base or modified speed
-            CurrentSpeed = baseSpeed; // Assuming baseSpeed is defined
         }
 
         // Optionally, handle removing or managing multiple effects

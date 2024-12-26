@@ -1,11 +1,10 @@
 using UnityEngine;
-using CoED;
 
 namespace CoED
 {
-    public class GridManager : MonoBehaviour
+    public class _GridManager : MonoBehaviour
     {
-        public static GridManager Instance { get; private set; }
+        public static _GridManager Instance { get; private set; }
 
         [Header("Grid Settings")]
         [SerializeField, Range(1, 100)]
