@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using CoED;
 using UnityEngine;
 
 namespace CoED
@@ -60,20 +59,11 @@ namespace CoED
             }
 
             cursedNumber = luckyNumbers[Random.Range(0, luckyNumbers.Count)];
-            // Debug.Log($"PlayerProfileManager: Cursed Number (Hidden): {cursedNumber}");
         }
 
         public void SetDungeonSeed(int seed)
         {
             dungeonSeed = seed;
-            // Debug.Log($"PlayerProfileManager: Dungeon Seed Set: {dungeonSeed}");
         }
     }
 }
-
-/*
-Changes made:
-1. Retained all profile management functionality, as it does not interact directly with the turn or action system.
-2. Made sure the script focuses solely on managing player settings and removed redundant components.
-3. No direct interaction with PlayerManager or TurnManager is required here.
-*/

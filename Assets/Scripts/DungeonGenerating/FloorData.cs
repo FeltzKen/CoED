@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -18,27 +17,23 @@ namespace CoED
         public List<GameObject> StairsDown { get; private set; } = new List<GameObject>();
         public Transform itemParent;
 
-        // Constructor
         public FloorData(int floorNumber)
         {
             FloorNumber = floorNumber;
         }
 
-        /// <summary>
-        /// Sets the tilemaps for the floor.
-        /// </summary>
-        public void SetTilemaps(Tilemap floorTilemap, Tilemap wallTilemap, Tilemap voidTilemap) // Added VoidTilemap
+        public void SetTilemaps(Tilemap floorTilemap, Tilemap wallTilemap, Tilemap voidTilemap)
         {
             FloorTilemap = floorTilemap;
             WallTilemap = wallTilemap;
-            VoidTilemap = voidTilemap; // Added VoidTilemap
+            VoidTilemap = voidTilemap;
         }
 
         public void AddAllFloorTiles(
             IEnumerable<Vector2Int> floorTiles,
             IEnumerable<Vector2Int> wallTiles,
             IEnumerable<Vector2Int> voidTiles
-        ) // Added VoidTiles
+        )
         {
             foreach (var tile in floorTiles)
             {
@@ -54,9 +49,6 @@ namespace CoED
             }
         }
 
-        /// <summary>
-        /// Gets multiple random floor tiles.
-        /// </summary>
         public List<Vector2Int> GetRandomFloorTiles(int count)
         {
             if (FloorTiles.Count == 0 || count <= 0)

@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using CoED;
 
 namespace CoED
 {
@@ -20,7 +19,6 @@ namespace CoED
 
         private void Awake()
         {
-            // Implement Singleton Pattern
             if (Instance == null)
             {
                 Instance = this;
@@ -32,7 +30,6 @@ namespace CoED
                 return;
             }
 
-            // Validate fogTilemap and fogTile
             if (fogTilemap == null)
             {
                 Debug.LogError("FogOfWarManager: Fog Tilemap is not assigned.");
@@ -54,7 +51,6 @@ namespace CoED
                 return;
             }
 
-            // Iterate over tiles within the vision radius and clear fog
             for (int x = playerPosition.x - visionRadius; x <= playerPosition.x + visionRadius; x++)
             {
                 for (

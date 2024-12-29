@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using CoED;
 
 namespace CoED
 {
@@ -59,7 +58,7 @@ namespace CoED
             GenerateInitialInventory();
             if (isInitialEncounter)
             {
-              //  SpawnNearPlayer();
+                //  SpawnNearPlayer();
                 isInitialEncounter = false;
             }
             else

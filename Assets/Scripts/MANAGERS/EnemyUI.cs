@@ -1,12 +1,11 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
-using CoED;
-using System.Collections;
+
 namespace CoED
 {
     public class EnemyUI : MonoBehaviour
     {
-
         public static EnemyUI enemyAI;
         public static EnemyStats enemyStats;
 
@@ -14,7 +13,7 @@ namespace CoED
         private Slider healthBar;
 
         [SerializeField]
-        private Color healthBarBackground = Color.red; 
+        private Color healthBarBackground = Color.red;
 
         [SerializeField]
         private Color normalHealthColor = Color.green;
@@ -35,6 +34,7 @@ namespace CoED
                 Debug.LogError("EnemyUI: HealthBar component not found.");
             }
         }
+
         public void SetHealthBarMax(float maxHealth)
         {
             if (healthBar != null)
@@ -44,7 +44,7 @@ namespace CoED
             }
         }
 
-        public void UpdateHealthBar(int currentHealth, int maxHealth)
+        public void UpdateHealthBar(float currentHealth, float maxHealth)
         {
             if (healthBar != null)
             {
@@ -54,9 +54,9 @@ namespace CoED
             }
         }
 
-        private void CheckLowHealth(int currentHealth, int maxHealth)
+        private void CheckLowHealth(float currentHealth, float maxHealth)
         {
-            float healthPercentage = (float)currentHealth / maxHealth;
+            float healthPercentage = currentHealth / maxHealth;
             if (healthPercentage < 0.2f && !isLowHealth)
             {
                 isLowHealth = true;

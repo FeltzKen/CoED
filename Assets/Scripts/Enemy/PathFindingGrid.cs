@@ -17,8 +17,6 @@ namespace CoED.Pathfinding
                 if (!nodes.ContainsKey(pos))
                     Debug.LogError($"PathfindingGrid: Missing node for walkable tile at {pos}");
             }
-            // Debug.Log($"PathfindingGrid: Initialized with {nodes.Count} walkable nodes.");
-            // Debug.Log($"PathfindingGrid: Grid fully connected: {IsGridFullyConnected()}");
         }
 
         public Node GetNode(Vector2Int position)

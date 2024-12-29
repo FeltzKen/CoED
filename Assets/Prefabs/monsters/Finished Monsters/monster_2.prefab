@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 2788784344097151140}
   - component: {fileID: 6230446444657700687}
   - component: {fileID: 5405996234022275639}
-  - component: {fileID: 3984977953762216121}
   - component: {fileID: 5710572630327944031}
   - component: {fileID: 499285718735250053}
   - component: {fileID: -6418701496261444902}
@@ -56,7 +55,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3198391839532095026}
-  m_BodyType: 1
+  m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
@@ -67,7 +66,7 @@ Rigidbody2D:
   m_Material: {fileID: 6200000, guid: fdb52bb4983dbcb4e88f217b419e54dc, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 16840
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -208,23 +207,10 @@ MonoBehaviour:
   dropRateDecreaseFactor: 0.5
   moneyPrefab: {fileID: 5582355417736950124, guid: 94e565f3443a44a4f8d23c4d5a0dc48f, type: 3}
   minMoneyAmount: 1
-  maxMoneyAmount: 20
+  maxMoneyDropAmount: 20
   moneyDropRate: 0.5
   normalColor: {r: 1, g: 1, b: 1, a: 1}
   highlightedColor: {r: 1, g: 0.08237281, b: 0.015686274, a: 1}
---- !u!114 &3984977953762216121
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3198391839532095026}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 72c9ac53f72bb934c9f1c943832200f5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  uniqueID: 1
 --- !u!114 &5710572630327944031
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -259,7 +245,6 @@ MonoBehaviour:
   baseDetectionRange: 6
   baseFireRate: 6
   baseProjectileLifespan: 2
-  ChaseSpeed: 0
 --- !u!114 &-6418701496261444902
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -288,7 +273,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1469d0ae262676745bb84743561131a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 2
+  floorTilemap: {fileID: 0}
+  moveSpeed: 1
 --- !u!114 &-374340769953024843
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -301,12 +287,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c87369e3b1304e499f0f41793258f33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  playerTransform: {fileID: 0}
+  CurrentState: 0
+  CanAttackPlayer: 1
   visualObstructionLayer:
     serializedVersion: 2
     m_Bits: 136
-  AttackRange: 1.5
-  CanAttackPlayer: 1
 --- !u!1001 &2245403152686551375
 PrefabInstance:
   m_ObjectHideFlags: 0

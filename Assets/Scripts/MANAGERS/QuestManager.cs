@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using CoED;
 
 namespace CoED
 {
@@ -85,7 +84,7 @@ namespace CoED
             if (quest.RewardItem != null)
             {
                 playerInventory.AddItem(quest.RewardItem);
-                 Debug.Log(
+                Debug.Log(
                     $"QuestManager: Granted reward '{quest.RewardItem.ItemName}' to the player."
                 );
             }
@@ -147,7 +146,7 @@ namespace CoED
             if (availableQuests.Contains(quest))
             {
                 availableQuests.Remove(quest);
-                 Debug.Log(
+                Debug.Log(
                     $"QuestManager: Removed quest '{quest.QuestName}' from available quests."
                 );
             }

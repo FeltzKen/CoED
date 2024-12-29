@@ -1,13 +1,10 @@
 // CurseRemover.cs
 using UnityEngine;
-using CoED;
 
 namespace CoED
 {
-    /// Handles removing curses from items.
     public static class CurseRemover
     {
-        /// Attempts to remove the curse from the given item.
         public static void UseOnEquipment(Equipment equipment)
         {
             if (equipment == null)
@@ -19,14 +16,19 @@ namespace CoED
             if (equipment.IsCursed)
             {
                 equipment.RemoveCurse();
-                // Debug.Log($"{equipment.equipmentName} has been uncursed.");
-
-                // Optionally, we could invoke some UI or status update here.
-                // For example: UIManager.Instance?.UpdateInventoryDisplay();
+                FloatingTextManager.Instance.ShowFloatingText(
+                    "Curse removed!",
+                    PlayerMovement.Instance.transform,
+                    Color.green
+                );
             }
             else
             {
-                // Debug.Log("CurseRemover: This item is not cursed or cannot be uncursed.");
+                FloatingTextManager.Instance.ShowFloatingText(
+                    "This item is not cursed or cannot be uncursed.",
+                    PlayerMovement.Instance.transform,
+                    Color.red
+                );
             }
         }
     }

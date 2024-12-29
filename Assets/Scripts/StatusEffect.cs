@@ -38,7 +38,6 @@ namespace CoED
                 case StatusEffectType.Freeze:
                     effectCoroutine = StartCoroutine(FreezeEffect());
                     break;
-                // Handle additional effects here
                 default:
                     Debug.LogWarning($"StatusEffect: Unknown effect type {effectType}.");
                     Destroy(gameObject);

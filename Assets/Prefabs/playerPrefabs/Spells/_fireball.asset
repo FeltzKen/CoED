@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spellName: Fireball
   icon: {fileID: -1080549867, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
-  magicCost: 1
+  magicCost: 0
   damage: 200
   lifetime: 5
   collisionRadius: 0.5

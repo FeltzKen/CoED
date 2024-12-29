@@ -7,11 +7,21 @@ namespace CoED
     {
         public static TileOccupancyManager Instance { get; private set; }
 
-        /// <summary>
-        /// Maps a tile position to the occupant ID that has reserved it.
-        /// If a tile is free, it won't appear in the dictionary at all.
-        /// </summary>
         private Dictionary<Vector2Int, int> tileReservations = new Dictionary<Vector2Int, int>();
+
+        public static readonly Vector2Int[] adjacentOffsets =
+        {
+            new Vector2Int(-1, 0), // Left
+            new Vector2Int(1, 0), // Right
+            new Vector2Int(0, 1), // Up
+            new Vector2Int(0, -1), // Down
+            new Vector2Int(-1, 1), // Up-Left
+            new Vector2Int(1, 1), // Up-Right
+            new Vector2Int(-1, -1), // Down-Left
+            new Vector2Int(1, -1), // Down-Right
+        };
+
+        private Vector2Int playerPosition;
 
         private void Awake()
         {
@@ -25,59 +35,58 @@ namespace CoED
             }
         }
 
-        /// <summary>
-        /// Attempts to reserve the given tile for occupantID.
-        /// Returns true if successful (tile was free or already owned by occupantID).
-        /// Returns false if another occupant currently holds it.
-        /// </summary>
+        public void SetPlayerPosition(Vector2Int position)
+        {
+            playerPosition = position;
+        }
+
+        public bool IsPlayerSurroundedByEnemies()
+        {
+            foreach (var offset in adjacentOffsets)
+            {
+                Vector2Int checkPos = playerPosition + offset;
+                if (IsTileFree(checkPos)) // If any adjacent tile is free, the player is not surrounded
+                    return false;
+            }
+            Debug.Log("Player is surrounded by enemies!");
+            return true;
+        }
+
         public bool TryReserveTile(Vector2Int tilePosition, int occupantID)
         {
-            // If tile not in dictionary => free, or occupantID already owns it
-            if (
-                !tileReservations.ContainsKey(tilePosition)
-                || tileReservations[tilePosition] == occupantID
-            )
+            if (IsTileFree(tilePosition))
             {
-                tileReservations[tilePosition] = occupantID;
+                tileReservations.Add(tilePosition, occupantID);
                 return true;
             }
-
-            // If someone else owns it, we fail.
             return false;
         }
 
-        /// <summary>
-        /// Releases the tile if occupantID currently owns it.
-        /// </summary>
         public void ReleaseTile(Vector2Int tilePosition, int occupantID)
         {
-            if (tileReservations.ContainsKey(tilePosition))
+            if (
+                tileReservations.TryGetValue(tilePosition, out int currentOccupantID)
+                && currentOccupantID == occupantID
+            )
             {
-                // Only the occupant who reserved the tile can release it
-                if (tileReservations[tilePosition] == occupantID)
-                {
-                    tileReservations.Remove(tilePosition);
-                }
+                tileReservations.Remove(tilePosition);
             }
         }
 
-        public bool IsTileOccupiedByPlayer(Vector2Int tilePosition)
+        public bool IsTileFree(Vector2Int tilePosition)
         {
-            return new Vector3(tilePosition.x, tilePosition.y, 0)
-                == PlayerMovement.Instance.GetPlayerPosition();
+            return !tileReservations.ContainsKey(tilePosition);
         }
 
-        /// <summary>
-        /// Returns the occupant ID that currently holds tilePosition,
-        /// or -1 if it's free / not in the dictionary.
-        /// </summary>
-        public int GetOccupantOfTile(Vector2Int tilePosition)
+        public bool IsAnyAdjacentTileFree(Vector2Int playerTilePos)
         {
-            if (tileReservations.TryGetValue(tilePosition, out int occupantID))
+            foreach (var offset in adjacentOffsets)
             {
-                return occupantID;
+                Vector2Int checkPos = playerTilePos + offset;
+                if (IsTileFree(checkPos))
+                    return true;
             }
-            return -1;
+            return false;
         }
     }
 }

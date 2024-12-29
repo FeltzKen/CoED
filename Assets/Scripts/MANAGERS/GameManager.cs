@@ -28,7 +28,6 @@ namespace CoED
 
         private void Start()
         {
-            // Spawn player if needed and store reference
             if (PlayerSpawner.Instance != null)
             {
                 GameObject player = PlayerSpawner.Instance.SpawnPlayer();

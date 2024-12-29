@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using CoED;
 
 namespace CoED
 {
@@ -90,7 +89,6 @@ namespace CoED
         {
             if (IsCompleted)
             {
-                // Debug.Log($"Quest '{questName}' is already completed.");
                 return;
             }
 
@@ -141,7 +139,6 @@ namespace CoED
         {
             if (IsCompleted)
             {
-                // Debug.Log($"Objective '{description}' is already completed.");
                 return;
             }
 

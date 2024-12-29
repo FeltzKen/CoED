@@ -24,17 +24,15 @@ namespace CoED
                 return;
             }
 
-            // Calculate camera size
             halfHeight = mainCamera.orthographicSize;
             halfWidth = halfHeight * mainCamera.aspect;
 
-            // Position the camera over the spawning room initially
             Transform spawningRoom = GameObject.Find("SpawningRoom")?.transform;
             if (spawningRoom != null)
             {
                 Vector3 spawningRoomPosition = spawningRoom.position;
                 spawningRoomPosition.z = transform.position.z;
-                transform.position = spawningRoomPosition;
+                transform.position = spawningRoomPosition + new Vector3(0, 3, 0);
 
                 Debug.Log("Camera positioned above the spawning room.");
             }
@@ -47,13 +45,11 @@ namespace CoED
 
         void LateUpdate()
         {
-            // Handle spawning room behavior
             if (isInSpawningRoom)
             {
                 return; // Camera stays stationary until the player exits the spawning room
             }
 
-            // Dynamically find player if not already assigned
             if (playerTransform == null)
             {
                 playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
@@ -64,7 +60,6 @@ namespace CoED
                 }
             }
 
-            // Follow the player with or without clamping
             if (boundsClampingEnabled)
             {
                 CenterCameraOnPlayer();
@@ -85,7 +80,6 @@ namespace CoED
 
             Vector3 playerPosition = playerTransform.position;
 
-            // Clamp the player's position to the bounds of the floor
             float clampedX = Mathf.Clamp(
                 playerPosition.x,
                 minBounds.x + halfWidth,
@@ -97,10 +91,7 @@ namespace CoED
                 maxBounds.y - halfHeight
             );
 
-            // Update the camera's position
             transform.position = new Vector3(clampedX, clampedY, transform.position.z);
-
-            // Debug.Log($"Camera centered on player at ({clampedX}, {clampedY}) with clamping.");
         }
 
         private void CenterCameraOnPlayerWithoutClamping()
@@ -113,14 +104,11 @@ namespace CoED
 
             Vector3 playerPosition = playerTransform.position;
 
-            // Directly update the camera's position without clamping
             transform.position = new Vector3(
                 playerPosition.x,
                 playerPosition.y,
                 transform.position.z
             );
-
-            // Debug.Log($"Camera centered on player at ({playerPosition.x}, {playerPosition.y}) without clamping.");
         }
 
         public void ExitSpawningRoom()
@@ -134,7 +122,6 @@ namespace CoED
 
             if (playerTransform != null)
             {
-                // Immediately transition to the player position and enable bounds clamping
                 CenterCameraOnPlayerWithoutClamping();
                 UpdateBounds(PlayerStats.Instance.GetCurrentFloor());
                 boundsClampingEnabled = true;
@@ -156,7 +143,6 @@ namespace CoED
                 return;
             }
 
-            // Update bounds based on the floor's tilemap and parent offset
             Bounds floorBounds = floorData.FloorTilemap.localBounds;
             Vector3 floorOffset = floorData.FloorTilemap.transform.parent.position;
 
@@ -175,27 +161,6 @@ namespace CoED
                 $"Camera bounds updated for Floor {floorNumber}: Min({minBounds}), Max({maxBounds})"
             );
             MinimapController.Instance.UpdateMinimapPosition(transform.position);
-        }
-
-        private void OnDrawGizmos()
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawLine(
-                new Vector3(minBounds.x, minBounds.y, 0),
-                new Vector3(maxBounds.x, minBounds.y, 0)
-            );
-            Gizmos.DrawLine(
-                new Vector3(maxBounds.x, minBounds.y, 0),
-                new Vector3(maxBounds.x, maxBounds.y, 0)
-            );
-            Gizmos.DrawLine(
-                new Vector3(maxBounds.x, maxBounds.y, 0),
-                new Vector3(minBounds.x, maxBounds.y, 0)
-            );
-            Gizmos.DrawLine(
-                new Vector3(minBounds.x, maxBounds.y, 0),
-                new Vector3(minBounds.x, minBounds.y, 0)
-            );
         }
     }
 }

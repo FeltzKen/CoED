@@ -5,7 +5,7 @@ namespace CoED
     public class ItemCollectible : MonoBehaviour
     {
         [SerializeField]
-        public Consumable item; // Ensure this is of type Consumable
+        public Consumable item;
 
         public Consumable Item => item;
 
@@ -13,7 +13,6 @@ namespace CoED
         {
             if (other.CompareTag("Player"))
             {
-                // Debug.Log("ItemCollectible: Player entered trigger.");
                 CollectItem(PlayerActions.Instance);
             }
         }

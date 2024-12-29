@@ -1,5 +1,4 @@
 using UnityEngine;
-using CoED;
 
 namespace CoED
 {
@@ -16,7 +15,6 @@ namespace CoED
 
         private void Awake()
         {
-            // Implement Singleton Pattern
             if (Instance == null)
             {
                 Instance = this;
@@ -48,7 +46,6 @@ namespace CoED
             UpdateFogOfWar();
         }
 
-        /// Updates the fog of war based on the player's position.
         private void UpdateFogOfWar()
         {
             Collider2D[] fogTiles = Physics2D.OverlapCircleAll(

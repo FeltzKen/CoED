@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using CoED;
 using UnityEngine;
 
 namespace CoED
@@ -17,14 +16,8 @@ namespace CoED
         [SerializeField, Min(0)]
         private int baseHealth = 100;
 
-        [SerializeField, Min(0)]
-        public float PatrolSpeed = 1f;
-
         [SerializeField, Min(0f)]
         private float baseAttackRange = 1.0f;
-
-        [SerializeField, Min(0f)]
-        private float baseDetectionRange = 5f;
 
         [SerializeField, Min(0f)]
         private float baseFireRate = 1f;
@@ -35,29 +28,24 @@ namespace CoED
         private List<StatusEffect> activeStatusEffects = new List<StatusEffect>();
 
         // Current Stats
-        public float ChaseSpeed { get; set; }
-        public int CurrentAttack { get; set; }
-        public int CurrentDefense { get; set; }
-        public int CurrentHealth { get; set; }
-        public int MaxHealth { get; set; }
+        public float PatrolSpeed;
+        public float ChaseSpeed;
+        public float CurrentAttack { get; set; }
+        public float CurrentDefense { get; set; }
+        public float CurrentHealth { get; set; }
+        public float MaxHealth { get; set; }
         public float CurrentAttackRange { get; set; }
-        public float CurrentDetectionRange { get; set; }
         public float CurrentFireRate { get; set; }
         public float CurrentProjectileLifespan { get; set; }
-
+        public float ScaledFactor { get; private set; }
         private EnemyUI enemyUI { get; set; }
         private Enemy enemy { get; set; }
+        public int spawnFloor { get; set; }
 
-        // public event Action <int> OnHealthChanged;
-        public event Action OnEnemyDeath;
-        public int spawnFloor { get; set; } // Store the floor this enemy spawned on
-
-        private void Awake()
+        private void Start()
         {
             CalculateStats();
         }
-
-        private void Start() { }
 
         private void InitializeUI()
         {
@@ -71,26 +59,27 @@ namespace CoED
 
         private void CalculateStats()
         {
-            float floorMultiplier = 1 + (spawnFloor * 0.5f); // Example: each floor increases stats by 10%
+            float floorMultiplier = 1 + (spawnFloor * 0.5f);
+            ScaledFactor = floorMultiplier * UnityEngine.Random.Range(0.9f, 1.1f);
 
-            MaxHealth = Mathf.RoundToInt(baseHealth * floorMultiplier);
-            CurrentAttack = Mathf.RoundToInt(baseAttack * floorMultiplier);
-            CurrentDefense = Mathf.RoundToInt(baseDefense * floorMultiplier);
-            ChaseSpeed = PatrolSpeed * floorMultiplier;
-            CurrentAttackRange = baseAttackRange * floorMultiplier;
-            CurrentDetectionRange = baseDetectionRange * floorMultiplier;
-            CurrentFireRate = Mathf.Max(baseFireRate - spawnFloor * 0.02f, 0.1f);
-            CurrentProjectileLifespan = baseProjectileLifespan + spawnFloor * 0.05f;
+            PatrolSpeed = Mathf.Lerp(1f, 3f, spawnFloor / 6f) + UnityEngine.Random.Range(0f, 0.5f);
+            ChaseSpeed = PatrolSpeed * 1.5f;
+
+            MaxHealth = Mathf.RoundToInt(baseHealth * ScaledFactor);
+            CurrentAttack = Mathf.RoundToInt(baseAttack * ScaledFactor);
+            CurrentDefense = Mathf.RoundToInt(baseDefense * ScaledFactor);
+            CurrentAttackRange = baseAttackRange * ScaledFactor;
+            CurrentFireRate = Mathf.Max(baseFireRate * ScaledFactor, 0.1f);
+            CurrentProjectileLifespan = baseProjectileLifespan * ScaledFactor;
             CurrentHealth = MaxHealth;
 
             InitializeUI();
         }
 
-        public void TakeDamage(int damage)
+        public void TakeDamage(float damage)
         {
-            int effectiveDamage = Mathf.Max(damage - CurrentDefense, 1);
+            float effectiveDamage = Mathf.Max(damage - CurrentDefense, 1);
             CurrentHealth = Mathf.Max(CurrentHealth - effectiveDamage, 0);
-            // OnHealthChanged?.Invoke(CurrentHealth);
             FloatingTextManager.Instance.ShowFloatingText(
                 effectiveDamage.ToString(),
                 transform,
@@ -99,17 +88,13 @@ namespace CoED
 
             UpdateHealthUI();
 
-            FloatingTextManager floatingTextManager = FloatingTextManager.Instance;
-
-            // Debug.Log($"EnemyStats: Took {effectiveDamage} damage. Current health: {CurrentHealth}/{MaxHealth}");
-
             if (CurrentHealth <= 0)
             {
                 HandleDeath();
             }
         }
 
-        public void Heal(int amount)
+        public void Heal(float amount)
         {
             if (amount <= 0)
             {
@@ -118,11 +103,7 @@ namespace CoED
             }
 
             CurrentHealth = Mathf.Min(CurrentHealth + amount, MaxHealth);
-            //OnHealthChanged?.Invoke(CurrentHealth);
             UpdateHealthUI();
-
-            FloatingTextManager floatingTextManager = FloatingTextManager.Instance;
-            //  floatingTextManager?.ShowFloatingText($"+{amount}", transform, Color.green);
 
             Debug.Log(
                 $"EnemyStats: Healed {amount} health. Current health: {CurrentHealth}/{MaxHealth}"
@@ -144,7 +125,6 @@ namespace CoED
             activeStatusEffects.Add(statusEffect);
         }
 
-        // Optionally, handle removing or managing multiple effects
         private void HandleDeath()
         {
             AwardExperienceToPlayer();
@@ -168,22 +148,8 @@ namespace CoED
 
         private int CalculateExperiencePoints()
         {
-            // Base experience points
-            int baseExperience = 10;
-
-            // Scaling factor for experience points per floor
-            int scalingFactor = 5;
-
-            // Random range factor to add variability
-            int randomRange = 3;
-
-            // Calculate experience points with some randomness
-            int experiencePoints =
-                baseExperience
-                + (spawnFloor * scalingFactor)
-                + UnityEngine.Random.Range(baseExperience * spawnFloor, randomRange * spawnFloor);
-
-            return experiencePoints;
+            int baseExperience = Mathf.RoundToInt(ScaledFactor * 10);
+            return baseExperience;
         }
 
         private void AwardExperienceToPlayer()

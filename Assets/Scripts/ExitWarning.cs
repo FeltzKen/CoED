@@ -1,3 +1,4 @@
+using CoED;
 using UnityEngine;
 
 public class ExitWarning : MonoBehaviour
@@ -15,8 +16,10 @@ public class ExitWarning : MonoBehaviour
 
     private void DisplayWarning()
     {
-        // Replace this with your preferred UI system or method to show the message
-        // Debug.Log(warningMessage);
-        // You could also invoke a UI popup, dialogue box, or other in-game message system here.
+        FloatingTextManager.Instance.ShowFloatingText(
+            warningMessage,
+            PlayerMovement.Instance.transform,
+            Color.red
+        );
     }
 }

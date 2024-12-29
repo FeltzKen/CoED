@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using UnityEngine;
 using CoED;
+using UnityEngine;
 
 namespace CoED
 {
@@ -26,13 +26,13 @@ namespace CoED
             }
             else
             {
-                Debug.LogWarning("Inventory: Duplicate instance detected. Destroying this instance.");
-                Destroy(gameObject); // Destroy duplicate instance
+                Debug.LogWarning(
+                    "Inventory: Duplicate instance detected. Destroying this instance."
+                );
+                Destroy(gameObject);
             }
         }
- 
 
-        // Adds an item to the inventory. Returns true if successful.
         public bool AddItem(Item item)
         {
             if (items.Count >= maxInventorySlots)
@@ -42,9 +42,7 @@ namespace CoED
             }
 
             items.Add(item);
-        //    Debug.Log($"Inventory: Added {item.ItemName}.");
-        //    Debug.Log($"Inventory: {string.Join(", ", items)}");
-            OnInventoryChanged?.Invoke(); // Notify subscribers that inventory has changed
+            OnInventoryChanged?.Invoke();
             return true;
         }
 
@@ -52,7 +50,6 @@ namespace CoED
         {
             // Add special item from quest.
         }
-
 
         public bool RemoveItem(Item item)
         {
@@ -64,24 +61,20 @@ namespace CoED
             return false;
         }
 
-        // Checks if the inventory contains a specific item.
         public bool HasItem(Item item)
         {
             return items.Contains(item);
         }
 
-        // Returns a copy of the list of items in the inventory.
         public List<Item> GetAllItems()
         {
             return new List<Item>(items);
         }
 
-        // Clears all items from the inventory.
         public void ClearInventory()
         {
             items.Clear();
-            // Debug.Log("Inventory: Inventory cleared.");
-            OnInventoryChanged?.Invoke(); // Notify subscribers that inventory has changed
+            OnInventoryChanged?.Invoke();
         }
     }
 }

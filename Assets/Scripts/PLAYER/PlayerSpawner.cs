@@ -1,4 +1,3 @@
-using CoED;
 using UnityEngine;
 
 namespace CoED

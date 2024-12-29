@@ -14,7 +14,7 @@ namespace CoED
         public float lifetime { get; set; } = 5f;
 
         [SerializeField]
-        public int damage { get; set; }
+        public float damage { get; set; }
 
         [SerializeField]
         public float collisionRadius { get; set; } // Radius for collision detection
@@ -49,7 +49,6 @@ namespace CoED
                     Destroy(gameObject);
                 }
 
-                // Check for collisions
                 OnCollide();
             }
         }
@@ -86,18 +85,5 @@ namespace CoED
                 }
             }
         }
-
-        private void OnDrawGizmos()
-        {
-            // Draw the collision detection radius in the editor
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position, collisionRadius);
-        }
     }
-
-    public class Arrow : PlayerProjectile { }
-
-    public class Spear : PlayerProjectile { }
-
-    // Add more projectile types as needed
 }

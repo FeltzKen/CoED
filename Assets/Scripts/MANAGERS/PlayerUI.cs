@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using CoED;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -112,7 +111,6 @@ namespace CoED
             if (Instance == null)
             {
                 Instance = this;
-                // Uncomment if needed
                 DontDestroyOnLoad(gameObject);
                 Debug.Log("PlayerSpellCaster: Instance initialized.");
             }
@@ -151,7 +149,6 @@ namespace CoED
                 return;
             }
 
-            // Clear containers
             foreach (Transform child in leftContainer)
             {
                 Destroy(child.gameObject);
@@ -161,7 +158,6 @@ namespace CoED
                 Destroy(child.gameObject);
             }
 
-            // Populate the containers
             foreach (PlayerSpell spell in availableSpells)
             {
                 if (spell.selfTargeting)
@@ -194,7 +190,6 @@ namespace CoED
                 return;
             }
 
-            // Get the border image component
             Image borderImage = buttonObj.transform.Find("Border")?.GetComponent<Image>();
             if (borderImage == null)
             {
@@ -202,8 +197,7 @@ namespace CoED
                 Destroy(buttonObj);
                 return;
             }
-            borderImage.enabled = false; // Disable border by default
-            // Get the base image component
+            borderImage.enabled = false;
             Image baseImage = buttonObj.transform.Find("BaseImage")?.GetComponent<Image>();
             if (baseImage == null)
             {
@@ -212,7 +206,6 @@ namespace CoED
                 return;
             }
 
-            // Get the mask image component
             Image maskImage = buttonObj.transform.Find("MaskImage")?.GetComponent<Image>();
             if (maskImage == null)
             {
@@ -221,25 +214,21 @@ namespace CoED
                 return;
             }
 
-            // Set the mask image type to filled and radial360
             maskImage.type = Image.Type.Filled;
             maskImage.fillMethod = Image.FillMethod.Radial360;
 
-            // Assign the spell's icon to the base image
             if (spell.icon != null)
             {
                 baseImage.sprite = spell.icon;
-                baseImage.color = Color.white; // Set to white or any other default color
+                baseImage.color = Color.white;
             }
             else
             {
                 Debug.LogWarning($"Spell {spell.spellName} does not have an icon assigned.");
             }
 
-            // Assign the spell to the button's click event
             spellButton.onClick.AddListener(() => OnSpellSelected(spell));
 
-            // Create and store the UI element
             SpellUIElement uiElement = new SpellUIElement
             {
                 button = spellButton,
@@ -257,11 +246,11 @@ namespace CoED
             {
                 if (pair.Key == selectedSpell)
                 {
-                    pair.Value.borderImage.enabled = true; // Enable border for selected spell
+                    pair.Value.borderImage.enabled = true;
                 }
                 else
                 {
-                    pair.Value.borderImage.enabled = false; // Disable border for other spells
+                    pair.Value.borderImage.enabled = false;
                 }
             }
         }
@@ -270,15 +259,13 @@ namespace CoED
         {
             if (spellUIMap.TryGetValue(spell, out SpellUIElement uiElement))
             {
-                uiElement.cooldownTimer = spell.cooldown; // Set cooldown timer
+                uiElement.cooldownTimer = spell.cooldown;
                 uiElement.button.interactable = false;
-                uiElement.maskImage.fillAmount = 0f; // Start with an empty mask
+                uiElement.maskImage.fillAmount = 0f;
 
-                // Start the cooldown coroutine
                 StartCoroutine(CooldownCoroutine(spell, uiElement));
             }
 
-            // Update the magic bar
             UpdateMagicBar(PlayerStats.Instance.CurrentMagic, PlayerStats.Instance.MaxMagic);
         }
 
@@ -286,12 +273,11 @@ namespace CoED
         {
             while (uiElement.cooldownTimer > 0)
             {
-                yield return null; // Wait for the next frame
+                yield return null;
                 uiElement.cooldownTimer -= Time.deltaTime;
                 uiElement.maskImage.fillAmount = 1 - (uiElement.cooldownTimer / spell.cooldown);
             }
 
-            // Cooldown completed
             uiElement.maskImage.fillAmount = 0f;
             uiElement.button.interactable = true;
         }
@@ -320,7 +306,7 @@ namespace CoED
             }
         }
 
-        public void UpdateMagicBar(int currentMagic, int maxMagic)
+        public void UpdateMagicBar(float currentMagic, float maxMagic)
         {
             if (magicBar != null)
             {
@@ -336,17 +322,16 @@ namespace CoED
         private class SpellUIElement
         {
             public Button button;
-            public Image maskImage; // Image component for the mask
-            public Image borderImage; // Image component for the border
-            public float cooldownTimer; // Cooldown timer in float
+            public Image maskImage;
+            public Image borderImage;
+            public float cooldownTimer;
         }
 
         public void UpdateStepCount()
         {
             if (stepCountText != null)
             {
-                int currentSteps = int.Parse(stepCountText.text);
-                stepCountText.text = (currentSteps + 1).ToString();
+                stepCountText.text = PlayerStats.Instance.stepCounter.ToString();
             }
         }
 
@@ -363,7 +348,7 @@ namespace CoED
             }
         }
 
-        public void UpdateHealthBar(int currentHealth, int maxHealth)
+        public void UpdateHealthBar(float currentHealth, float maxHealth)
         {
             if (healthBar != null)
             {
@@ -411,7 +396,7 @@ namespace CoED
             }
         }
 
-        public void UpdateExperienceBar(int currentExp, int maxExp)
+        public void UpdateExperienceBar(float currentExp, float maxExp)
         {
             if (experienceBar != null)
             {
@@ -459,6 +444,7 @@ namespace CoED
                     }
                 }
         */
+
         public void ShowDeathPanel()
         {
             if (deathPanel != null)
@@ -488,7 +474,7 @@ namespace CoED
             }
         }
 
-        public void UpdateStaminaBar(int currentStamina, int maxStamina)
+        public void UpdateStaminaBar(float currentStamina, float maxStamina)
         {
             if (staminaBar != null)
             {

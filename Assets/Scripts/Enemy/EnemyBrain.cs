@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEditor.Callbacks;
 using UnityEngine;
 
 namespace CoED
@@ -16,69 +15,29 @@ namespace CoED
             WanderNearPlayer,
         }
 
-        public EnemyState CurrentState { get; private set; } = EnemyState.Patrol;
+        public EnemyState CurrentState = EnemyState.Patrol;
 
         private EnemyNavigator navigator;
         private EnemyStats enemyStats;
 
-        // Patrol / detection logic
         private HashSet<Vector2Int> patrolPoints = new HashSet<Vector2Int>();
         private Vector2Int patrolDestination;
 
         private Transform playerTransform;
+
         private FloorData floorData;
-        private float thinkCooldown = 0.5f; // how often we decide states
+        private float thinkCooldown = 0.5f;
         private float nextThinkTime = 0f;
-        private int WanderRadius = 5;
+        private int wanderRange = 5;
         public bool CanAttackPlayer = true;
 
         [SerializeField]
-        private LayerMask visualObstructionLayer; // E.g. “Walls” or “Obstacles”
+        private LayerMask visualObstructionLayer;
 
-        /// <summary>
-        /// Called from spawner or initialization code.
-        /// We pass in references like floorData and patrolPoints.
-        /// </summary>
         public void Initialize(FloorData floorData, IEnumerable<Vector2Int> patrolPoints)
         {
             this.floorData = floorData;
             this.patrolPoints = new HashSet<Vector2Int>(patrolPoints);
-
-            ValidateStartingPosition();
-        }
-
-        private void ValidateStartingPosition()
-        {
-            Vector2Int currentPosition = Vector2Int.RoundToInt(transform.position);
-
-            if (!DungeonSpawner.Instance.IsValidSpawnPosition(floorData, currentPosition))
-            {
-                //Debug.Log($"Invalid starting position for {gameObject.name}, relocating...");
-                RepositionToValidTile();
-            }
-        }
-
-        private void RepositionToValidTile()
-        {
-            if (patrolPoints == null || patrolPoints.Count == 0)
-            {
-                //Debug.LogError($"No patrol points available to relocate {gameObject.name}.");
-                return;
-            }
-
-            // Choose a random valid patrol point
-            Vector2Int newTile = new List<Vector2Int>(patrolPoints)[
-                Random.Range(0, patrolPoints.Count)
-            ];
-            Vector3Int cellPos = new Vector3Int(newTile.x, newTile.y, 0);
-            Vector3 newWorldPos = floorData.FloorTilemap.CellToWorld(cellPos); // + new Vector3(-0.5f, -0.5f, 0);
-            //log enemy id and new position
-            Debug.Log($"Relocating {navigator.occupantID} to {newWorldPos}");
-
-            // Move the enemy
-            transform.position = newWorldPos;
-            GetComponent<Rigidbody2D>().position = newWorldPos;
-            //ValidateStartingPosition();
         }
 
         private void Awake()
@@ -89,49 +48,49 @@ namespace CoED
 
         private void Start()
         {
-            // Acquire Player reference
             var playerObj = GameObject.FindGameObjectWithTag("Player");
             if (playerObj != null)
             {
                 playerTransform = playerObj.transform;
             }
 
-            // Pick an initial patrol destination
             ChooseRandomPatrolDestination();
-            navigator.SetMoveSpeed(enemyStats.PatrolSpeed);
+            navigator.SetMoveSpeed(1f / enemyStats.PatrolSpeed); // Delay for patrol movements
         }
 
         private void Update()
         {
-            // Evaluate AI states at intervals
             if (Time.time >= nextThinkTime)
             {
                 DecideNextAction();
                 nextThinkTime = Time.time + thinkCooldown;
             }
-
-            // Let the Navigator do continuous movement
-            navigator.UpdateNavigation();
         }
 
         private void DecideNextAction()
         {
-            if (playerTransform == null)
-                return;
-
             float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
             bool seesPlayer = HasLineOfSightToPlayer(distanceToPlayer);
+            bool isPlayerSurrounded = TileOccupancyManager.Instance.IsPlayerSurroundedByEnemies();
 
-            // Transition to appropriate state
             if (distanceToPlayer <= enemyStats.CurrentAttackRange)
             {
                 ChangeState(EnemyState.Attack);
+                transform.position = new Vector3(
+                    Mathf.Floor(transform.position.x),
+                    Mathf.Floor(transform.position.y),
+                    0
+                );
             }
-            else if (distanceToPlayer <= WanderRadius && seesPlayer)
+            else if (
+                distanceToPlayer > enemyStats.CurrentAttackRange
+                && seesPlayer
+                && isPlayerSurrounded
+            )
             {
                 ChangeState(EnemyState.WanderNearPlayer);
             }
-            else if (seesPlayer && distanceToPlayer >= enemyStats.CurrentAttackRange)
+            else if (seesPlayer)
             {
                 ChangeState(EnemyState.Chase);
             }
@@ -140,7 +99,6 @@ namespace CoED
                 ChangeState(EnemyState.Patrol);
             }
 
-            // Handle logic based on the state
             switch (CurrentState)
             {
                 case EnemyState.Chase:
@@ -160,7 +118,6 @@ namespace CoED
 
         private bool HasLineOfSightToPlayer(float distanceToPlayer)
         {
-            // Similar to your old code:
             Vector2 direction = (playerTransform.position - transform.position).normalized;
             RaycastHit2D hit = Physics2D.Raycast(
                 transform.position,
@@ -168,7 +125,6 @@ namespace CoED
                 distanceToPlayer,
                 visualObstructionLayer
             );
-            // If we didn’t hit anything or we hit the Player => we see the player
             return hit.collider == null || hit.collider.CompareTag("Player");
         }
 
@@ -181,73 +137,128 @@ namespace CoED
             switch (newState)
             {
                 case EnemyState.Patrol:
-                    navigator.SetMoveSpeed(enemyStats.PatrolSpeed);
+                    navigator.SetMoveSpeed(1f / enemyStats.PatrolSpeed);
+                    ChooseRandomPatrolDestination(); // Ensure new point is selected immediately
+                    navigator.SetDestination(patrolDestination);
                     break;
                 case EnemyState.Chase:
-                    navigator.SetMoveSpeed(enemyStats.ChaseSpeed);
+                    navigator.SetMoveSpeed(1f / enemyStats.ChaseSpeed);
+                    navigator.ClearPath();
                     break;
                 case EnemyState.Attack:
-                    // Potentially set speed = 0 or minimal
-                    navigator.SetMoveSpeed(0.1f);
+                    navigator.SetMoveSpeed(0); // Effectively stop movement
                     break;
             }
         }
 
         private void HandlePatrol()
         {
-            // If we have no path or we reached our destination
             if (!navigator.HasPath())
             {
                 ChooseRandomPatrolDestination();
                 navigator.SetDestination(patrolDestination);
             }
+            else
+            {
+                if (
+                    IsCongested(
+                        new Vector2Int(
+                            Mathf.RoundToInt(transform.position.x),
+                            Mathf.RoundToInt(transform.position.y)
+                        )
+                    )
+                )
+                {
+                    ChooseRandomPatrolDestination();
+                    navigator.SetDestination(patrolDestination);
+                }
+            }
+        }
+
+        private bool IsCongested(Vector2Int position)
+        {
+            int congestionThreshold = 3;
+            int nearbyEnemies = 0;
+
+            foreach (var offset in TileOccupancyManager.adjacentOffsets)
+            {
+                Vector2Int neighbor = position + offset;
+                if (!TileOccupancyManager.Instance.IsTileFree(neighbor))
+                {
+                    nearbyEnemies++;
+                    if (nearbyEnemies >= congestionThreshold)
+                        return true;
+                }
+            }
+
+            return false;
         }
 
         private void HandleChase()
         {
             if (playerTransform != null)
             {
-                // Always set the player's current position as the destination
-                Vector2Int playerPosGrid = Vector2Int.RoundToInt(playerTransform.position);
+                Vector2Int playerPosGrid = Vector2Int.RoundToInt(
+                    playerTransform.position
+                        - DungeonManager.Instance.GetFloorTransform(enemyStats.spawnFloor).position
+                );
                 navigator.SetDestination(playerPosGrid);
             }
         }
 
         private void HandleAttack()
         {
-            // Attack logic here, e.g.:
             if (CanAttackPlayer)
             {
                 PlayerStats.Instance.TakeDamage(enemyStats.CurrentAttack);
                 CanAttackPlayer = false;
             }
-            // You can add a cooldown or animation triggers, etc.
         }
+
+        private float orbitAngle = 0f;
 
         private void HandleWanderNearPlayer()
         {
-            if (playerTransform != null)
-            {
-                // Pick a random tile near the player within the wander radius
-                Vector2Int playerPos = Vector2Int.RoundToInt(playerTransform.position);
-                Vector2Int randomOffset = new Vector2Int(
-                    Random.Range(-WanderRadius, WanderRadius + 1),
-                    Random.Range(-WanderRadius, WanderRadius + 1)
-                );
-                Vector2Int wanderTile = playerPos + randomOffset;
+            if (playerTransform == null)
+                return;
 
-                // Ensure the tile is valid
-                if (DungeonSpawner.Instance.IsValidSpawnPosition(floorData, wanderTile))
-                {
-                    navigator.SetDestination(wanderTile, true);
-                }
+            // Adjust orbit angle with slight randomness
+            orbitAngle += Random.Range(-15f, 15f);
+
+            float radius = 3f; // Consider making this configurable
+            Vector2 playerPos = playerTransform.position;
+
+            // Calculate the target position based on the orbit angle
+            float angleRadians = orbitAngle * Mathf.Deg2Rad;
+            float offsetX = radius * Mathf.Cos(angleRadians);
+            float offsetY = radius * Mathf.Sin(angleRadians);
+
+            Vector2 targetPosWorld = new Vector2(playerPos.x + offsetX, playerPos.y + offsetY);
+
+            // Snap target position to grid
+            Vector3Int targetCellPos = floorData.FloorTilemap.WorldToCell(targetPosWorld);
+            Vector2Int targetTilePos = new Vector2Int(targetCellPos.x, targetCellPos.y);
+
+            // Check for valid position and set destination
+            if (DungeonSpawner.Instance.IsValidSpawnPosition(floorData, targetTilePos))
+            {
+                navigator.SetDestination(targetTilePos);
+            }
+            else
+            {
+                // Adjust orbit angle to find another position
+                orbitAngle += 180f;
             }
         }
 
         private void ChooseRandomPatrolDestination()
         {
             if (patrolPoints.Count == 0)
+            {
+                Debug.LogWarning("[EnemyBrain] No patrol points available.");
+                patrolDestination = Vector2Int.RoundToInt(transform.position);
                 return;
+            }
 
             int index = Random.Range(0, patrolPoints.Count);
             foreach (var pt in patrolPoints)
@@ -255,6 +266,8 @@ namespace CoED
                 if (index == 0)
                 {
                     patrolDestination = pt;
+                    navigator.SetDestination(patrolDestination);
+
                     break;
                 }
                 index--;

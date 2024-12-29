@@ -19,16 +19,12 @@ namespace CoED
             new Dictionary<StatusEffect, GameObject>();
 
         private PlayerStats playerStats;
-        private EnemyStats enemyStats; // apply effects for enemy combat
-
-        // private EnemyPatrolChase enemyPatrolChase; // apply effects to enemy chase speed
-        private FloatingTextManager floatingTextManager;
+        private EnemyStats enemyStats;
 
         private void Awake()
         {
             playerStats = GetComponent<PlayerStats>();
             enemyStats = GetComponent<EnemyStats>();
-            floatingTextManager = FloatingTextManager.Instance;
         }
 
         private void Update()
@@ -64,7 +60,7 @@ namespace CoED
                 {
                     if (playerStats != null)
                     {
-                        playerStats.CurrentSpeed += effect.speedModifier * deltaTime; // Ensure CurrentSpeed is float
+                        playerStats.CurrentSpeed += effect.speedModifier * deltaTime;
                     }
                 }
             }
@@ -97,9 +93,6 @@ namespace CoED
                 if (activeEffect.Effect.effectName == effect.effectName)
                 {
                     activeEffect.RemainingDuration = effect.duration;
-                    /*Debug.Log(
-                        $"StatusEffectManager: Refreshed duration for existing effect '{effect.EffectName}'."
-                    );*/
                     return;
                 }
             }
@@ -119,7 +112,6 @@ namespace CoED
 
             activeEffects.RemoveAll(ae => ae.Effect.effectName == effect.effectName);
             RemoveEffectIcon(effect);
-            // Debug.Log($"StatusEffectManager: Removed status effect '{effect.EffectName}'.");
         }
 
         private void DisplayEffectIcon(StatusEffect effect)

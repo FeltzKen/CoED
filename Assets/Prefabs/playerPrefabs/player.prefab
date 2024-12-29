@@ -54,7 +54,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8948494598534906761}
-  m_BodyType: 1
+  m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
@@ -65,14 +65,14 @@ Rigidbody2D:
   m_Material: {fileID: 6200000, guid: fdb52bb4983dbcb4e88f217b419e54dc, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 16640
   m_ExcludeLayers:
     serializedVersion: 2
     m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 4
+  m_Constraints: 7
 --- !u!212 &4918402029249683888
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -182,6 +182,9 @@ MonoBehaviour:
   restMagicRate: 1
   restInterval: 1
   dangerRadius: 5
+  searchableLayer:
+    serializedVersion: 2
+    m_Bits: 640
 --- !u!114 &1948119710454645371
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -212,7 +215,7 @@ MonoBehaviour:
   staminaCostPerRun: 2
   obstacleLayer:
     serializedVersion: 2
-    m_Bits: 384
+    m_Bits: 16768
   moveDelay: 0.25
   staminaBar: {fileID: 8034618581357456614, guid: 4e03e51d2d01fab4aa3632a729ecb472, type: 3}
   enemyLayer:
@@ -262,7 +265,6 @@ MonoBehaviour:
   baseSpeed: 5
   baseFireRate: 1
   baseProjectileLifespan: 2
-  transitioningComplete: 0
   currency: 0
   currentFloor: 1
 --- !u!223 &-5451514820897329398

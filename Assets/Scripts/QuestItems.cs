@@ -38,9 +38,8 @@ namespace CoED
         public int DefenseModifier => defenseModifier;
         public int HealthModifier => healthModifier;
         public float SpeedModifier => speedModifier;
-        public ItemRarity Rarity => rarity; // Getter for rarity
+        public ItemRarity Rarity => rarity;
 
-        // Constructor to initialize the QuestItem
         public QuestItem(
             string itemName,
             string loreDescription,
@@ -52,7 +51,7 @@ namespace CoED
             float speedModifier
         )
         {
-            this.itemName = itemName; // Set itemName using the parameter
+            this.itemName = itemName;
             this.loreDescription = loreDescription;
             this.isKeyItem = isKeyItem;
             this.rarity = rarity;

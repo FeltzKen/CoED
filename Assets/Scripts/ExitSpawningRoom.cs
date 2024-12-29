@@ -5,8 +5,7 @@ namespace CoED
     public class SpawningRoomExitTrigger : MonoBehaviour
     {
         public string warningMessage = "There is no turning back now!!!!";
-        private Vector3 seededExitPosition;
-        private DungeonSettings dungeonSettings;
+
         private void OnTriggerEnter2D(Collider2D other)
         {
             if (other.CompareTag("Player"))
@@ -18,15 +17,17 @@ namespace CoED
 
         private void DisplayWarning()
         {
-            // Debug.Log(warningMessage);
+            FloatingTextManager.Instance.ShowFloatingText(
+                warningMessage,
+                PlayerMovement.Instance.transform,
+                Color.red
+            );
         }
 
         private void ExitSpawningRoom(Transform player)
         {
-
             DisplayWarning();
 
-            // Destroy spawning room instance via DungeonManager
             Destroy(DungeonManager.Instance.SpawningRoomInstance);
 
             if (DungeonManager.Instance != null)
@@ -36,8 +37,7 @@ namespace CoED
                 if (cameraController != null)
                 {
                     cameraController.ExitSpawningRoom();
-}
-
+                }
             }
             else
             {

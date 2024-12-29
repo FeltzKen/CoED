@@ -6,33 +6,32 @@ namespace CoED
 {
     public class Enemy : MonoBehaviour
     {
-        private StatusEffectManager statusEffectManager; // Manages enemy status effects
-        private FloatingTextManager floatingTextManager; // Manages floating text displays for feedback
-        public bool IsVisible = false; // Tracks if the enemy is visible (not covered by fog)
+        private StatusEffectManager statusEffectManager;
+        public bool IsVisible = false;
 
         [Header("Loot Settings")]
         [SerializeField]
-        private GameObject[] possibleDrops; // Array of possible loot items the enemy can drop
+        private GameObject[] possibleDrops;
 
         [SerializeField]
-        private float baseDropRate = 0.3f; // Base chance for dropping items
+        private float baseDropRate = 0.3f;
 
         [SerializeField]
-        private float dropRateDecreaseFactor = 0.5f; // Drop rate decay factor after each item
+        private float dropRateDecreaseFactor = 0.5f;
 
         [SerializeField]
-        private GameObject moneyPrefab; // Prefab for the money drop
+        private GameObject moneyPrefab;
 
         [SerializeField]
-        private int minMoneyAmount = 1; // Minimum money amount dropped
+        private int minMoneyAmount = 1;
 
         private EnemyStats enemyStats;
 
         [SerializeField]
-        private int maxMoneyDropAmount = 20; // Maximum money amount dropped
+        private int maxMoneyDropAmount = 20;
 
         [SerializeField]
-        private float moneyDropRate = 0.5f; // Chance to drop money
+        private float moneyDropRate = 0.5f;
         private SpriteRenderer spriteRenderer;
 
         [SerializeField]
@@ -45,35 +44,27 @@ namespace CoED
         {
             enemyStats = GetComponent<EnemyStats>();
             spriteRenderer = GetComponent<SpriteRenderer>();
-            // Initialize necessary components
-            //statusEffectManager = GetComponent<StatusEffectManager>();
-            //floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
 
-            // Check for required components
             if (statusEffectManager == null)
             {
                 Debug.LogError("Enemy: StatusEffectManager component missing.");
                 return;
             }
-
-            // Set initial health
         }
 
         public void DropLoot()
         {
             float currentDropRate = baseDropRate;
 
-            // Loop through possible drops, instantiating them based on current drop rate
             foreach (var drop in possibleDrops)
             {
                 if (UnityEngine.Random.value <= currentDropRate)
                 {
                     Instantiate(drop, transform.position, Quaternion.identity);
                 }
-                currentDropRate *= dropRateDecreaseFactor; // Reduces chance for subsequent items
+                currentDropRate *= dropRateDecreaseFactor;
             }
 
-            // Determine if money should be dropped
             if (UnityEngine.Random.value <= moneyDropRate)
             {
                 int moneyAmount = UnityEngine.Random.Range(minMoneyAmount, maxMoneyDropAmount + 1);
@@ -83,12 +74,11 @@ namespace CoED
                     Quaternion.identity
                 );
 
-                // Set the amount of money dropped if Money component is found
                 Money moneyComponent = money.GetComponent<Money>();
                 if (moneyComponent != null)
                 {
                     moneyComponent.SetAmount(moneyAmount);
-                    floatingTextManager?.ShowFloatingText(
+                    FloatingTextManager.Instance.ShowFloatingText(
                         $"Dropped {moneyAmount} gold",
                         transform,
                         Color.blue

@@ -1,5 +1,4 @@
 using UnityEngine;
-using CoED;
 
 namespace CoED
 {
@@ -38,7 +37,6 @@ namespace CoED
             if (playerStats != null)
             {
                 playerStats.GainCurrency(amount);
-                // Debug.Log($"Money: Collected {amount} currency.");
             }
             else
             {
@@ -49,9 +47,9 @@ namespace CoED
             return amount;
         }
 
-        private void OnTriggerEnter2D(Collider2D collision)
+        private void OnTriggerEnter2D(Collider2D other)
         {
-            if (collision.CompareTag("Player"))
+            if (other.CompareTag("Player"))
             {
                 Collect();
             }

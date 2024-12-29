@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca6e961de5fd58040949a231cc2cd335, type: 3}
+  m_Name: max_health_potion
+  m_EditorClassIdentifier: 
+  itemPrefab: {fileID: 4106867743383400254, guid: 10c9bec27e3cbaf4a82b60df8e0f5e76, type: 3}
+  itemName: MaxHeal
+  icon: {fileID: 1644787379, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
+  isHidden: 1
+  attackBoost: 0
+  defenseBoost: 0
+  speedBoost: 0
+  healthBoost: 5000
+  magicBoost: 0
+  staminaBoost: 0

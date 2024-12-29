@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using CoED;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -64,10 +63,6 @@ namespace CoED
             playerStats = PlayerStats.Instance;
             currentTilePosition = Vector2Int.RoundToInt(transform.position);
 
-            rb.bodyType = RigidbodyType2D.Kinematic;
-            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-            rb.interpolation = RigidbodyInterpolation2D.Interpolate;
-
             UpdateStaminaUI();
         }
 
@@ -93,7 +88,6 @@ namespace CoED
                 return;
             isMouseHeld = Input.GetMouseButton(0);
 
-            // Handle mouse input
             if (Input.GetMouseButtonDown(0))
             {
                 isInitialClickValid = !IsPointerOverSpecificUIElement();
@@ -107,7 +101,6 @@ namespace CoED
             }
             Vector2Int direction = Vector2Int.zero;
 
-            // Priority: Keyboard input first
             if (Input.GetKey(KeyCode.UpArrow))
                 direction += Vector2Int.up;
             if (Input.GetKey(KeyCode.DownArrow))
@@ -117,20 +110,17 @@ namespace CoED
             if (Input.GetKey(KeyCode.RightArrow))
                 direction += Vector2Int.right;
 
-            // If a keyboard direction is found, move and return
             if (direction != Vector2Int.zero)
             {
                 MoveInDirection(direction);
                 return;
             }
 
-            // If mouse is held and the initial click was valid (not over blocking UI), proceed
             if (isMouseHeld && isInitialClickValid)
             {
                 Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                mousePosition.z = 0; // Ensure the z-coordinate is zero
+                mousePosition.z = 0;
 
-                // Apply the offset of the current floor parent, if any
                 Transform floorParent = GetCurrentFloorParent();
                 if (floorParent != null)
                 {
@@ -139,10 +129,8 @@ namespace CoED
 
                 Vector2 directionToMouse = (mousePosition - transform.position).normalized;
 
-                // Determine move direction based on the mouse position
                 direction = DetermineDirection(directionToMouse);
 
-                // Check if the mouse is currently over an enemy within attack range
                 if (!IsMouseOverEnemy(mousePosition))
                 {
                     MoveInDirection(direction);
@@ -163,7 +151,6 @@ namespace CoED
                 direction.y = directionToMouse.y > 0 ? 1 : -1;
             }
 
-            // Allow diagonal movement if the mouse direction is sufficiently diagonal
             if (Mathf.Abs(directionToMouse.x) > 0.5f && Mathf.Abs(directionToMouse.y) > 0.5f)
             {
                 direction.x = directionToMouse.x > 0 ? 1 : -1;
@@ -188,12 +175,11 @@ namespace CoED
                 PlayerCombat.Instance.PerformMeleeAttack(newTilePosition);
                 return;
             }
-            // Check each axis for move possibility
             bool canMoveX = IsMovePossible(new Vector2Int(direction.x, 0));
             bool canMoveY = IsMovePossible(new Vector2Int(0, direction.y));
             bool canMoveDiagonal = IsMovePossible(direction);
 
-            if (canMoveDiagonal) // && canMoveX && canMoveY)
+            if (canMoveDiagonal)
             {
                 currentTilePosition = newTilePosition;
                 targetPosition = newPosition;
@@ -209,20 +195,14 @@ namespace CoED
                 targetPosition = new Vector2(currentTilePosition.x, currentTilePosition.y);
             }
 
-            // If movement is possible along any axis
-            if (canMoveX || canMoveY || canMoveDiagonal) // && canMoveX && canMoveY))
+            if (canMoveX || canMoveY || canMoveDiagonal)
             {
-                // Move player to the target position
                 UpdateCurrentTilePosition(targetPosition);
+
                 isMoving = true;
                 moveCooldown = Time.time + moveDelay;
                 enemy.ResetEnemyAttackFlags();
             }
-        }
-
-        public Vector3 GetPlayerPosition()
-        {
-            return transform.position;
         }
 
         private bool IsMovePossible(Vector2Int direction)
@@ -261,19 +241,16 @@ namespace CoED
 
                 foreach (RaycastResult result in results)
                 {
-                    // If the element is a Slider, ignore it and don't block movement
                     if (result.gameObject.GetComponent<Slider>() != null)
                     {
                         continue;
                     }
 
-                    // If it's a Button, block movement
                     if (result.gameObject.GetComponent<Button>() != null)
                     {
                         return true;
                     }
 
-                    // If it's an Image (likely representing a panel), block movement
                     if (result.gameObject.GetComponent<Image>() != null)
                     {
                         return true;
@@ -294,7 +271,7 @@ namespace CoED
                 roundedMousePosition,
                 0.5f,
                 enemyLayer
-            ); // Adjusted radius
+            );
             bool isOverEnemy =
                 hitCollider != null
                 && Vector2.Distance(transform.position, roundedMousePosition)
@@ -324,21 +301,27 @@ namespace CoED
             return isEnemyAtPos;
         }
 
-        public void UpdateCurrentTilePosition(Vector3 position) // DO NOT REMOVE!!!!
+        public void UpdateCurrentTilePosition(Vector3 position)
         {
             rb = GetComponent<Rigidbody2D>();
 
-            // Update the logical representation of the player's position
             currentTilePosition = new Vector2Int(
                 Mathf.RoundToInt(position.x),
                 Mathf.RoundToInt(position.y)
             );
 
-            // Ensure the physical player position is also updated
             rb.position = position;
             transform.position = position;
             enemy.ResetEnemyAttackFlags();
-            PlayerUI.Instance.UpdateStepCount();
+            PlayerStats.Instance.AddStep();
+            TileOccupancyManager.Instance.SetPlayerPosition(
+                Vector2Int.RoundToInt(transform.position)
+            );
+        }
+
+        public object GetPlayerTransform()
+        {
+            return transform;
         }
 
         private void UpdateStaminaUI()

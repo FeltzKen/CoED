@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using CoED;
 using UnityEngine;
 
 namespace CoED
@@ -40,7 +39,6 @@ namespace CoED
             }
         }
 
-        /// Equips an item to the specified slot and updates player stats.
         public void EquipItem(Item equipment, int slotIndex)
         {
             if (slotIndex < 0 || slotIndex >= equipmentSlots.Count)
@@ -84,7 +82,6 @@ namespace CoED
             }
         }
 
-        /// Unequips an item from the specified slot and updates player stats.
         public void UnequipItem(int slotIndex)
         {
             if (slotIndex < 0 || slotIndex >= equipmentSlots.Count)
@@ -116,7 +113,6 @@ namespace CoED
             }
         }
 
-        /// Updates player stats when equipment changes occur.
         public void UpdateAllEquipmentStats()
         {
             if (playerStats == null)
@@ -146,7 +142,6 @@ namespace CoED
                 totalDefenseModifier,
                 totalHealthModifier
             );
-            // Debug.Log("EquipmentManager: Updated all equipment stats.");
         }
     }
 }

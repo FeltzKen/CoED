@@ -34,7 +34,6 @@ namespace CoED.Pathfinding
 
                 if (currentNode == targetNode)
                 {
-                    // Debug.Log($"Path found from {startPosition} to {targetPosition}");
                     return RetracePath(startNode, targetNode);
                 }
 
@@ -62,7 +61,6 @@ namespace CoED.Pathfinding
                 }
             }
 
-            //Debug.LogWarning($"No path found from {startPosition} to {targetPosition}");
             return null;
         }
 

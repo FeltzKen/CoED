@@ -1,13 +1,8 @@
 using System.Collections;
-using CoED;
-using UnityEditor.Rendering;
 using UnityEngine;
 
 namespace CoED
 {
-    /// <summary>
-    /// Handles player actions such as resting, collecting items, searching for secrets, etc.
-    /// </summary>
     public class PlayerActions : MonoBehaviour
     {
         public static PlayerActions Instance { get; private set; }
@@ -20,28 +15,19 @@ namespace CoED
         private bool isResting = false;
         private PlayerStats playerStats;
         public Inventory playerInventory;
-        private FloatingTextManager floatingTextManager;
         private Enemy enemy;
 
         [SerializeField]
-        private int restMagicRate = 1;
-
-        [SerializeField]
-        private float restInterval = 1f;
+        private int magicRefillRateWhenResting = 5;
 
         [SerializeField]
         private float dangerRadius = 5f;
 
-        // ================== NEW FIELDS FOR SEARCHING ==================
         [Header("Search Settings")]
-        [SerializeField]
-        private float searchRadius = 5f;
+        private float searchRadius = 1.4f;
 
-        [Tooltip("Layer mask for objects that can be found. If empty, we'll check all collisions.")]
         [SerializeField]
         private LayerMask searchableLayer;
-
-        // ================ End of NEW FIELDS ==========================
 
         private void Awake()
         {
@@ -63,8 +49,6 @@ namespace CoED
         {
             playerStats = PlayerStats.Instance;
             playerInventory = Inventory.Instance;
-            floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
-
             ValidateComponents();
         }
 
@@ -97,24 +81,24 @@ namespace CoED
                 enemy.ResetEnemyAttackFlags();
             }
 
-            // Press 'R' to rest for HP
             if (Input.GetKeyDown(KeyCode.R) && !isResting)
             {
                 if (!IsDangerNearby())
                 {
-                    StartCoroutine(RestUntilHealed());
+                    Vector3 restPosition = transform.position;
+                    StartCoroutine(RestUntilHealed(restPosition));
                 }
-                else
+            }
+            if (Input.GetKeyDown(KeyCode.M) && !isResting)
+            {
+                if (!IsDangerNearby())
                 {
-                    Debug.Log("Cannot rest, danger is nearby");
+                    Vector3 restPosition = transform.position;
+                    StartCoroutine(RestUntilMagic(restPosition));
                 }
             }
         }
 
-        /// <summary>
-        /// Overlaps a small circle around the player to find objects that implement ISearchable.
-        /// Calls OnSearch() on any discovered objects.
-        /// </summary>
         public void CollectItem(ItemCollectible itemCollectible)
         {
             if (itemCollectible.Item is Consumable consumable)
@@ -122,11 +106,19 @@ namespace CoED
                 if (playerInventory.AddItem(consumable))
                 {
                     Destroy(itemCollectible.gameObject);
-                    Debug.Log($"Collected item: {consumable.ItemName}");
+                    FloatingTextManager.Instance.ShowFloatingText(
+                        $"Collected {consumable.ItemName}",
+                        transform,
+                        Color.green
+                    );
                 }
                 else
                 {
-                    Debug.LogWarning("Inventory is full. Cannot collect item.");
+                    FloatingTextManager.Instance.ShowFloatingText(
+                        "Inventory is full",
+                        transform,
+                        Color.red
+                    );
                 }
             }
             else
@@ -138,7 +130,6 @@ namespace CoED
         public void CollectItems()
         {
             Collider2D[] items = Physics2D.OverlapCircleAll(transform.position, 1f);
-            //bool collectedAny = false;
 
             foreach (var itemCollider in items)
             {
@@ -148,7 +139,6 @@ namespace CoED
                     if (money != null)
                     {
                         money.Collect();
-                        //collectedAny = true;
                     }
 
                     ItemCollectible collectible = itemCollider.GetComponent<ItemCollectible>();
@@ -156,77 +146,95 @@ namespace CoED
                     {
                         playerInventory.AddItem(collectible.Item);
                         Destroy(itemCollider.gameObject);
-                        //collectedAny = true;
                     }
                 }
             }
-
-            // Debug.Log(collectedAny ? "PlayerActions: Collected items." : "PlayerActions: No items to collect nearby.");
         }
 
         private void SearchForSecrets()
         {
+            FloatingTextManager.Instance.ShowFloatingText(
+                "Searching for secrets...",
+                transform,
+                Color.yellow
+            );
             Vector2 center = transform.position;
             Collider2D[] hits = Physics2D.OverlapCircleAll(center, searchRadius, searchableLayer);
 
             if (hits.Length == 0)
             {
-                Debug.Log("SearchForSecrets: Nothing was found.");
                 return;
             }
 
-            // Check each collider for an object implementing ISearchable
-            bool foundSomething = false;
             foreach (var hit in hits)
             {
+                Debug.DrawLine(center, hit.transform.position, Color.cyan, 1f);
                 var searchable = hit.GetComponent<ISearchable>();
                 if (searchable != null)
                 {
                     searchable.OnSearch();
-                    foundSomething = true;
                 }
             }
-
-            if (!foundSomething)
-            {
-                Debug.Log("SearchForSecrets: No searchable objects found in range.");
-            }
         }
 
-        private IEnumerator RestUntilHealed()
+        private IEnumerator RestUntilHealed(Vector3 restPosition)
         {
             isResting = true;
-            ShowFloatingText("Resting and healing...");
-            // Debug.Log("PlayerActions: Starting to rest and heal...");
-
-            while (playerStats.CurrentHealth < playerStats.MaxHealth && !IsDangerNearby())
+            while (
+                playerStats.CurrentHealth < playerStats.MaxHealth
+                && !IsDangerNearby()
+                && Vector3.Distance(restPosition, transform.position) < 0.1f
+            )
             {
                 playerStats.Heal(restHealRate);
-                ShowFloatingText($"Healed {restHealRate} HP");
-                yield return new WaitForSeconds(restInterval);
+                FloatingTextManager.Instance.ShowFloatingText(
+                    $"Healed {restHealRate} HP",
+                    transform,
+                    Color.green
+                );
+                yield return new WaitForSeconds(PlayerStats.Instance.restInterval);
             }
-
+            if (Vector3.Distance(restPosition, transform.position) >= 0.1f)
+            {
+                FloatingTextManager.Instance.ShowFloatingText(
+                    "Resting interrupted",
+                    transform,
+                    Color.red
+                );
+            }
             isResting = false;
-            ShowFloatingText("Resting completed");
-            // Debug.Log("PlayerActions: Resting completed.");
+            FloatingTextManager.Instance.ShowFloatingText(
+                "Resting completed",
+                transform,
+                Color.green
+            );
         }
 
-        private IEnumerator RestUntilMagic()
+        private IEnumerator RestUntilMagic(Vector3 restPosition)
         {
             isResting = true;
-            ShowFloatingText("Resting to regain magic...");
-            // Debug.Log("PlayerActions: Starting to rest and refill magic...");
-
-            while (playerStats.CurrentMagic < playerStats.MaxMagic && !IsDangerNearby())
+            while (
+                playerStats.CurrentMagic < playerStats.MaxMagic
+                && !IsDangerNearby()
+                && Vector3.Distance(restPosition, transform.position) < 0.1f
+            )
             {
-                playerStats.RefillMagic(restMagicRate);
-                ShowFloatingText($"Regained {restMagicRate} MP");
-                yield return new WaitForSeconds(restInterval);
+                PlayerStats.Instance.Heal(20);
+                playerStats.RefillMagic(magicRefillRateWhenResting);
+                FloatingTextManager.Instance.ShowFloatingText(
+                    $"Regained {magicRefillRateWhenResting} MP",
+                    transform,
+                    Color.green
+                );
+                yield return new WaitForSeconds(PlayerStats.Instance.restInterval * 3);
             }
 
             isResting = false;
-            ShowFloatingText("Magic refill completed");
-            // Debug.Log("PlayerActions: Magic refill completed.");
+            FloatingTextManager.Instance.ShowFloatingText(
+                "Resting completed",
+                transform,
+                Color.green
+            );
         }
 
         private void ToggleInventoryUI()
@@ -234,7 +242,6 @@ namespace CoED
             if (inventoryUI != null)
             {
                 inventoryUI.SetActive(!inventoryUI.activeSelf);
-                // Debug.Log($"PlayerActions: Inventory UI {(inventoryUI.activeSelf ? "opened" : "closed")}");
             }
             else
             {
@@ -250,33 +257,21 @@ namespace CoED
             {
                 if (col.CompareTag("Enemy"))
                 {
+                    FloatingTextManager.Instance.ShowFloatingText(
+                        "Cannot rest. Danger nearby!",
+                        transform,
+                        Color.red
+                    );
                     return true;
                 }
             }
             return false;
         }
 
-        // Optional: for visual debug in Editor
         private void UseAbility()
         {
             // Debug.Log("PlayerActions: Using ability...");
             // have possible other script to use for player abilities.
-        }
-
-        private void ShowFloatingText(string message)
-        {
-            //  floatingTextManager?.ShowFloatingText(message, transform, Color.yellow);
-        }
-
-        private void OnDrawGizmosSelected()
-        {
-            // Show search radius
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawWireSphere(transform.position, searchRadius);
-
-            // Danger radius
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position, dangerRadius);
         }
     }
 }

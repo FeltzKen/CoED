@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 namespace CoED
 {
@@ -21,9 +20,6 @@ namespace CoED
         [Header("Tile Palette")]
         [SerializeField]
         public TilePalette tilePalette;
-
-        // Expose the TilePalette instance for access
-        public TilePalette TilePalette => tilePalette;
 
         [Tooltip("List of item prefabs to spawn in the dungeon.")]
         public List<ScriptableObject> itemPrefabs = new List<ScriptableObject>();
@@ -118,7 +114,7 @@ namespace CoED
         [Tooltip("Enable visualization for enemy spawn positions.")]
         public bool visualizeSpawnPositions = false;
 
-        [System.Serializable]
+        [Serializable]
         public class AlgorithmConfig
         {
             [Header("Algorithm Type")]

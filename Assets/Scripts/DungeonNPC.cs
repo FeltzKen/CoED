@@ -1,13 +1,9 @@
 using UnityEngine;
-using CoED;
 
 namespace CoED
 {
     public class DungeonNPC : MonoBehaviour
     {
-        [SerializeField]
-        private FloatingTextManager floatingTextManager; // Assign in Inspector
-
         private Quest assignedQuest;
 
         [SerializeField]
@@ -24,12 +20,11 @@ namespace CoED
             if (questManager != null && playerInventory != null)
             {
                 assignedQuest = questManager.AssignNewQuest();
-                floatingTextManager?.ShowFloatingText(
+                FloatingTextManager.Instance.ShowFloatingText(
                     $"Quest Assigned: {assignedQuest.QuestName}",
                     transform,
                     Color.white
                 );
-                // Debug.Log($"NPC Quest Assigned: {assignedQuest.QuestName}");
             }
             else
             {
@@ -42,12 +37,11 @@ namespace CoED
             if (playerInventory != null && rewardItem != null)
             {
                 playerInventory.AddItem(rewardItem);
-                floatingTextManager?.ShowFloatingText(
+                FloatingTextManager.Instance.ShowFloatingText(
                     $"{rewardItem.ItemName} added to inventory!",
                     transform,
                     Color.green
                 );
-                // Debug.Log($"{rewardItem.ItemName} has been added to your inventory!");
             }
             else
             {
@@ -59,21 +53,19 @@ namespace CoED
         {
             if (assignedQuest != null)
             {
-                floatingTextManager?.ShowFloatingText(
+                FloatingTextManager.Instance.ShowFloatingText(
                     assignedQuest.Description,
                     transform,
                     Color.cyan
                 );
-                // Debug.Log($"{assignedQuest.Description}");
             }
             else
             {
-                floatingTextManager?.ShowFloatingText(
+                FloatingTextManager.Instance.ShowFloatingText(
                     "No quest assigned to this NPC.",
                     transform,
                     Color.gray
                 );
-                // Debug.Log("No quest assigned to this NPC.");
             }
         }
     }

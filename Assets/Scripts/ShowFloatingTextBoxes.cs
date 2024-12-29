@@ -1,6 +1,6 @@
-using UnityEngine;
+using System.Collections;
 using TMPro;
-using System.Collections; // If using TextMeshPro
+using UnityEngine;
 
 namespace CoED
 {
@@ -16,13 +16,10 @@ namespace CoED
         private Vector3 offset = new Vector3(0, -1f, 0);
 
         [SerializeField]
-        private float floatSpeed = 2f; // Speed at which the text floats up
+        private float floatStep = 0.1f;
 
         [SerializeField]
-        private float floatStep = 0.1f; // Distance to move the text in each step
-
-        [SerializeField]
-        private float stepInterval = 0.1f; // Time interval between each step
+        private float stepInterval = 0.1f;
 
         private void Awake()
         {
@@ -38,23 +35,19 @@ namespace CoED
 
         public void ShowFloatingText(string message, Transform parentTransform, Color color)
         {
-            // Create a new GameObject for the floating text
+            new WaitForSeconds(0.2f);
             GameObject floatingTextInstance = new GameObject("FloatingText");
 
-            // Set the parent transform
             floatingTextInstance.transform.SetParent(parentTransform);
 
-            // Set the local position with the offset
             floatingTextInstance.transform.localPosition = offset;
 
-            // Add a TextMeshProUGUI component
             TextMeshProUGUI textComponent = floatingTextInstance.AddComponent<TextMeshProUGUI>();
             textComponent.text = message;
             textComponent.color = color;
             textComponent.alignment = TextAlignmentOptions.Center;
-            textComponent.fontSize = 0.4f; // Adjust the font size as needed
+            textComponent.fontSize = 0.5f;
 
-            // Start the coroutine to float the text upwards and destroy it after the duration
             StartCoroutine(FloatAndDestroy(floatingTextInstance));
         }
 
@@ -69,10 +62,8 @@ namespace CoED
                     yield break;
                 }
 
-                // Move the text up by the specified step amount
                 floatingTextInstance.transform.localPosition += Vector3.up * floatStep;
 
-                // Wait for the specified interval before moving again
                 yield return new WaitForSeconds(stepInterval);
 
                 elapsedTime += stepInterval;

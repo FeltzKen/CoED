@@ -39,7 +39,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: daaccea728ff9e44aa70eb30afe55880, type: 2}
   - {fileID: 11400000, guid: 7ae50d9337691e24a8ff2b5443bbc717, type: 2}
   numberOfItemsPerFloor: 30
-  seed: 568
+  seed: 5665
   selectedAlgorithm:
     algorithmType: 0
     initialWallDensity: 0.4

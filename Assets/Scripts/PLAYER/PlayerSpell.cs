@@ -8,18 +8,18 @@ namespace CoED
         [Header("Basic Attributes")]
         public string spellName;
         public Sprite icon;
-        public int magicCost;
-        public int damage;
+        public float magicCost;
+        public float damage;
         public float lifetime;
-        public float collisionRadius; // Radius for collision detection
-        public float speed; // Speed of the projectile
-        public float cooldown; // Time in seconds before the spell can be used again
+        public float collisionRadius;
+        public float speed;
+        public float cooldown;
 
         [Header("Advanced Attributes")]
-        public SpellType type; // Enum: Projectile, AoE, Heal, etc.
-        public float range; // Maximum casting distance
-        public float areaOfEffect; // Radius for AoE spells; 0 for single target
-        public GameObject spellEffectPrefab; // Visual effect prefab
+        public SpellType type;
+        public float range;
+        public float areaOfEffect;
+        public GameObject spellEffectPrefab;
 
         [Header("Status Effects")]
         public bool hasBurnEffect;
@@ -30,9 +30,9 @@ namespace CoED
         public float freezeDuration;
 
         [Header("Special Attributes")]
-        public bool selfTargeting; // If true, projectile will chase targets
-        public bool canChase; // If true, projectile will chase targets
-        public bool isInstant; // If true, instantly affects the target
+        public bool selfTargeting;
+        public bool canChase;
+        public bool isInstant;
     }
 
     public enum SpellType
@@ -40,6 +40,7 @@ namespace CoED
         Projectile,
         AoE,
         Heal,
-        // Add more types as needed
+        Buff,
+        Debuff,
     }
 }
