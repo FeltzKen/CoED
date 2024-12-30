@@ -1,12 +1,11 @@
 using System.Collections.Generic;
-using CoED;
 using UnityEngine;
 
 namespace CoED
 {
-    public class Inventory : MonoBehaviour
+    public class ConsumableInventory : MonoBehaviour
     {
-        public static Inventory Instance { get; private set; }
+        public static ConsumableInventory Instance { get; private set; }
 
         [Header("Inventory Settings")]
         [SerializeField]
@@ -19,7 +18,6 @@ namespace CoED
 
         private void Awake()
         {
-            // Singleton setup
             if (Instance == null)
             {
                 Instance = this;

@@ -1,18 +1,25 @@
 using UnityEngine;
+using UnityEngine.UI;
 
-[CreateAssetMenu(fileName = "NewEquipment", menuName = "GameItems/Equipment", order = 1)]
+[CreateAssetMenu(fileName = "NewEquipment", menuName = "Inventory/Equipment")]
 public class Equipment : ScriptableObject
 {
     public string equipmentName;
-    public EquipmentType equipmentType;
-    public int attackBonus;
-    public int defenseBonus;
+    public Object equipmentButtonPrefab;
+    public float attackModifier;
+    public float defenseModifier;
+    public float healthModifier;
+    public float speedModifier;
+    public float magicModifier;
+    public float staminaModifier;
     public int durability;
+    public bool IsEnchanted { get; private set; }
+    public bool IsCursed { get; private set; }
+    public EquipmentType equipmentType;
+    public EquipmentSlot equipmentSlot;
+    public GameObject modelPrefab;
     public Rarity rarity;
     public Sprite icon;
-    public GameObject modelPrefab;
-    public bool IsEnchanted { get; set; }
-    public bool IsCursed { get; set; }
 
     private const float enchantmentChance = 0.1f;
     private const float curseChance = 0.1f;

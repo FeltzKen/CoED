@@ -14,7 +14,8 @@ namespace CoED
         private GameObject inventoryUI;
         private bool isResting = false;
         private PlayerStats playerStats;
-        public Inventory playerInventory;
+        public ConsumableInventory consumableInventory;
+        public EquipmentInventory equipmentInventory;
         private Enemy enemy;
 
         [SerializeField]
@@ -48,7 +49,8 @@ namespace CoED
         private void Start()
         {
             playerStats = PlayerStats.Instance;
-            playerInventory = Inventory.Instance;
+            consumableInventory = ConsumableInventory.Instance;
+            equipmentInventory = EquipmentInventory.Instance;
             ValidateComponents();
         }
 
@@ -59,7 +61,7 @@ namespace CoED
 
         private void ValidateComponents()
         {
-            if (playerStats == null || playerInventory == null)
+            if (playerStats == null || consumableInventory == null)
             {
                 Debug.LogError(
                     "PlayerActions: Missing required components (PlayerStats, Inventory). Disabling script."
@@ -101,9 +103,9 @@ namespace CoED
 
         public void CollectItem(ItemCollectible itemCollectible)
         {
-            if (itemCollectible.Item is Consumable consumable)
+            if (itemCollectible.ConsumeItem is Consumable consumable)
             {
-                if (playerInventory.AddItem(consumable))
+                if (consumableInventory.AddItem(consumable))
                 {
                     Destroy(itemCollectible.gameObject);
                     FloatingTextManager.Instance.ShowFloatingText(
@@ -121,9 +123,30 @@ namespace CoED
                     );
                 }
             }
+            if (itemCollectible.Equipment is Equipment equipment)
+            {
+                if (equipmentInventory.AddEquipment(equipment))
+                {
+                    EquippableItemsUIManager.Instance.AddEquipmentToUI(equipment);
+                    Destroy(itemCollectible.gameObject);
+                    FloatingTextManager.Instance.ShowFloatingText(
+                        $"Collected {equipment.equipmentName}",
+                        transform,
+                        Color.green
+                    );
+                }
+                else
+                {
+                    FloatingTextManager.Instance.ShowFloatingText(
+                        "Inventory is full",
+                        transform,
+                        Color.red
+                    );
+                }
+            }
             else
             {
-                Debug.LogWarning("Collected item is not a consumable.");
+                Debug.LogWarning("ItemCollectible: Equipment not found.");
             }
         }
 
@@ -144,8 +167,18 @@ namespace CoED
                     ItemCollectible collectible = itemCollider.GetComponent<ItemCollectible>();
                     if (collectible != null)
                     {
-                        playerInventory.AddItem(collectible.Item);
+                        consumableInventory.AddItem(collectible.ConsumeItem);
                         Destroy(itemCollider.gameObject);
+                    }
+                    if (collectible == null)
+                    {
+                        equipmentInventory = itemCollider.GetComponent<EquipmentInventory>();
+                        Debug.LogWarning("ItemCollectible or Money component not found.");
+                        FloatingTextManager.Instance.ShowFloatingText(
+                            $"Collected {itemCollider.name}",
+                            transform,
+                            Color.green
+                        );
                     }
                 }
             }

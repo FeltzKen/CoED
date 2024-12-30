@@ -7,17 +7,19 @@ namespace CoED
         private Quest assignedQuest;
 
         [SerializeField]
-        private Item rewardItem;
+        private Equipment equipmentRewardItem;
+        private Item consumableRewardItem;
 
         private QuestManager questManager;
-        private Inventory playerInventory;
+        private EquipmentInventory equipmentInventory;
+        private ConsumableInventory consumableInventory;
 
         private void Start()
         {
             questManager = QuestManager.Instance;
-            playerInventory = FindAnyObjectByType<Inventory>();
+            equipmentInventory = FindAnyObjectByType<EquipmentInventory>();
 
-            if (questManager != null && playerInventory != null)
+            if (questManager != null && equipmentInventory != null)
             {
                 assignedQuest = questManager.AssignNewQuest();
                 FloatingTextManager.Instance.ShowFloatingText(
@@ -34,18 +36,27 @@ namespace CoED
 
         public void GrantReward()
         {
-            if (playerInventory != null && rewardItem != null)
+            if (equipmentInventory != null && equipmentRewardItem != null)
             {
-                playerInventory.AddItem(rewardItem);
+                equipmentInventory.AddEquipment(equipmentRewardItem);
                 FloatingTextManager.Instance.ShowFloatingText(
-                    $"{rewardItem.ItemName} added to inventory!",
+                    $"{equipmentRewardItem.equipmentName} added to inventory!",
+                    transform,
+                    Color.green
+                );
+            }
+            else if (equipmentInventory == null || consumableRewardItem == null)
+            {
+                consumableInventory.AddItem(consumableRewardItem);
+                FloatingTextManager.Instance.ShowFloatingText(
+                    $"{consumableRewardItem.ItemName} added to inventory!",
                     transform,
                     Color.green
                 );
             }
             else
             {
-                Debug.LogWarning("PlayerInventory or RewardItem is missing.");
+                Debug.LogWarning("EquipmentInventory or RewardItem not found.");
             }
         }
 

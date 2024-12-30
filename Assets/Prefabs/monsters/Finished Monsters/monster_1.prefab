@@ -202,7 +202,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   IsVisible: 1
-  possibleDrops: []
+  possibleDrops:
+  - {fileID: 4106867743383400254, guid: 2f0cfc5b91f9d9d4bbc84b36180f56de, type: 3}
+  - {fileID: 4106867743383400254, guid: bf19b45271bd85e439a6fa931164b95c, type: 3}
+  - {fileID: 1998612530821210125, guid: c9293d22b28d901439827ba92f82273a, type: 3}
+  - {fileID: 1998612530821210125, guid: 97689ad36b792ed49ac2dc631403c5a4, type: 3}
+  - {fileID: 1998612530821210125, guid: 00fadd280e9b5ff47af7dba912246f1b, type: 3}
   baseDropRate: 0.3
   dropRateDecreaseFactor: 0.5
   moneyPrefab: {fileID: 5582355417736950124, guid: 94e565f3443a44a4f8d23c4d5a0dc48f, type: 3}
@@ -240,11 +245,11 @@ MonoBehaviour:
   baseAttack: 10
   baseDefense: 7
   baseHealth: 100
-  PatrolSpeed: 1
   baseAttackRange: 1.4
-  baseDetectionRange: 5
   baseFireRate: 5
   baseProjectileLifespan: 2
+  PatrolSpeed: 1
+  ChaseSpeed: 0
 --- !u!114 &3581927541495694504
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -274,7 +279,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   floorTilemap: {fileID: 0}
-  moveSpeed: 1
 --- !u!114 &7618035010408620958
 MonoBehaviour:
   m_ObjectHideFlags: 0

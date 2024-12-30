@@ -14,7 +14,7 @@ namespace CoED
         private GameObject[] possibleDrops;
 
         [SerializeField]
-        private float baseDropRate = 0.3f;
+        private float baseDropRate = .01f;
 
         [SerializeField]
         private float dropRateDecreaseFactor = 0.5f;
@@ -60,7 +60,20 @@ namespace CoED
             {
                 if (UnityEngine.Random.value <= currentDropRate)
                 {
-                    Instantiate(drop, transform.position, Quaternion.identity);
+                    GameObject loot = Instantiate(drop, transform.position, Quaternion.identity);
+
+                    // Check if the loot has a script to modify stats
+                    Equipment equipment = loot.GetComponent<Equipment>();
+                    if (equipment != null)
+                    {
+                        ApplyStatModifiers(equipment);
+                    }
+
+                    Consumable consumable = loot.GetComponent<Consumable>();
+                    if (consumable != null)
+                    {
+                        ApplyStatModifiers(consumable);
+                    }
                 }
                 currentDropRate *= dropRateDecreaseFactor;
             }
@@ -89,6 +102,20 @@ namespace CoED
                     Debug.LogWarning("Enemy: Money prefab does not have a Money component.");
                 }
             }
+        }
+
+        // Applies stat modifiers to an equipment item
+        private void ApplyStatModifiers(Equipment equipment)
+        {
+            equipment.attackModifier += equipment.attackModifier * enemyStats.ScaledFactor;
+            equipment.defenseModifier += equipment.defenseModifier * enemyStats.ScaledFactor;
+        }
+
+        // Applies stat modifiers to a consumable item
+        private void ApplyStatModifiers(Consumable consumable)
+        {
+            consumable.healthBoost += consumable.healthBoost * enemyStats.ScaledFactor;
+            consumable.magicBoost += consumable.magicBoost * enemyStats.ScaledFactor;
         }
 
         public void Attack()

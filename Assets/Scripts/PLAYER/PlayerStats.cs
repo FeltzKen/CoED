@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CoED
@@ -45,7 +46,7 @@ namespace CoED
         [Header("Attack")]
         [SerializeField, Min(0)]
         private int baseAttack = 10;
-        public float CurrentAttack { get; set; }
+        public float CurrentAttack;
         private float equipmentAttack = 0;
 
         [SerializeField]
@@ -54,30 +55,31 @@ namespace CoED
         [Header("Defense")]
         [SerializeField, Min(0)]
         private int baseDefense = 5;
-        public float CurrentDefense { get; set; }
+        public float CurrentDefense;
         private float equipmentDefense = 0;
 
         [Header("Range")]
         [SerializeField, Min(0f)]
         private float baseProjectileRange = 5f;
-        public float CurrentProjectileRange { get; set; }
+        public float CurrentProjectileRange;
         public float targetingRange = 0f;
         private float equipmentRange = 0;
 
         [Header("Speed")]
         [SerializeField, Min(0)]
         private int baseSpeed = 5;
-        public float CurrentSpeed { get; set; }
+        public float CurrentSpeed;
+        private float equipmentSpeed = 0;
 
         [Header("Fire Rate")]
         [SerializeField, Min(0f)]
         private float baseFireRate = 1f;
-        public float CurrentFireRate { get; set; }
+        public float CurrentFireRate;
 
         [Header("Projectile Lifespan")]
         [SerializeField, Min(0f)]
         private float baseProjectileLifespan = 2f;
-        public float CurrentProjectileLifespan { get; set; }
+        public float CurrentProjectileLifespan;
 
         public bool HasEnteredDungeon { get; set; } = false;
 
@@ -128,7 +130,7 @@ namespace CoED
             }
         }
 
-        private void CalculateStats()
+        public void CalculateStats()
         {
             MaxStamina = baseStamina + level * 5;
             MaxHealth = baseHealth + level * 20 + equipmentHealth;
@@ -136,7 +138,7 @@ namespace CoED
             CurrentAttack = baseAttack + (baseAttack * level * 0.2f) + equipmentAttack;
             CurrentDefense = baseDefense + (baseDefense * level * 0.15f) + equipmentDefense;
             CurrentProjectileRange = baseProjectileRange + level * 0.1f + equipmentRange;
-            CurrentSpeed = baseSpeed + level * 0.05f;
+            CurrentSpeed = baseSpeed + level * 0.05f + equipmentSpeed;
             CurrentFireRate = baseFireRate - level * 0.02f;
             CurrentProjectileLifespan = baseProjectileLifespan + level * 0.05f;
             CurrentHealth = MaxHealth;
@@ -147,13 +149,30 @@ namespace CoED
             InitializeUI();
         }
 
-        public void SetEquipmentStats(int attack, int defense, int health)
+        public void SetEquipmentStats(IEnumerable<Equipment> equippedItems)
         {
-            equipmentAttack = Mathf.Max(attack, 0);
-            equipmentDefense = Mathf.Max(defense, 0);
-            equipmentHealth = Mathf.Max(health, 0);
+            float totalAttack = 0,
+                totalDefense = 0,
+                totalHealth = 0,
+                totalMagic = 0,
+                totalSpeed = 0;
+
+            foreach (var item in equippedItems)
+            {
+                totalAttack += item.attackModifier;
+                totalDefense += item.defenseModifier;
+                totalHealth += item.healthModifier;
+                totalMagic += item.magicModifier;
+                totalSpeed += item.speedModifier;
+            }
+
+            equipmentAttack = totalAttack;
+            equipmentDefense = totalDefense;
+            equipmentHealth = totalHealth;
+            equipmentMagic = totalMagic;
+            equipmentSpeed = totalSpeed;
+
             CalculateStats();
-            UpdateHealthUI(FindAnyObjectByType<PlayerUI>());
         }
 
         public void GainExperience(int amount)
@@ -283,7 +302,7 @@ namespace CoED
             PlayerUI.Instance.UpdateMagicBar(CurrentMagic, MaxMagic);
         }
 
-        public void RefillMagic(int amount)
+        public void RefillMagic(float amount)
         {
             CurrentMagic = Mathf.Min(CurrentMagic + amount, MaxMagic);
             PlayerUI.Instance.UpdateMagicBar(CurrentMagic, MaxMagic);

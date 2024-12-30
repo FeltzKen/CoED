@@ -1,4 +1,3 @@
-using CoED;
 using UnityEngine;
 
 namespace CoED
@@ -18,25 +17,25 @@ namespace CoED
         public bool isHidden;
 
         [SerializeField]
-        public int attackBoost = 0;
+        public float attackBoost = 0;
 
         [SerializeField]
-        public int defenseBoost = 0;
+        public float defenseBoost = 0;
 
         [SerializeField]
-        public int speedBoost = 0;
+        public float speedBoost = 0;
 
         [SerializeField]
-        public int healthBoost = 0;
+        public float healthBoost = 0;
 
         public string ItemName => itemName;
 
         public Sprite Icon => icon;
 
-        public int AttackBoost => attackBoost;
+        public float AttackBoost => attackBoost;
 
-        public int DefenseBoost => defenseBoost;
+        public float DefenseBoost => defenseBoost;
 
-        public int HealthBoost => healthBoost;
+        public float HealthBoost => healthBoost;
     }
 }

@@ -15,7 +15,7 @@ namespace CoED
         [SerializeField]
         private List<Quest> activeQuests = new List<Quest>();
 
-        private Inventory playerInventory;
+        private ConsumableInventory consumableInventory;
 
         private void Awake()
         {
@@ -32,8 +32,8 @@ namespace CoED
 
         private void Start()
         {
-            playerInventory = Inventory.Instance;
-            if (playerInventory == null)
+            consumableInventory = ConsumableInventory.Instance;
+            if (consumableInventory == null)
             {
                 Debug.LogError("QuestManager: Player Inventory not found.");
             }
@@ -83,7 +83,7 @@ namespace CoED
         {
             if (quest.RewardItem != null)
             {
-                playerInventory.AddItem(quest.RewardItem);
+                consumableInventory.AddItem(quest.RewardItem);
                 Debug.Log(
                     $"QuestManager: Granted reward '{quest.RewardItem.ItemName}' to the player."
                 );

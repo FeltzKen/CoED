@@ -5,9 +5,12 @@ namespace CoED
     public class ItemCollectible : MonoBehaviour
     {
         [SerializeField]
-        public Consumable item;
+        public Consumable consumeItem;
+        public Consumable ConsumeItem => consumeItem;
 
-        public Consumable Item => item;
+        [SerializeField]
+        public Equipment equipmentItem;
+        public Equipment Equipment => equipmentItem;
 
         private void OnTriggerEnter2D(Collider2D other)
         {

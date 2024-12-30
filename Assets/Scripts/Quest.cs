@@ -33,7 +33,7 @@ namespace CoED
 
         public QuestObjective CurrentObjective => objectives[currentObjectiveIndex];
         public bool IsCompleted => currentObjectiveIndex >= objectives.Count;
-        private Inventory inventory;
+        private EquipmentInventory equipmentInventory;
 
         public void CompleteObjective()
         {
@@ -64,10 +64,10 @@ namespace CoED
 
         private void GrantReward()
         {
-            inventory = Inventory.Instance;
-            if (rewardItem != null && inventory != null)
+            equipmentInventory = EquipmentInventory.Instance;
+            if (rewardItem != null && equipmentInventory != null)
             {
-                inventory.AddQuestItem(rewardItem);
+                equipmentInventory.AddQuestItem(rewardItem);
                 Debug.Log(
                     $"Quest '{questName}': Special quest reward '{rewardItem.ItemName}' added to player's inventory."
                 );

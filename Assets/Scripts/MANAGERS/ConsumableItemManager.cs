@@ -21,7 +21,7 @@ namespace CoED
 
         private void Start()
         {
-            if (Inventory.Instance == null)
+            if (ConsumableInventory.Instance == null)
             {
                 Debug.LogError("ConsumableItemsUIManager: Inventory instance is null.");
                 return;
@@ -47,7 +47,7 @@ namespace CoED
                 return;
             }
 
-            Inventory.Instance.OnInventoryChanged += UpdateConsumableItemsUI;
+            ConsumableInventory.Instance.OnInventoryChanged += UpdateConsumableItemsUI;
             UpdateConsumableItemsUI();
 
             inventoryPanel.SetActive(false);
@@ -63,13 +63,13 @@ namespace CoED
             }
             consumableItemButtons.Clear();
             Debug.Log(
-                $"Total number of items in the inventory: {Inventory.Instance.GetAllItems().Count}"
+                $"Total number of items in the inventory: {ConsumableInventory.Instance.GetAllItems().Count}"
             );
             Debug.Log(
                 $"Total number of buttons in the consumableItemButtons: {consumableItemButtons.Count}"
             );
 
-            foreach (var item in Inventory.Instance.GetAllItems())
+            foreach (var item in ConsumableInventory.Instance.GetAllItems())
             {
                 Debug.Log($"Item in inventory: {item.ItemName}, Type: {item.GetType()}");
 
@@ -144,13 +144,8 @@ namespace CoED
         {
             Debug.Log($"ConsumableItemsUIManager: Consuming item {consumable.ItemName}.");
             consumable.Consume(PlayerStats.Instance);
-            Inventory.Instance.RemoveItem(consumable);
+            ConsumableInventory.Instance.RemoveItem(consumable);
             UpdateConsumableItemsUI(); // Update UI after consuming the item
-        }
-
-        public void ToggleInventoryPanel() //call back for button that controls the consumable UI menu
-        {
-            inventoryPanel.SetActive(!inventoryPanel.activeSelf);
         }
     }
 }

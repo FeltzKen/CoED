@@ -43,7 +43,10 @@ namespace CoED
         private FogOfWarManager fogOfWarManager;
 
         [SerializeField]
-        private Inventory playerInventory;
+        private EquipmentInventory equipmentInventory;
+
+        [SerializeField]
+        private ConsumableInventory consumableInventory;
 
         [SerializeField]
         private Transform playerTransform;
@@ -82,12 +85,20 @@ namespace CoED
                     Debug.LogError("ShopGoblin: FogOfWar component not found in the scene.");
                 }
             }
-            if (playerInventory == null)
+            if (equipmentInventory == null)
             {
-                playerInventory = FindAnyObjectByType<Inventory>();
-                if (playerInventory == null)
+                equipmentInventory = FindAnyObjectByType<EquipmentInventory>();
+                if (equipmentInventory == null)
                 {
                     Debug.LogError("ShopGoblin: Player Inventory not found in the scene.");
+                }
+            }
+            if (consumableInventory == null)
+            {
+                consumableInventory = FindAnyObjectByType<ConsumableInventory>();
+                if (consumableInventory == null)
+                {
+                    Debug.LogError("ShopGoblin: Consumable Inventory not found in the scene.");
                 }
             }
             if (playerTransform == null)

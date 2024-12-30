@@ -4,8 +4,8 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "NewConsumable", menuName = "Inventory/Consumable")]
 public class Consumable : Item
 {
-    public int magicBoost;
-    public int staminaBoost;
+    public float magicBoost;
+    public float staminaBoost;
 
     public void Consume(PlayerStats playerStats)
     {

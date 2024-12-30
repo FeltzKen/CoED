@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace CoED
@@ -7,15 +8,10 @@ namespace CoED
     {
         public static EquipmentManager Instance { get; private set; }
 
-        [Header("Equipment Slots")]
-        [SerializeField]
-        private List<EquipmentSlotUI> equipmentSlots = new List<EquipmentSlotUI>();
-
-        private PlayerStats playerStats;
+        private Dictionary<Equipment.EquipmentSlot, Equipment> equippedItems = new();
 
         private void Awake()
         {
-            // Implement Singleton Pattern
             if (Instance == null)
             {
                 Instance = this;
@@ -23,125 +19,44 @@ namespace CoED
             else
             {
                 Destroy(gameObject);
-                Debug.LogWarning("EquipmentManager instance already exists. Destroying duplicate.");
-                return;
-            }
-
-            if (PlayerStats.Instance != null)
-            {
-                playerStats = PlayerStats.Instance;
-            }
-
-            if (playerStats == null)
-            {
-                Debug.LogError("EquipmentManager: PlayerStats reference not found.");
-                enabled = false; // Disable script to prevent runtime errors
             }
         }
 
-        public void EquipItem(Item equipment, int slotIndex)
+        public void EquipItem(Equipment equipment)
         {
-            if (slotIndex < 0 || slotIndex >= equipmentSlots.Count)
+            Equipment.EquipmentSlot slot = equipment.equipmentSlot;
+
+            // Unequip existing item in the same slot
+            if (equippedItems.ContainsKey(slot))
             {
-                Debug.LogWarning("EquipmentManager: Invalid slot index.");
-                return;
+                UnequipItem(equipment);
+            }
+            if (equippedItems.ContainsKey(slot))
+            {
+                UnequipItem(equipment);
             }
 
-            EquipmentSlotUI slot = equipmentSlots[slotIndex];
-            if (slot == null)
-            {
-                Debug.LogWarning("EquipmentManager: Equipment slot not assigned.");
-                return;
-            }
+            // Equip new item
+            equippedItems[slot] = equipment;
+            Debug.Log($"EquipmentManager: Equipped {equipment.name} in {slot} slot.");
 
-            Item previousItem = slot.EquippedItem;
-            slot.SetEquippedItem(equipment);
-
-            if (playerStats != null)
-            {
-                playerStats.SetEquipmentStats(
-                    equipment.AttackBoost,
-                    equipment.DefenseBoost,
-                    equipment.HealthBoost
-                );
-                Debug.Log(
-                    $"EquipmentManager: Equipped '{equipment.ItemName}' to slot {slotIndex}, updating stats."
-                );
-
-                if (previousItem != null)
-                {
-                    playerStats.SetEquipmentStats(
-                        -previousItem.AttackBoost,
-                        -previousItem.DefenseBoost,
-                        -previousItem.HealthBoost
-                    );
-                    Debug.Log(
-                        $"EquipmentManager: Removed '{previousItem.ItemName}', adjusting stats."
-                    );
-                }
-            }
+            // Recalculate stats
+            PlayerStats.Instance?.SetEquipmentStats(equippedItems.Values.ToList());
+            PlayerStats.Instance?.CalculateStats();
         }
 
-        public void UnequipItem(int slotIndex)
+        private void UnequipItem(Equipment equipment)
         {
-            if (slotIndex < 0 || slotIndex >= equipmentSlots.Count)
+            Equipment.EquipmentSlot slot = equipment.equipmentSlot;
+
+            if (equippedItems.ContainsKey(slot))
             {
-                Debug.LogWarning("EquipmentManager: Invalid slot index.");
-                return;
+                equippedItems.Remove(slot);
+                Debug.Log($"EquipmentManager: Unequipped {equipment.name} from {slot} slot.");
+
+                // Recalculate stats
+                PlayerStats.Instance?.CalculateStats();
             }
-
-            EquipmentSlotUI slot = equipmentSlots[slotIndex];
-            if (slot == null || slot.EquippedItem == null)
-            {
-                Debug.LogWarning("EquipmentManager: No item to unequip in this slot.");
-                return;
-            }
-
-            Item unequippedItem = slot.EquippedItem;
-            slot.SetEquippedItem(null); // Unequip the item by setting it to null
-
-            if (playerStats != null && unequippedItem != null)
-            {
-                playerStats.SetEquipmentStats(
-                    -unequippedItem.AttackBoost,
-                    -unequippedItem.DefenseBoost,
-                    -unequippedItem.HealthBoost
-                );
-                Debug.Log(
-                    $"EquipmentManager: Unequipped '{unequippedItem.ItemName}', adjusting stats."
-                );
-            }
-        }
-
-        public void UpdateAllEquipmentStats()
-        {
-            if (playerStats == null)
-            {
-                Debug.LogError(
-                    "EquipmentManager: PlayerStats reference not found during stat update."
-                );
-                return;
-            }
-
-            int totalAttackModifier = 0;
-            int totalDefenseModifier = 0;
-            int totalHealthModifier = 0;
-
-            foreach (EquipmentSlotUI slot in equipmentSlots)
-            {
-                if (slot != null && slot.EquippedItem != null)
-                {
-                    totalAttackModifier += slot.EquippedItem.AttackBoost;
-                    totalDefenseModifier += slot.EquippedItem.DefenseBoost;
-                    totalHealthModifier += slot.EquippedItem.HealthBoost;
-                }
-            }
-
-            playerStats.SetEquipmentStats(
-                totalAttackModifier,
-                totalDefenseModifier,
-                totalHealthModifier
-            );
         }
     }
 }
