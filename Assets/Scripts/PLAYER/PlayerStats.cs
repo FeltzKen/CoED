@@ -144,7 +144,7 @@ namespace CoED
             CurrentHealth = MaxHealth;
             CurrentMagic = MaxMagic;
             CurrentStamina = MaxStamina;
-            restInterval -= 1 / level;
+            restInterval = restInterval / level;
 
             InitializeUI();
         }

@@ -8,10 +8,6 @@ namespace CoED
         public Consumable consumeItem;
         public Consumable ConsumeItem => consumeItem;
 
-        [SerializeField]
-        public Equipment equipmentItem;
-        public Equipment Equipment => equipmentItem;
-
         private void OnTriggerEnter2D(Collider2D other)
         {
             if (other.CompareTag("Player"))

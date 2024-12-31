@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4305334641535992224}
   - component: {fileID: 2981977345375240177}
   - component: {fileID: 202816574104133317}
-  - component: {fileID: 4145934853498365336}
+  - component: {fileID: 6138977369563804488}
   m_Layer: 9
   m_Name: small dagger
   m_TagString: Untagged
@@ -149,7 +149,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isHidden: 0
---- !u!114 &4145934853498365336
+--- !u!114 &6138977369563804488
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -158,8 +158,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1998612530821210125}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ac203efd827e6d40b9646aa0fd709dd, type: 3}
+  m_Script: {fileID: 11500000, guid: e683ada41659f0f4881cc9047f1182fe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  consumeItem: {fileID: 0}
-  equipmentItem: {fileID: 11400000, guid: b5cfb27eb9061274dad755db11c3809f, type: 2}
+  equipmentData: {fileID: 11400000, guid: b5cfb27eb9061274dad755db11c3809f, type: 2}

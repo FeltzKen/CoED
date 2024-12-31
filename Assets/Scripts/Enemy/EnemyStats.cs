@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -60,9 +59,9 @@ namespace CoED
         private void CalculateStats()
         {
             float floorMultiplier = 1 + (spawnFloor * 0.5f);
-            ScaledFactor = floorMultiplier * UnityEngine.Random.Range(0.9f, 1.1f);
+            ScaledFactor = floorMultiplier * Random.Range(0.9f, 1.1f);
 
-            PatrolSpeed = Mathf.Lerp(1f, 3f, spawnFloor / 6f) + UnityEngine.Random.Range(0f, 0.5f);
+            PatrolSpeed = Mathf.Lerp(1f, 3f, spawnFloor / 6f) + Random.Range(0f, 0.5f);
             ChaseSpeed = PatrolSpeed * 1.5f;
 
             MaxHealth = Mathf.RoundToInt(baseHealth * ScaledFactor);

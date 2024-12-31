@@ -1,11 +1,11 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 [CreateAssetMenu(fileName = "NewEquipment", menuName = "Inventory/Equipment")]
 public class Equipment : ScriptableObject
 {
     public string equipmentName;
     public Object equipmentButtonPrefab;
+    public GameObject equipmentPrefab;
     public float attackModifier;
     public float defenseModifier;
     public float healthModifier;
@@ -17,7 +17,6 @@ public class Equipment : ScriptableObject
     public bool IsCursed { get; private set; }
     public EquipmentType equipmentType;
     public EquipmentSlot equipmentSlot;
-    public GameObject modelPrefab;
     public Rarity rarity;
     public Sprite icon;
 

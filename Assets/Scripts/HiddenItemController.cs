@@ -3,7 +3,7 @@ using UnityEngine;
 namespace CoED.Items
 {
     [RequireComponent(typeof(SpriteRenderer))]
-    public class HiddenItemController : MonoBehaviour, CoED.ISearchable
+    public class HiddenItemController : MonoBehaviour, ISearchable
     {
         [Header("Hidden Item Settings")]
         public bool isHidden = false;
@@ -37,6 +37,10 @@ namespace CoED.Items
                 if (GetComponent<ItemCollectible>() != null)
                 {
                     PlayerActions.Instance.CollectItem(GetComponent<ItemCollectible>());
+                }
+                if (GetComponent<EquipmentWrapper>())
+                {
+                    PlayerActions.Instance.CollectItem(GetComponent<EquipmentWrapper>());
                 }
             }
             else

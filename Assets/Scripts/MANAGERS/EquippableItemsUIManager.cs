@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -69,6 +70,16 @@ namespace CoED
 
         public void AddEquipmentToUI(Equipment equipment)
         {
+            // Validate the EquipmentWrapper and the Equipment data
+            if (equipment == null)
+            {
+                Debug.LogError(
+                    "EquippableItemsUIManager: Invalid EquipmentWrapper or Equipment data."
+                );
+                return;
+            }
+
+            // Find the appropriate panel for the equipment slot category
             Transform categoryPanel = GetCategoryPanel(equipment.equipmentSlot);
             if (categoryPanel == null)
             {
@@ -78,23 +89,67 @@ namespace CoED
                 return;
             }
 
-            // Create the button dynamically
-            GameObject button = new GameObject("EquipmentButton");
+            // Create the main button object
+            GameObject button = new GameObject($"{equipment.equipmentName}Button");
             button.transform.SetParent(categoryPanel, false);
 
-            // Set icon
-            Image iconImage = button.AddComponent<Image>();
-            RectTransform rectTransform = button.GetComponent<RectTransform>();
-            rectTransform.sizeDelta = new Vector2(0.5f, 0.5f);
-            iconImage.sprite = equipment.icon;
+            RectTransform buttonRect = button.AddComponent<RectTransform>();
+            buttonRect.sizeDelta = new Vector2(0.5f, 0.5f); // Adjust as needed
 
-            // Add Button component and set its behavior
+            // Create the background layer
+            GameObject background = new GameObject("Border");
+            background.transform.SetParent(button.transform, false);
+            RectTransform bgRect = background.AddComponent<RectTransform>();
+            bgRect.sizeDelta = new Vector2(0.65f, 0.65f);
+            Image bgImage = background.AddComponent<Image>();
+            bgImage.color = Color.green; // green
+
+            // Create the icon mask layer
+            GameObject mask = new GameObject("Mask");
+            mask.transform.SetParent(button.transform, false);
+            RectTransform maskRect = mask.AddComponent<RectTransform>();
+            maskRect.sizeDelta = new Vector2(0.55f, 0.55f); // Adjust as needed
+            Image maskImage = mask.AddComponent<Image>();
+            maskImage.color = Color.black; // black
+
+            // Add the icon inside the mask
+            GameObject icon = new GameObject("Icon");
+            icon.transform.SetParent(button.transform, false);
+            RectTransform iconRect = icon.AddComponent<RectTransform>();
+            iconRect.sizeDelta = new Vector2(0.5f, 0.5f); // Adjust as needed
+            Image iconImage = icon.AddComponent<Image>();
+            iconImage.sprite = equipment.icon;
+            iconImage.preserveAspect = true;
+
+            mask.SetActive(false); // Hide the mask initially
+            background.SetActive(false); // Hide the background initially
+            // Add a button component for interactivity
             Button buttonComponent = button.AddComponent<Button>();
             buttonComponent.onClick.AddListener(() =>
             {
+                // Equip the selected item via the EquipmentManager
                 EquipmentManager.Instance.EquipItem(equipment);
                 DisplayItemStats(equipment);
+
+                // Toggle the background visibility
+                ToggleBordersOff(categoryPanel); // Ensure only one item is selected
+                background.SetActive(true);
+                mask.SetActive(true);
             });
+        }
+
+        private void ToggleBordersOff(Transform categoryPanel)
+        {
+            foreach (Transform child in categoryPanel)
+            {
+                Transform background = child.Find("Border");
+                Transform mask = child.Find("Mask");
+                if (background != null)
+                {
+                    background.gameObject.SetActive(false);
+                    mask.gameObject.SetActive(false);
+                }
+            }
         }
 
         private Transform GetCategoryPanel(Equipment.EquipmentSlot slot)
@@ -134,11 +189,11 @@ namespace CoED
             }
 
             itemNameText.text = equipment.equipmentName;
-            attackModifierText.text = equipment.attackModifier.ToString();
-            defenseModifierText.text = equipment.defenseModifier.ToString();
-            magicModifierText.text = equipment.magicModifier.ToString();
-            healthModifierText.text = equipment.healthModifier.ToString();
-            speedModifierText.text = equipment.speedModifier.ToString();
+            attackModifierText.text = "+ " + equipment.attackModifier.ToString();
+            defenseModifierText.text = "+ " + equipment.defenseModifier.ToString();
+            magicModifierText.text = "+ " + equipment.magicModifier.ToString();
+            healthModifierText.text = "+ " + equipment.healthModifier.ToString();
+            speedModifierText.text = "+ " + equipment.speedModifier.ToString();
         }
     }
 }

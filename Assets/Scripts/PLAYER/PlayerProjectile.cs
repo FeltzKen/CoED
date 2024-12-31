@@ -23,7 +23,6 @@ namespace CoED
 
         public void SetTargetPosition(Vector3 target)
         {
-            Debug.Log($"PlayerProjectile: Setting target position to {target}");
             targetPosition = target;
         }
 
@@ -38,12 +37,10 @@ namespace CoED
             {
                 float step = speed * Time.deltaTime;
                 transform.position = Vector3.MoveTowards(transform.position, targetPosition, step);
-                Debug.Log($"PlayerProjectile: Moving towards {targetPosition} with step {step}");
 
                 if (Vector3.Distance(transform.position, targetPosition) < 0.1f)
                 {
                     hasReachedTarget = true;
-                    Debug.Log("PlayerProjectile: Reached target position.");
                     // Optionally instantiate an impact effect here
                     // Instantiate(impactEffectPrefab, targetPosition, Quaternion.identity);
                     Destroy(gameObject);
@@ -63,9 +60,6 @@ namespace CoED
                     EnemyStats enemy = hit.GetComponent<EnemyStats>();
                     if (enemy != null)
                     {
-                        Debug.Log(
-                            $"PlayerProjectile: Hit enemy {hit.name}, dealing {damage} damage."
-                        );
                         enemy.TakeDamage(damage);
                     }
                     else
@@ -77,9 +71,8 @@ namespace CoED
                     Destroy(gameObject);
                     return;
                 }
-                else if (hit.CompareTag("Obstacle"))
+                else if (hit.CompareTag("Wall"))
                 {
-                    Debug.Log("PlayerProjectile: Hit an obstacle.");
                     Destroy(gameObject);
                     return;
                 }

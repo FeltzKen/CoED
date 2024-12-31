@@ -1,5 +1,5 @@
-using System;
-using CoED;
+using System.Collections.Generic;
+using Microsoft.Unity.VisualStudio.Editor;
 using UnityEngine;
 
 namespace CoED
@@ -11,10 +11,10 @@ namespace CoED
 
         [Header("Loot Settings")]
         [SerializeField]
-        private GameObject[] possibleDrops;
+        private List<EquipmentWrapper> possibleDrops = new List<EquipmentWrapper>();
 
         [SerializeField]
-        private float baseDropRate = .01f;
+        private float baseDropRate = 0.9f; // Increased for testing
 
         [SerializeField]
         private float dropRateDecreaseFactor = 0.5f;
@@ -25,13 +25,13 @@ namespace CoED
         [SerializeField]
         private int minMoneyAmount = 1;
 
-        private EnemyStats enemyStats;
-
         [SerializeField]
         private int maxMoneyDropAmount = 20;
 
         [SerializeField]
-        private float moneyDropRate = 0.5f;
+        private float moneyDropRate = 0.5f; // Increased for better testing
+
+        private EnemyStats enemyStats;
         private SpriteRenderer spriteRenderer;
 
         [SerializeField]
@@ -45,56 +45,85 @@ namespace CoED
             enemyStats = GetComponent<EnemyStats>();
             spriteRenderer = GetComponent<SpriteRenderer>();
 
-            if (statusEffectManager == null)
+            if (enemyStats == null)
             {
-                Debug.LogError("Enemy: StatusEffectManager component missing.");
-                return;
+                Debug.LogError("Enemy: Missing EnemyStats component.");
             }
         }
 
         public void DropLoot()
         {
-            float currentDropRate = baseDropRate;
-
-            foreach (var drop in possibleDrops)
+            if (possibleDrops == null || possibleDrops.Count == 0)
             {
-                if (UnityEngine.Random.value <= currentDropRate)
+                Debug.LogWarning("Enemy: No possible drops assigned.");
+                return;
+            }
+            int randomIndex = Random.Range(0, possibleDrops.Count);
+
+            if (possibleDrops[randomIndex]?.equipmentData == null)
+            {
+                Debug.LogError($"Enemy.DropLoot: equipmentData is null at index {randomIndex}.");
+                return;
+            }
+            // Drop equipment based on drop rate
+            if (Random.value <= baseDropRate)
+            {
+                Equipment selectedLoot = possibleDrops[
+                    Random.Range(0, possibleDrops.Count)
+                ].equipmentData;
+                if (selectedLoot.equipmentPrefab == null)
                 {
-                    GameObject loot = Instantiate(drop, transform.position, Quaternion.identity);
-
-                    // Check if the loot has a script to modify stats
-                    Equipment equipment = loot.GetComponent<Equipment>();
-                    if (equipment != null)
-                    {
-                        ApplyStatModifiers(equipment);
-                    }
-
-                    Consumable consumable = loot.GetComponent<Consumable>();
-                    if (consumable != null)
-                    {
-                        ApplyStatModifiers(consumable);
-                    }
+                    Debug.LogError(
+                        $"Enemy: equipmentPrefab is null for {selectedLoot.equipmentName}."
+                    );
+                    return;
                 }
-                currentDropRate *= dropRateDecreaseFactor;
+                if (selectedLoot == null)
+                {
+                    Debug.LogError("Enemy: Selected loot is null.");
+                    return;
+                }
+
+                // Use prefab instantiation for the loot object
+                GameObject lootPrefab = Instantiate(
+                    selectedLoot.equipmentPrefab,
+                    transform.position,
+                    Quaternion.identity
+                );
+                EquipmentWrapper lootWrapper = lootPrefab.GetComponent<EquipmentWrapper>();
+
+                if (lootWrapper == null)
+                {
+                    Debug.LogError("Enemy: Loot prefab is missing EquipmentWrapper component.");
+                    Destroy(lootPrefab);
+                    return;
+                }
+
+                lootWrapper.Initialize(selectedLoot);
+                lootWrapper.ApplyStatModifiers(enemyStats.ScaledFactor);
+
+                Debug.Log($"Enemy dropped {selectedLoot.equipmentName} with scaled stats.");
             }
 
-            if (UnityEngine.Random.value <= moneyDropRate)
+            // Drop money based on money drop rate
+            if (Random.value <= moneyDropRate)
             {
-                int moneyAmount = UnityEngine.Random.Range(minMoneyAmount, maxMoneyDropAmount + 1);
+                int moneyAmount = Random.Range(minMoneyAmount, maxMoneyDropAmount + 1);
+
                 GameObject money = Instantiate(
                     moneyPrefab,
                     transform.position,
                     Quaternion.identity
                 );
-
                 Money moneyComponent = money.GetComponent<Money>();
+
                 if (moneyComponent != null)
                 {
                     moneyComponent.SetAmount(moneyAmount);
                     FloatingTextManager.Instance.ShowFloatingText(
                         $"Dropped {moneyAmount} gold",
                         transform,
-                        Color.blue
+                        Color.yellow
                     );
                 }
                 else
@@ -102,25 +131,6 @@ namespace CoED
                     Debug.LogWarning("Enemy: Money prefab does not have a Money component.");
                 }
             }
-        }
-
-        // Applies stat modifiers to an equipment item
-        private void ApplyStatModifiers(Equipment equipment)
-        {
-            equipment.attackModifier += equipment.attackModifier * enemyStats.ScaledFactor;
-            equipment.defenseModifier += equipment.defenseModifier * enemyStats.ScaledFactor;
-        }
-
-        // Applies stat modifiers to a consumable item
-        private void ApplyStatModifiers(Consumable consumable)
-        {
-            consumable.healthBoost += consumable.healthBoost * enemyStats.ScaledFactor;
-            consumable.magicBoost += consumable.magicBoost * enemyStats.ScaledFactor;
-        }
-
-        public void Attack()
-        {
-            PlayerStats.Instance.TakeDamage(enemyStats.CurrentAttack);
         }
 
         public void SetHighlighted(bool isHighlighted)

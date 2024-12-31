@@ -123,36 +123,37 @@ namespace CoED
                     );
                 }
             }
-            if (itemCollectible.Equipment is Equipment equipment)
+            else
             {
-                if (equipmentInventory.AddEquipment(equipment))
-                {
-                    EquippableItemsUIManager.Instance.AddEquipmentToUI(equipment);
-                    Destroy(itemCollectible.gameObject);
-                    FloatingTextManager.Instance.ShowFloatingText(
-                        $"Collected {equipment.equipmentName}",
-                        transform,
-                        Color.green
-                    );
-                }
-                else
-                {
-                    FloatingTextManager.Instance.ShowFloatingText(
-                        "Inventory is full",
-                        transform,
-                        Color.red
-                    );
-                }
+                Debug.LogWarning("ItemCollectible: Consumable not found.");
+            }
+        }
+
+        public void CollectItem(EquipmentWrapper equipment)
+        {
+            if (equipmentInventory.AddEquipment(equipment.equipmentData))
+            {
+                EquippableItemsUIManager.Instance.AddEquipmentToUI(equipment.equipmentData);
+                Destroy(equipment.gameObject);
+                FloatingTextManager.Instance.ShowFloatingText(
+                    $"Collected {equipment.equipmentData.equipmentName}",
+                    transform,
+                    Color.green
+                );
             }
             else
             {
-                Debug.LogWarning("ItemCollectible: Equipment not found.");
+                FloatingTextManager.Instance.ShowFloatingText(
+                    "Inventory is full",
+                    transform,
+                    Color.red
+                );
             }
         }
 
         public void CollectItems()
         {
-            Collider2D[] items = Physics2D.OverlapCircleAll(transform.position, 1f);
+            Collider2D[] items = Physics2D.OverlapCircleAll(transform.position, 0.2f);
 
             foreach (var itemCollider in items)
             {

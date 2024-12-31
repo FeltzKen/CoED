@@ -178,9 +178,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   restHealRate: 5
-  playerInventory: {fileID: 0}
-  restMagicRate: 1
-  restInterval: 1
+  consumableInventory: {fileID: 0}
+  equipmentInventory: {fileID: 0}
+  magicRefillRateWhenResting: 5
   dangerRadius: 5
   searchableLayer:
     serializedVersion: 2
@@ -197,8 +197,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1623fb5dd22a2744e81fa3cd4fd88bc2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  attackRange: 1.5
-  projectileRange: 5
   attackCooldown: 1
 --- !u!114 &8182549918890610233
 MonoBehaviour:
@@ -253,18 +251,25 @@ MonoBehaviour:
   CurrentExp: 0
   ExpToNextLevel: 100
   maxLevel: 50
+  restInterval: 3
   baseHealth: 1000
   baseStamina: 100
   baseMagic: 50
   equipmentMagic: 0
-  baseAttack: 10
+  baseAttack: 40
+  CurrentAttack: 0
   AttackRange: 3
   baseDefense: 5
+  CurrentDefense: 0
   baseProjectileRange: 5
+  CurrentProjectileRange: 0
   targetingRange: 7
   baseSpeed: 5
+  CurrentSpeed: 0
   baseFireRate: 1
+  CurrentFireRate: 0
   baseProjectileLifespan: 2
+  CurrentProjectileLifespan: 0
   currency: 0
   currentFloor: 1
 --- !u!223 &-5451514820897329398

@@ -109,6 +109,7 @@ namespace CoED
                     Tilemap wallTilemap = CreateTilemap(floorParent.transform, "WallTilemap", true);
                     wallTilemap.GetComponent<TilemapRenderer>().sortingOrder = 2; // Sorting order for walls (above floor)
                     wallTilemap.gameObject.layer = LayerMask.NameToLayer("Obstacles"); // Set to Obstacles layer
+                    wallTilemap.gameObject.tag = "Wall";
 
                     Tilemap voidTilemap = CreateTilemap(floorParent.transform, "VoidTilemap", true);
                     voidTilemap.GetComponent<TilemapRenderer>().sortingOrder = 0; // Sorting order for void space (below floor)

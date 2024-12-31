@@ -12,18 +12,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 238d564276168b045b3de74cf084bc48, type: 3}
   m_Name: leather hood
   m_EditorClassIdentifier: 
-  equipmentName: small helmet
-  equipmentButtonPrefab: {fileID: 9134042355877932202, guid: edb3a6a9ee1d9c24c97c96ce2d9cb0f6, type: 3}
-  attackModifier: 0
-  defenseModifier: 2
-  healthModifier: 0
-  speedModifier: 0
-  magicModifier: 0
-  staminaModifier: 0
-  durability: 0
-  equipmentType: 1
-  equipmentSlot: 1
-  modelPrefab: {fileID: 1998612530821210125, guid: c9293d22b28d901439827ba92f82273a, type: 3}
-  rarity: 0
-  icon: {fileID: -476460484, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
-  description: a basic leather hood
