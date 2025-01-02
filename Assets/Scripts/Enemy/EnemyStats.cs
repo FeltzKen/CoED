@@ -37,6 +37,7 @@ namespace CoED
         public float CurrentFireRate { get; set; }
         public float CurrentProjectileLifespan { get; set; }
         public float ScaledFactor { get; private set; }
+        public float CurrentSpeed { get; set; } = 1f;
         private EnemyUI enemyUI { get; set; }
         private Enemy enemy { get; set; }
         public int spawnFloor { get; set; }
@@ -107,21 +108,6 @@ namespace CoED
             Debug.Log(
                 $"EnemyStats: Healed {amount} health. Current health: {CurrentHealth}/{MaxHealth}"
             );
-        }
-
-        public void ApplyStatusEffect(
-            StatusEffectType effectType,
-            float damagePerSecond,
-            float duration
-        )
-        {
-            GameObject effectObject = new GameObject($"{effectType}Effect");
-            effectObject.transform.parent = transform;
-            StatusEffect statusEffect = effectObject.AddComponent<StatusEffect>();
-            statusEffect.effectType = effectType;
-            statusEffect.damagePerSecond = damagePerSecond;
-            statusEffect.duration = duration;
-            activeStatusEffects.Add(statusEffect);
         }
 
         private void HandleDeath()

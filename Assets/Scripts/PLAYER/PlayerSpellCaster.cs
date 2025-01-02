@@ -11,7 +11,7 @@ namespace CoED
         [SerializeField]
         private Transform spellSpawnPoint; // Point where spells are spawned
         private PlayerStats playerStats; // Reference to the PlayerStats component
-        private PlayerSpell selectedSpell; // Currently selected spell
+        private PlayerSpellWrapper selectedSpell; // Currently selected spell
 
         [SerializeField]
         private LayerMask enemyLayer; // Layer mask to identify enemies
@@ -20,11 +20,20 @@ namespace CoED
         private List<GameObject> enemiesInRange = new List<GameObject>();
         private int currentTargetIndex = 0;
 
+        [Header("Status Effects")]
+        [SerializeField]
+        private StatusEffectIconLibrary statusEffectLibrary;
+        private List<PlayerSpellWrapper> playerSpellsWrapper;
+
+        [SerializeField]
+        private List<PlayerSpell> spellPrefabs; // List of spell prefabs
+
         private void Awake()
         {
             if (Instance == null)
             {
                 Instance = this;
+                InitializeWrappedSpells();
                 DontDestroyOnLoad(gameObject);
             }
             else
@@ -61,6 +70,32 @@ namespace CoED
             {
                 CastSelectedSpell(currentTarget.transform.position);
             }
+        }
+
+        private void InitializeWrappedSpells()
+        {
+            // Check if spellPrefabs are populated
+            if (spellPrefabs == null || spellPrefabs.Count == 0)
+            {
+                Debug.LogError("No spell prefabs found. Please assign them in the inspector.");
+                return;
+            }
+
+            playerSpellsWrapper = new List<PlayerSpellWrapper>();
+            foreach (var baseSpell in spellPrefabs) // Assuming spellPrefabs holds PlayerSpell ScriptableObjects
+            {
+                GameObject spellWrapperObj = new GameObject($"{baseSpell.spellName}_Wrapper");
+                PlayerSpellWrapper spellWrapper =
+                    spellWrapperObj.AddComponent<PlayerSpellWrapper>();
+                spellWrapper.Initialize(baseSpell); // Initialize wrapper with the base spell
+
+                playerSpellsWrapper.Add(spellWrapper);
+            }
+        }
+
+        public List<PlayerSpellWrapper> GetKnownSpells()
+        {
+            return playerSpellsWrapper;
         }
 
         private void UpdateEnemiesInRange()
@@ -135,19 +170,19 @@ namespace CoED
             SetTarget(enemiesInRange[currentTargetIndex]);
         }
 
-        public void SelectSpell(PlayerSpell spell)
+        public void SelectSpell(PlayerSpellWrapper spell)
         {
             selectedSpell = spell;
             FloatingTextManager.Instance.ShowFloatingText(
-                $"{spell.spellName} selected",
+                $"{spell.SpellName} selected",
                 transform,
                 Color.yellow
             );
         }
 
-        public void CastSelfTargetingSpell(PlayerSpell spell)
+        public void CastSelfTargetingSpell(PlayerSpellWrapper spell)
         {
-            if (playerStats.CurrentMagic < spell.magicCost)
+            if (playerStats.CurrentMagic < spell.MagicCost)
             {
                 FloatingTextManager.Instance.ShowFloatingText(
                     "Not enough magic",
@@ -175,8 +210,8 @@ namespace CoED
                 );
                 return;
             }
-            playerStats.ConsumeMagic(spell.magicCost);
-            ExecuteSpell(spell, transform.position);
+            playerStats.ConsumeMagic(spell.MagicCost);
+            ExecuteSpell(spell.BaseSpell, transform.position);
 
             PlayerUI.Instance.OnSpellCast(spell);
         }
@@ -193,7 +228,7 @@ namespace CoED
                 return;
             }
 
-            if (playerStats.CurrentMagic < selectedSpell.magicCost)
+            if (playerStats.CurrentMagic < selectedSpell.MagicCost)
             {
                 FloatingTextManager.Instance.ShowFloatingText(
                     "Not enough magic",
@@ -213,16 +248,11 @@ namespace CoED
                 return;
             }
 
-            playerStats.ConsumeMagic(selectedSpell.magicCost);
+            playerStats.ConsumeMagic(selectedSpell.MagicCost);
 
-            ExecuteSpell(selectedSpell, targetPosition);
+            ExecuteSpell(selectedSpell.BaseSpell, targetPosition);
 
             PlayerUI.Instance.OnSpellCast(selectedSpell);
-        }
-
-        private bool IsSpellOnCooldown(PlayerSpell spell)
-        {
-            return PlayerUI.Instance.IsSpellOnCooldown(spell);
         }
 
         public void ExecuteSpell(PlayerSpell spell, Vector3 targetPosition)
@@ -230,7 +260,14 @@ namespace CoED
             switch (spell.type)
             {
                 case SpellType.Projectile:
-                    CastProjectileSpell(spell, targetPosition);
+                    if (spell.spellName == "Lightning Bolt")
+                    {
+                        CastLightningBolt(spell, targetPosition);
+                    }
+                    else
+                    {
+                        CastProjectileSpell(spell, targetPosition);
+                    }
                     break;
                 case SpellType.AoE:
                     CastAoESpell(spell, targetPosition);
@@ -247,6 +284,29 @@ namespace CoED
                 default:
                     Debug.LogWarning($"Unsupported spell type: {spell.type}");
                     break;
+            }
+        }
+
+        private void CastLightningBolt(PlayerSpell spell, Vector3 targetPosition)
+        {
+            GameObject lightning = Instantiate(
+                spell.spellEffectPrefab,
+                spellSpawnPoint.position,
+                Quaternion.identity
+            );
+            LightningBoltController controller = lightning.GetComponent<LightningBoltController>();
+
+            if (controller != null)
+            {
+                Debug.Log("Creating lightning bolt");
+                controller.CreateLightningBolt(
+                    spellSpawnPoint.position,
+                    targetPosition,
+                    spell.damage,
+                    spell.speed,
+                    spell.lifetime
+                );
+                CreateStatusEffectsFromSpell(spell);
             }
         }
 
@@ -267,12 +327,13 @@ namespace CoED
 
             if (projectile != null)
             {
-                Vector2 direction = (targetPosition - spellSpawnPoint.position).normalized;
+                projectile.direction = (targetPosition - spellSpawnPoint.position).normalized;
                 projectile.lifetime = spell.lifetime;
                 projectile.collisionRadius = spell.collisionRadius;
-                projectile.direction = direction;
-                projectile.speed = spell.speed; // Ensure the speed is set
+                projectile.speed = spell.speed;
                 projectile.damage = spell.damage;
+
+                projectile.statusEffects = CreateStatusEffectsFromSpell(spell);
                 projectile.SetTargetPosition(targetPosition);
             }
             else
@@ -297,28 +358,18 @@ namespace CoED
                 spell.areaOfEffect,
                 LayerMask.GetMask("enemies")
             );
+
             foreach (var enemyCollider in hitEnemies)
             {
                 EnemyStats enemyStats = enemyCollider.GetComponent<EnemyStats>();
+                enemyStats.TakeDamage(spell.damage);
                 if (enemyStats != null)
                 {
-                    enemyStats.TakeDamage(spell.damage);
-
-                    if (spell.hasBurnEffect)
+                    foreach (var statusEffect in CreateStatusEffectsFromSpell(spell))
                     {
-                        enemyStats.ApplyStatusEffect(
-                            StatusEffectType.Burn,
-                            spell.burnDamage,
-                            spell.burnDuration
-                        );
-                    }
-
-                    if (spell.hasFreezeEffect)
-                    {
-                        enemyStats.ApplyStatusEffect(
-                            StatusEffectType.Freeze,
-                            0,
-                            spell.freezeDuration
+                        StatusEffectManager.Instance.AddStatusEffect(
+                            enemyCollider.gameObject,
+                            statusEffect
                         );
                     }
                 }
@@ -334,11 +385,68 @@ namespace CoED
             }
         }
 
+        public List<StatusEffect> CreateStatusEffectsFromSpell(PlayerSpell spell)
+        {
+            List<StatusEffect> statusEffects = new List<StatusEffect>();
+
+            void AddEffect(StatusEffectType type)
+            {
+                GameObject prefab = statusEffectLibrary.GetEffectPrefab(type);
+                if (prefab != null)
+                {
+                    StatusEffect effect = prefab.GetComponent<StatusEffect>();
+                    if (effect != null)
+                    {
+                        statusEffects.Add(effect);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Prefab for {type} is missing a StatusEffect component.");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"No prefab found for {type} in StatusEffectIconLibrary.");
+                }
+            }
+
+            if (spell.hasBurnEffect)
+                AddEffect(StatusEffectType.Burn);
+            if (spell.hasFreezeEffect)
+                AddEffect(StatusEffectType.Freeze);
+            if (spell.hasPoisonEffect)
+                AddEffect(StatusEffectType.Poison);
+            if (spell.hasStunEffect)
+                AddEffect(StatusEffectType.Stun);
+            if (spell.hasSlowEffect)
+                AddEffect(StatusEffectType.Slow);
+            if (spell.hasRegenEffect)
+                AddEffect(StatusEffectType.Regen);
+            if (spell.hasShieldEffect)
+                AddEffect(StatusEffectType.Shield);
+            if (spell.hasInvincibleEffect)
+                AddEffect(StatusEffectType.Invincible);
+
+            return statusEffects;
+        }
+
+        private bool IsSpellOnCooldown(PlayerSpellWrapper spell)
+        {
+            return PlayerUI.Instance.IsSpellOnCooldown(spell);
+        }
+
         private Vector3 GetMouseWorldPosition()
         {
             Vector3 mousePos = Input.mousePosition;
             mousePos.z = Camera.main.nearClipPlane;
             return Camera.main.ScreenToWorldPoint(mousePos);
         }
+    }
+
+    [System.Serializable]
+    public class StatusEffectPrefab
+    {
+        public StatusEffectType effectType;
+        public GameObject prefab;
     }
 }

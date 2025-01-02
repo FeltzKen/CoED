@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 7457511724886291004}
   - component: {fileID: 5584068053672071398}
   m_Layer: 6
-  m_Name: FireballEffect
+  m_Name: Ice
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -79,7 +79,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 3
-  m_Sprite: {fileID: -1080549867, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
+  m_Sprite: {fileID: 2024277501, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -167,4 +167,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   statusEffects:
-  - {fileID: 93035768914502204, guid: 0aa17d20e746747499743c8c56d9c39d, type: 3}
+  - {fileID: 93035768914502204, guid: b47548b4bad57ba438e2905afc3506f2, type: 3}

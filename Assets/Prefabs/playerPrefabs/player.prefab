@@ -11,13 +11,13 @@ GameObject:
   - component: {fileID: 5452245402053938655}
   - component: {fileID: 3467289398806818614}
   - component: {fileID: 4918402029249683888}
+  - component: {fileID: -5451514820897329398}
   - component: {fileID: 7168025207566393736}
   - component: {fileID: 4558179072998116767}
   - component: {fileID: 1948119710454645371}
   - component: {fileID: 8182549918890610233}
   - component: {fileID: 7276005580750806224}
   - component: {fileID: 5833244433419089174}
-  - component: {fileID: -5451514820897329398}
   - component: {fileID: -4137153357304739670}
   m_Layer: 3
   m_Name: player
@@ -128,6 +128,29 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!223 &-5451514820897329398
+Canvas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8948494598534906761}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_RenderMode: 2
+  m_Camera: {fileID: 0}
+  m_PlaneDistance: 100
+  m_PixelPerfect: 0
+  m_ReceivesEvents: 1
+  m_OverrideSorting: 0
+  m_OverridePixelPerfect: 0
+  m_SortingBucketNormalizedSize: 0
+  m_VertexColorAlwaysGammaSpace: 0
+  m_AdditionalShaderChannelsFlag: 0
+  m_UpdateRectTransformForStandalone: 0
+  m_SortingLayerID: 0
+  m_SortingOrder: 3
+  m_TargetDisplay: 0
 --- !u!70 &7168025207566393736
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -211,10 +234,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   staminaCostPerRun: 2
+  moveDelay: 0.3
+  actionDelay: 0.5
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 16768
-  moveDelay: 0.25
   staminaBar: {fileID: 8034618581357456614, guid: 4e03e51d2d01fab4aa3632a729ecb472, type: 3}
   enemyLayer:
     serializedVersion: 2
@@ -272,29 +296,6 @@ MonoBehaviour:
   CurrentProjectileLifespan: 0
   currency: 0
   currentFloor: 1
---- !u!223 &-5451514820897329398
-Canvas:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8948494598534906761}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_RenderMode: 2
-  m_Camera: {fileID: 0}
-  m_PlaneDistance: 100
-  m_PixelPerfect: 0
-  m_ReceivesEvents: 1
-  m_OverrideSorting: 0
-  m_OverridePixelPerfect: 0
-  m_SortingBucketNormalizedSize: 0
-  m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
-  m_UpdateRectTransformForStandalone: 0
-  m_SortingLayerID: 0
-  m_SortingOrder: 3
-  m_TargetDisplay: 0
 --- !u!114 &-4137153357304739670
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -311,6 +312,12 @@ MonoBehaviour:
   enemyLayer:
     serializedVersion: 2
     m_Bits: 256
+  statusEffectLibrary: {fileID: 11400000, guid: 86dd547b78145e94db6970253d681118, type: 2}
+  spellPrefabs:
+  - {fileID: 11400000, guid: a781e18ceab702b4eb978bed1709f647, type: 2}
+  - {fileID: 11400000, guid: c8daa40fa2231734ca539aad4df3701f, type: 2}
+  - {fileID: 11400000, guid: d02e4e08f45320346b6adec2fbe9149f, type: 2}
+  - {fileID: 11400000, guid: 3b5012b31a116ed48a06b2b34dab2950, type: 2}
 --- !u!1001 &8593987073900837000
 PrefabInstance:
   m_ObjectHideFlags: 0

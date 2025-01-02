@@ -13,11 +13,15 @@ namespace CoED
         [SerializeField]
         private float staminaCostPerRun = 2f;
 
+        [Header("Movement Settings")]
         [SerializeField]
-        private LayerMask obstacleLayer;
+        private float moveDelay = 0.3f;
 
         [SerializeField]
-        private float moveDelay = 0.2f;
+        private float actionDelay = 0.5f;
+
+        [SerializeField]
+        private LayerMask obstacleLayer;
 
         [SerializeField]
         private Slider staminaBar;
@@ -27,12 +31,13 @@ namespace CoED
         private Enemy enemy;
         private PlayerStats playerStats;
         public Vector2Int currentTilePosition;
-        private float moveCooldown;
         private Rigidbody2D rb;
         private bool isMoving = false;
         private Vector2 targetPosition;
         private bool isMouseHeld = false;
         private bool isInitialClickValid = false;
+        private float moveCooldownTimer = 0f;
+        private float actionCooldownTimer = 0f;
 
         private void Awake()
         {
@@ -68,6 +73,11 @@ namespace CoED
 
         private void Update()
         {
+            // Update timers
+            if (moveCooldownTimer > 0)
+                moveCooldownTimer -= Time.deltaTime;
+            if (actionCooldownTimer > 0)
+                actionCooldownTimer -= Time.deltaTime;
             HandleMovementInput();
         }
 
@@ -84,11 +94,11 @@ namespace CoED
 
         private void HandleMovementInput()
         {
-            if (Time.time < moveCooldown)
+            if (moveCooldownTimer > 0)
                 return;
             isMouseHeld = Input.GetMouseButton(0);
 
-            if (Input.GetMouseButtonDown(0))
+            if (Input.GetMouseButton(0) && actionCooldownTimer <= 0)
             {
                 isInitialClickValid = !IsPointerOverSpecificUIElement();
             }
@@ -97,6 +107,8 @@ namespace CoED
             )
             {
                 PerformContinuousAttack(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+                actionCooldownTimer = actionDelay; // Reset action cooldown
+
                 return;
             }
             Vector2Int direction = Vector2Int.zero;
@@ -170,9 +182,10 @@ namespace CoED
         {
             Vector2Int newTilePosition = currentTilePosition + direction;
             Vector2 newPosition = new Vector2(newTilePosition.x, newTilePosition.y);
-            if (IsEnemyAtPosition(newTilePosition))
+            if (IsEnemyAtPosition(newTilePosition) && actionCooldownTimer <= 0)
             {
                 PlayerCombat.Instance.PerformMeleeAttack(newTilePosition);
+                actionCooldownTimer = actionDelay; // Reset action cooldown timer
                 return;
             }
             bool canMoveX = IsMovePossible(new Vector2Int(direction.x, 0));
@@ -198,9 +211,8 @@ namespace CoED
             if (canMoveX || canMoveY || canMoveDiagonal)
             {
                 UpdateCurrentTilePosition(targetPosition);
-
+                moveCooldownTimer = moveDelay; // Reset move cooldown
                 isMoving = true;
-                moveCooldown = Time.time + moveDelay;
                 enemy.ResetEnemyAttackFlags();
             }
         }

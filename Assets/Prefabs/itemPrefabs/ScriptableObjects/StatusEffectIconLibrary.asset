@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcd1df7b60c63c7419c2b0ccd0323cd5, type: 3}
+  m_Name: StatusEffectIconLibrary
+  m_EditorClassIdentifier: 
+  EffectPrefabs:
+  - EffectType: 0
+    EffectPrefab: {fileID: 5813560597946081353, guid: 0aa17d20e746747499743c8c56d9c39d, type: 3}
+  - EffectType: 1
+    EffectPrefab: {fileID: 5813560597946081353, guid: b47548b4bad57ba438e2905afc3506f2, type: 3}
+  - EffectType: 7
+    EffectPrefab: {fileID: 5813560597946081353, guid: c7e6e26de664b14438e734bf98864050, type: 3}
+  - EffectType: 2
+    EffectPrefab: {fileID: 5813560597946081353, guid: 0ef6bbfacd52bb0418421f03509c32ed, type: 3}
+  - EffectType: 5
+    EffectPrefab: {fileID: 5813560597946081353, guid: 92d1f3902a3b139459bf6d5796a58db0, type: 3}
+  - EffectType: 6
+    EffectPrefab: {fileID: 5813560597946081353, guid: d32eb0433b9718f4b8434366174fa2fb, type: 3}
+  - EffectType: 4
+    EffectPrefab: {fileID: 5813560597946081353, guid: a4443e69186e94740a98f2c97e788acd, type: 3}
+  - EffectType: 3
+    EffectPrefab: {fileID: 5813560597946081353, guid: 18191ae519d901f418e3695a8c514ff3, type: 3}

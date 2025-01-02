@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CoED
@@ -15,11 +16,13 @@ namespace CoED
 
         [SerializeField]
         public float damage { get; set; }
+        public List<StatusEffect> statusEffects;
 
         [SerializeField]
-        public float collisionRadius { get; set; } // Radius for collision detection
+        public float collisionRadius { get; set; }
         private Vector3 targetPosition;
         private bool hasReachedTarget = false;
+        private bool hasCollided = false;
 
         public void SetTargetPosition(Vector3 target)
         {
@@ -40,18 +43,21 @@ namespace CoED
 
                 if (Vector3.Distance(transform.position, targetPosition) < 0.1f)
                 {
+                    OnCollide();
                     hasReachedTarget = true;
                     // Optionally instantiate an impact effect here
                     // Instantiate(impactEffectPrefab, targetPosition, Quaternion.identity);
                     Destroy(gameObject);
                 }
-
-                OnCollide();
             }
         }
 
         private void OnCollide()
         {
+            if (hasCollided)
+                return; // Prevent multiple calls
+            hasCollided = true;
+
             Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, collisionRadius);
             foreach (Collider2D hit in hits)
             {
@@ -61,12 +67,18 @@ namespace CoED
                     if (enemy != null)
                     {
                         enemy.TakeDamage(damage);
-                    }
-                    else
-                    {
-                        Debug.LogWarning(
-                            "PlayerProjectile: EnemyStats component not found on collided object."
-                        );
+
+                        foreach (var effectPrefab in statusEffects)
+                        {
+                            if (effectPrefab != null)
+                            {
+                                Debug.Log($"Applying {effectPrefab.effectType} to {hit.name}.");
+                                StatusEffectManager.Instance.AddStatusEffect(
+                                    hit.gameObject,
+                                    effectPrefab
+                                );
+                            }
+                        }
                     }
                     Destroy(gameObject);
                     return;

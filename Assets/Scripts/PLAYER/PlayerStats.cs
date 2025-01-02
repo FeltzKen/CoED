@@ -196,6 +196,7 @@ namespace CoED
             level++;
             ExpToNextLevel = Mathf.CeilToInt(ExpToNextLevel * 1.25f);
             CalculateStats();
+            LevelUpSpells();
             if (playerUI != null)
             {
                 playerUI = FindAnyObjectByType<PlayerUI>();
@@ -214,6 +215,22 @@ namespace CoED
             Debug.Log(
                 $"PlayerStats: Leveled up to level {level}! Next level at {ExpToNextLevel} experience."
             );
+        }
+
+        private void LevelUpSpells()
+        {
+            var spells = PlayerSpellCaster.Instance.GetKnownSpells(); // Retrieve known spells
+            foreach (var spell in spells)
+            {
+                if (
+                    spell.BaseSpell.levelUpThreshold > 0
+                    && level % spell.BaseSpell.levelUpThreshold == 0
+                    && spell.BaseSpell.spellLevel < level / spell.BaseSpell.levelUpThreshold
+                )
+                {
+                    spell.LevelUp();
+                }
+            }
         }
 
         public void GainCurrency(int amount)

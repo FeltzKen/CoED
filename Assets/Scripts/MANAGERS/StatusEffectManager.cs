@@ -6,141 +6,189 @@ namespace CoED
 {
     public class StatusEffectManager : MonoBehaviour
     {
+        public static StatusEffectManager Instance { get; private set; }
+
         [Header("Status Effect UI")]
         [SerializeField]
-        private Transform statusEffectContainer;
+        private Transform playerStatusEffectContainer;
 
         [SerializeField]
-        private GameObject statusEffectIconPrefab;
+        private Transform enemyStatusEffectContainer;
 
-        private List<ActiveStatusEffect> activeEffects = new List<ActiveStatusEffect>();
-        private Dictionary<StatusEffect, GameObject> effectIcons =
-            new Dictionary<StatusEffect, GameObject>();
+        [SerializeField]
+        private StatusEffectIconLibrary iconLibrary;
 
-        private PlayerStats playerStats;
-        private EnemyStats enemyStats;
+        private Dictionary<GameObject, List<ActiveStatusEffect>> playerEffects =
+            new Dictionary<GameObject, List<ActiveStatusEffect>>();
+        private Dictionary<GameObject, List<ActiveStatusEffect>> enemyEffects =
+            new Dictionary<GameObject, List<ActiveStatusEffect>>();
 
         private void Awake()
         {
-            playerStats = GetComponent<PlayerStats>();
-            enemyStats = GetComponent<EnemyStats>();
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
 
         private void Update()
         {
-            ApplyEffects();
-            UpdateEffects();
+            //ApplyEffects(playerEffects);
+            //ApplyEffects(enemyEffects);
+
+            UpdateEffects(playerEffects);
+            UpdateEffects(enemyEffects);
         }
 
-        private void ApplyEffects()
+        public void AddStatusEffect(GameObject entity, StatusEffect effectPrefab)
         {
-            foreach (var activeEffect in activeEffects)
+            bool isPlayer = entity.CompareTag("Player");
+            var targetEffects = isPlayer ? playerEffects : enemyEffects;
+
+            Transform targetContainer;
+
+            // Determine the appropriate container
+            if (isPlayer)
             {
-                StatusEffect effect = activeEffect.Effect;
-                float deltaTime = Time.deltaTime;
-
-                if (effect.damagePerSecond > 0)
-                {
-                    int damage = Mathf.CeilToInt(effect.damagePerSecond * deltaTime);
-                    if (playerStats != null)
-                    {
-                        //    playerStats.TakeDamage(damage);
-                        //   Debug.Log($"Player taking damage: {damage}");
-                        //   floatingTextManager?.ShowFloatingText(damage.ToString(),transform,Color.red);
-                    }
-                    else if (enemyStats != null)
-                    {
-                        // enemyStats.TakeDamage(damage);
-                        //  floatingTextManager?.ShowFloatingText(damage.ToString(), transform, Color.red);                  );
-                    }
-                }
-
-                if (effect.speedModifier != 0)
-                {
-                    if (playerStats != null)
-                    {
-                        playerStats.CurrentSpeed += effect.speedModifier * deltaTime;
-                    }
-                }
+                targetContainer = playerStatusEffectContainer;
             }
-        }
-
-        private void UpdateEffects()
-        {
-            for (int i = activeEffects.Count - 1; i >= 0; i--)
+            else
             {
-                ActiveStatusEffect activeEffect = activeEffects[i];
-                activeEffect.RemainingDuration -= Time.deltaTime;
-
-                if (activeEffect.RemainingDuration <= 0)
+                // Dynamically find the StatusEffectsPanel for the enemy
+                var enemyPanel = entity.transform.Find("StatusEffectsPanel");
+                if (enemyPanel == null)
                 {
-                    RemoveEffect(activeEffect.Effect);
+                    Debug.LogWarning($"Enemy {entity.name} does not have a StatusEffectsPanel.");
+                    return;
                 }
-            }
-        }
-
-        public void AddStatusEffect(StatusEffect effect)
-        {
-            if (effect == null)
-            {
-                Debug.LogWarning("StatusEffectManager: Attempted to add a null status effect.");
-                return;
+                targetContainer = enemyPanel;
             }
 
-            foreach (var activeEffect in activeEffects)
+            // Add the entity to the dictionary if not already present
+            if (!targetEffects.ContainsKey(entity))
             {
-                if (activeEffect.Effect.effectName == effect.effectName)
+                targetEffects[entity] = new List<ActiveStatusEffect>();
+            }
+
+            List<ActiveStatusEffect> effects = targetEffects[entity];
+
+            // Check for duplicate effects
+            foreach (var activeEffect in effects)
+            {
+                if (activeEffect.Effect.effectType == effectPrefab.effectType)
                 {
-                    activeEffect.RemainingDuration = effect.duration;
+                    Debug.LogWarning(
+                        $"Effect {effectPrefab.effectType} already applied to {entity.name}. Refreshing duration."
+                    );
+                    activeEffect.RemainingDuration = effectPrefab.duration;
                     return;
                 }
             }
 
-            activeEffects.Add(new ActiveStatusEffect(effect));
-            DisplayEffectIcon(effect);
-            Debug.Log($"StatusEffectManager: Added new status effect '{effect.effectName}'.");
-        }
+            // Instantiate the effect prefab
+            GameObject effectObj = Instantiate(effectPrefab.gameObject);
+            effectObj.transform.SetParent(targetContainer, false); // Assign to the correct container
+            effectObj.SetActive(true); // Ensure the instantiated prefab is active
 
-        private void RemoveEffect(StatusEffect effect)
-        {
-            if (effect == null)
+            StatusEffect newEffect = effectObj.GetComponent<StatusEffect>();
+            // Adjust RectTransform for layout group
+            RectTransform rectTransform = effectObj.GetComponent<RectTransform>();
+            if (rectTransform != null)
             {
-                Debug.LogWarning("StatusEffectManager: Attempted to remove a null status effect.");
-                return;
-            }
-
-            activeEffects.RemoveAll(ae => ae.Effect.effectName == effect.effectName);
-            RemoveEffectIcon(effect);
-        }
-
-        private void DisplayEffectIcon(StatusEffect effect)
-        {
-            if (statusEffectIconPrefab != null && statusEffectContainer != null)
-            {
-                GameObject iconObj = Instantiate(statusEffectIconPrefab, statusEffectContainer);
-                Image iconImage = iconObj.GetComponent<Image>();
-                if (iconImage != null)
-                {
-                    iconImage.sprite = effect.Icon;
-                }
-
-                effectIcons[effect] = iconObj;
+                rectTransform.localScale = Vector3.one; // Ensure correct scaling
+                //rectTransform.sizeDelta = new Vector2(1, 1); // Set size to match icons
             }
             else
             {
-                Debug.LogWarning(
-                    "StatusEffectManager: StatusEffectIconPrefab or StatusEffectContainer is not assigned."
-                );
+                Debug.LogWarning("StatusEffectManager: Icon prefab missing RectTransform.");
+            }
+            if (newEffect != null)
+            {
+                newEffect.ApplyToEntity(entity); // Apply the effect to the entity
+                effects.Add(new ActiveStatusEffect(newEffect));
+                Debug.Log($"Applied {newEffect.effectType} to {entity.name}.");
+            }
+            else
+            {
+                Debug.LogWarning("StatusEffectManager: Failed to apply status effect.");
             }
         }
 
-        private void RemoveEffectIcon(StatusEffect effect)
+        private void ApplyEffects(Dictionary<GameObject, List<ActiveStatusEffect>> targetEffects)
         {
-            if (effectIcons.TryGetValue(effect, out GameObject iconObj))
+            foreach (var entityEntry in targetEffects)
             {
-                Destroy(iconObj);
-                effectIcons.Remove(effect);
+                GameObject entity = entityEntry.Key;
+                List<ActiveStatusEffect> effects = entityEntry.Value;
+
+                foreach (var activeEffect in effects)
+                {
+                    StatusEffect effect = activeEffect.Effect;
+
+                    // Dynamically apply effects based on entity type
+                    if (entity.CompareTag("Player"))
+                    {
+                        var playerStats = entity.GetComponent<PlayerStats>();
+                        if (playerStats != null)
+                        {
+                            effect.ApplyToEntity(entity); // Let StatusEffect handle the logic
+                        }
+                    }
+                    else if (entity.CompareTag("Enemy"))
+                    {
+                        var enemyStats = entity.GetComponent<EnemyStats>();
+                        if (enemyStats != null)
+                        {
+                            effect.ApplyToEntity(entity); // Let StatusEffect handle the logic
+                        }
+                    }
+                }
             }
+        }
+
+        private void UpdateEffects(Dictionary<GameObject, List<ActiveStatusEffect>> targetEffects)
+        {
+            foreach (var entityEntry in targetEffects)
+            {
+                GameObject entity = entityEntry.Key;
+                List<ActiveStatusEffect> effects = entityEntry.Value;
+
+                for (int i = effects.Count - 1; i >= 0; i--)
+                {
+                    ActiveStatusEffect activeEffect = effects[i];
+                    if (activeEffect.Effect.hasDuration)
+                    {
+                        activeEffect.RemainingDuration -= Time.deltaTime;
+
+                        if (activeEffect.RemainingDuration <= 0)
+                        {
+                            RemoveEffect(entity, activeEffect.Effect);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void RemoveEffect(GameObject entity, StatusEffect effect)
+        {
+            bool isPlayer = playerEffects.ContainsKey(entity);
+            var targetEffects = isPlayer ? playerEffects : enemyEffects;
+
+            if (!targetEffects.ContainsKey(entity))
+                return;
+
+            targetEffects[entity].RemoveAll(ae => ae.Effect.effectName == effect.effectName);
+            RemoveEffectIcon(effect, isPlayer);
+            Debug.Log($"Removed status effect '{effect.effectName}' from {entity.name}.");
+        }
+
+        private void RemoveEffectIcon(StatusEffect effect, bool isPlayer)
+        {
+            Destroy(effect.gameObject);
         }
 
         private class ActiveStatusEffect

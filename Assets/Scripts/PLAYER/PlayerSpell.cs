@@ -14,20 +14,23 @@ namespace CoED
         public float collisionRadius;
         public float speed;
         public float cooldown;
+        public int spellLevel; // need to implement this
+        public int levelUpThreshold = 5; // Player level required for spell to level up
 
         [Header("Advanced Attributes")]
         public SpellType type;
-        public float range;
         public float areaOfEffect;
         public GameObject spellEffectPrefab;
 
         [Header("Status Effects")]
-        public bool hasBurnEffect;
-        public float burnDamage;
-        public float burnDuration;
-
+        public bool hasPoisonEffect;
         public bool hasFreezeEffect;
-        public float freezeDuration;
+        public bool hasBurnEffect;
+        public bool hasSlowEffect;
+        public bool hasStunEffect;
+        public bool hasRegenEffect;
+        public bool hasShieldEffect;
+        public bool hasInvincibleEffect;
 
         [Header("Special Attributes")]
         public bool selfTargeting;

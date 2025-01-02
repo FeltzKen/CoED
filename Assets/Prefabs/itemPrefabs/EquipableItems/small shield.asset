@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   equipmentName: small shield
   equipmentButtonPrefab: {fileID: 9134042355877932202, guid: edb3a6a9ee1d9c24c97c96ce2d9cb0f6, type: 3}
+  equipmentPrefab: {fileID: 1998612530821210125, guid: 00fadd280e9b5ff47af7dba912246f1b, type: 3}
   attackModifier: 0
-  defenseModifier: 4
+  defenseModifier: 3
   healthModifier: 0
   speedModifier: 0
   magicModifier: 0
@@ -23,7 +24,6 @@ MonoBehaviour:
   durability: 0
   equipmentType: 1
   equipmentSlot: 6
-  modelPrefab: {fileID: 1998612530821210125, guid: 00fadd280e9b5ff47af7dba912246f1b, type: 3}
   rarity: 0
   icon: {fileID: 1184448561, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   description: Just a basic shield.

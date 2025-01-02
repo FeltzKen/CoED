@@ -54,11 +54,11 @@ namespace CoED
 
         [Header("Available Spells")]
         [SerializeField]
-        private List<PlayerSpell> availableSpells;
+        private List<PlayerSpellWrapper> availableSpells;
 
         private PlayerSpellCaster spellCaster;
-        private Dictionary<PlayerSpell, SpellUIElement> spellUIMap =
-            new Dictionary<PlayerSpell, SpellUIElement>();
+        private Dictionary<PlayerSpellWrapper, SpellUIElement> spellUIMap =
+            new Dictionary<PlayerSpellWrapper, SpellUIElement>();
 
         [Header("Experience UI")]
         [SerializeField]
@@ -137,6 +137,8 @@ namespace CoED
 
         private void PopulateSpellPanel()
         {
+            availableSpells = PlayerSpellCaster.Instance.GetKnownSpells(); // Fetch known spells
+
             if (spellPanel == null || leftContainer == null || rightContainer == null)
             {
                 Debug.LogError("Spell panel or one of the containers is not assigned.");
@@ -158,29 +160,29 @@ namespace CoED
                 Destroy(child.gameObject);
             }
 
-            foreach (PlayerSpell spell in availableSpells)
+            foreach (var spell in availableSpells)
             {
-                if (spell.selfTargeting)
+                if (spell.SelfTargeting)
                 {
-                    AddSpellToUI(spell, rightContainer); // Add to the right container
+                    AddSpellToUI(spell, rightContainer);
                 }
                 else
                 {
-                    AddSpellToUI(spell, leftContainer); // Add to the left container
+                    AddSpellToUI(spell, leftContainer);
                 }
             }
         }
 
-        private void AddSpellToUI(PlayerSpell spell, Transform targetSpellPanel)
+        private void AddSpellToUI(PlayerSpellWrapper spell, Transform targetSpellPanel)
         {
             if (spellUIMap.ContainsKey(spell))
             {
-                Debug.LogWarning($"Spell {spell.spellName} is already in the UI.");
+                Debug.LogWarning($"Spell {spell.SpellName} is already in the UI.");
                 return;
             }
 
             GameObject buttonObj = Instantiate(spellButtonPrefab, targetSpellPanel);
-            buttonObj.name = $"{spell.spellName}_Button";
+            buttonObj.name = $"{spell.SpellName}_Button";
 
             Button spellButton = buttonObj.GetComponent<Button>();
             if (spellButton == null)
@@ -217,14 +219,14 @@ namespace CoED
             maskImage.type = Image.Type.Filled;
             maskImage.fillMethod = Image.FillMethod.Radial360;
 
-            if (spell.icon != null)
+            if (spell.Icon != null)
             {
-                baseImage.sprite = spell.icon;
+                baseImage.sprite = spell.Icon;
                 baseImage.color = Color.white;
             }
             else
             {
-                Debug.LogWarning($"Spell {spell.spellName} does not have an icon assigned.");
+                Debug.LogWarning($"Spell {spell.SpellName} does not have an icon assigned.");
             }
 
             spellButton.onClick.AddListener(() => OnSpellSelected(spell));
@@ -237,10 +239,11 @@ namespace CoED
                 cooldownTimer = 0f,
             };
 
+            Debug.Log($"Added spell {spell.SpellName} to UI.");
             spellUIMap.Add(spell, uiElement);
         }
 
-        private void HighlightSelectedSpell(PlayerSpell selectedSpell)
+        private void HighlightSelectedSpell(PlayerSpellWrapper selectedSpell)
         {
             foreach (var pair in spellUIMap)
             {
@@ -255,15 +258,15 @@ namespace CoED
             }
         }
 
-        public void OnSpellCast(PlayerSpell spell)
+        public void OnSpellCast(PlayerSpellWrapper spell)
         {
             if (spellUIMap.TryGetValue(spell, out SpellUIElement uiElement))
             {
-                uiElement.cooldownTimer = spell.cooldown;
+                uiElement.cooldownTimer = spell.Cooldown;
                 uiElement.button.interactable = false;
                 uiElement.maskImage.fillAmount = 0f;
 
-                StartCoroutine(CooldownCoroutine(spell, uiElement));
+                StartCoroutine(CooldownCoroutine(spell.BaseSpell, uiElement));
             }
 
             UpdateMagicBar(PlayerStats.Instance.CurrentMagic, PlayerStats.Instance.MaxMagic);
@@ -282,7 +285,7 @@ namespace CoED
             uiElement.button.interactable = true;
         }
 
-        public bool IsSpellOnCooldown(PlayerSpell spell)
+        public bool IsSpellOnCooldown(PlayerSpellWrapper spell)
         {
             if (spellUIMap.TryGetValue(spell, out SpellUIElement uiElement))
             {
@@ -291,9 +294,9 @@ namespace CoED
             return false;
         }
 
-        private void OnSpellSelected(PlayerSpell spell)
+        private void OnSpellSelected(PlayerSpellWrapper spell)
         {
-            if (!spell.selfTargeting)
+            if (!spell.SelfTargeting)
             {
                 Debug.Log("spell is not self-targeting");
                 HighlightSelectedSpell(spell);
