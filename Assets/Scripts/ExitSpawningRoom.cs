@@ -19,7 +19,7 @@ namespace CoED
         {
             FloatingTextManager.Instance.ShowFloatingText(
                 warningMessage,
-                PlayerMovement.Instance.transform,
+                PlayerStats.Instance.transform,
                 Color.red
             );
         }

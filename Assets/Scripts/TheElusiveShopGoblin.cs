@@ -266,7 +266,7 @@ namespace CoED
             bool isEnchanted = Random.value < 0.3f;
             int basePrice = Random.Range(10, 100);
             string itemResourcePath = isEnchanted ? "Items/EnchantedItem" : "Items/NormalItem";
-            Item item = Resources.Load<Item>(itemResourcePath);
+            ConsumableItemWrapper item = Resources.Load<ConsumableItemWrapper>(itemResourcePath);
 
             GameObject itemPrefab = null;
             if (item != null)

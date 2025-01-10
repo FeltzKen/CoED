@@ -2,57 +2,21 @@ using UnityEngine;
 
 namespace CoED
 {
-    public class Money : MonoBehaviour
+    [CreateAssetMenu(fileName = "Money", menuName = "Item/Money")]
+    public class Money : Item
     {
         [Header("Money Settings")]
         [SerializeField]
-        private int amount = 1;
+        private int baseAmount;
 
-        private PlayerStats playerStats;
-
-        private void Awake()
+        public int GetBaseAmount()
         {
-            playerStats = PlayerStats.Instance;
-            if (playerStats == null)
-            {
-                Debug.LogError("Money: PlayerStats instance not found.");
-            }
+            return baseAmount;
         }
 
-        public void SetAmount(int newAmount)
+        public void SetAmount(int amount)
         {
-            if (newAmount < 0)
-            {
-                Debug.LogWarning("Money: Attempted to set a negative amount. Defaulting to 0.");
-                amount = 0;
-            }
-            else
-            {
-                amount = newAmount;
-            }
-        }
-
-        public int Collect()
-        {
-            if (playerStats != null)
-            {
-                playerStats.GainCurrency(amount);
-            }
-            else
-            {
-                Debug.LogWarning("Money: PlayerStats instance not found. Cannot add currency.");
-            }
-
-            Destroy(gameObject, 0.1f);
-            return amount;
-        }
-
-        private void OnTriggerEnter2D(Collider2D other)
-        {
-            if (other.CompareTag("Player"))
-            {
-                Collect();
-            }
+            baseAmount = amount;
         }
     }
 }

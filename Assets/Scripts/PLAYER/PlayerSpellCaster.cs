@@ -46,16 +46,6 @@ namespace CoED
             }
 
             playerStats = GetComponent<PlayerStats>();
-            if (playerStats == null)
-            {
-                playerStats = PlayerStats.Instance;
-                if (playerStats == null)
-                {
-                    Debug.LogError("PlayerStats instance not found.");
-                    enabled = false;
-                    return;
-                }
-            }
         }
 
         private void Update()
@@ -74,13 +64,6 @@ namespace CoED
 
         private void InitializeWrappedSpells()
         {
-            // Check if spellPrefabs are populated
-            if (spellPrefabs == null || spellPrefabs.Count == 0)
-            {
-                Debug.LogError("No spell prefabs found. Please assign them in the inspector.");
-                return;
-            }
-
             playerSpellsWrapper = new List<PlayerSpellWrapper>();
             foreach (var baseSpell in spellPrefabs) // Assuming spellPrefabs holds PlayerSpell ScriptableObjects
             {
@@ -298,7 +281,6 @@ namespace CoED
 
             if (controller != null)
             {
-                Debug.Log("Creating lightning bolt");
                 controller.CreateLightningBolt(
                     spellSpawnPoint.position,
                     targetPosition,
@@ -312,12 +294,6 @@ namespace CoED
 
         private void CastProjectileSpell(PlayerSpell spell, Vector3 targetPosition)
         {
-            if (spell.spellEffectPrefab == null)
-            {
-                Debug.LogWarning($"No spellEffectPrefab assigned for {spell.spellName}.");
-                return;
-            }
-
             GameObject spellObject = Instantiate(
                 spell.spellEffectPrefab,
                 spellSpawnPoint.position,
@@ -335,12 +311,6 @@ namespace CoED
 
                 projectile.statusEffects = CreateStatusEffectsFromSpell(spell);
                 projectile.SetTargetPosition(targetPosition);
-            }
-            else
-            {
-                Debug.LogWarning(
-                    $"The prefab for {spell.spellName} does not have a PlayerProjectile component."
-                );
             }
         }
 
@@ -399,14 +369,6 @@ namespace CoED
                     {
                         statusEffects.Add(effect);
                     }
-                    else
-                    {
-                        Debug.LogWarning($"Prefab for {type} is missing a StatusEffect component.");
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning($"No prefab found for {type} in StatusEffectIconLibrary.");
                 }
             }
 

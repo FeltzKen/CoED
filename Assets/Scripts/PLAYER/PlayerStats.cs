@@ -29,6 +29,9 @@ namespace CoED
         public float CurrentHealth { get; set; }
         public float MaxHealth { get; set; }
         private float equipmentHealth = 0;
+        private float currentShieldValue = 0;
+        private bool invincible = false;
+        public bool Invincible => invincible;
 
         [Header("Stamina")]
         [SerializeField, Min(0)]
@@ -88,7 +91,7 @@ namespace CoED
         private int currency = 0;
 
         [SerializeField]
-        public int currentFloor = 1;
+        public int currentFloor = 0;
         private PlayerUI playerUI;
         public event Action OnPlayerDeath;
 
@@ -173,6 +176,36 @@ namespace CoED
             equipmentSpeed = totalSpeed;
 
             CalculateStats();
+        }
+
+        public void AddShield(float shieldValue)
+        {
+            if (shieldValue <= 0)
+            {
+                Debug.LogWarning("PlayerStats: Shield value must be positive.");
+                return;
+            }
+
+            currentShieldValue += shieldValue;
+            CurrentDefense += shieldValue;
+            Debug.Log($"Shield added: {shieldValue}. Current defense: {CurrentDefense}");
+        }
+
+        public void RemoveShield(float shieldValue)
+        {
+            if (shieldValue <= 0)
+            {
+                Debug.LogWarning("PlayerStats: Shield value must be positive.");
+                return;
+            }
+
+            float effectiveShieldRemoval = Mathf.Min(currentShieldValue, shieldValue);
+            currentShieldValue -= effectiveShieldRemoval;
+            CurrentDefense -= effectiveShieldRemoval;
+
+            Debug.Log(
+                $"Shield removed: {effectiveShieldRemoval}. Current defense: {CurrentDefense}"
+            );
         }
 
         public void GainExperience(int amount)
@@ -267,8 +300,14 @@ namespace CoED
             FloatingTextManager.Instance.ShowFloatingText($"{amount} spent", transform, Color.red);
         }
 
-        public void TakeDamage(float damage)
+        public void TakeDamage(float damage, bool bypassInvincible = false)
         {
+            if (!bypassInvincible && invincible)
+            {
+                Debug.Log("PlayerStats: Player is invincible.");
+                return;
+            }
+
             float effectiveDamage = damage - CurrentDefense;
             CurrentHealth = Mathf.Max(CurrentHealth - effectiveDamage, 0);
             UpdateHealthUI(FindAnyObjectByType<PlayerUI>());
@@ -335,6 +374,11 @@ namespace CoED
         {
             CurrentStamina = Mathf.Clamp(CurrentStamina + amount, 0, MaxStamina);
             UpdateStaminaUI(FindAnyObjectByType<PlayerUI>());
+        }
+
+        public void SetInvincible(bool value)
+        {
+            invincible = value;
         }
 
         private void UpdateExperienceUI(PlayerUI playerUI)

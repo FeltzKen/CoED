@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 4668065812263961041}
   m_Layer: 9
   m_Name: small shield
-  m_TagString: Untagged
+  m_TagString: Item
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -162,3 +162,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   equipmentData: {fileID: 11400000, guid: 3563d9a1e87b87a4ba76be51f9e41eeb, type: 2}
+  itemDescription: 

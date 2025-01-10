@@ -5,28 +5,16 @@ namespace CoED
     public class ItemCollectible : MonoBehaviour
     {
         [SerializeField]
-        public Consumable consumeItem;
-        public Consumable ConsumeItem => consumeItem;
+        public ConsumableItemWrapper consumeItem;
+        public ConsumableItemWrapper ConsumeItem => consumeItem;
 
-        private void OnTriggerEnter2D(Collider2D other)
+        [SerializeField]
+        private string itemDescription;
+
+        public void Awake()
         {
-            if (other.CompareTag("Player"))
-            {
-                CollectItem(PlayerActions.Instance);
-            }
+            itemDescription = consumeItem.GetDescription();
         }
 
-        private void CollectItem(PlayerActions playerActions)
-        {
-            if (playerActions != null)
-            {
-                playerActions.CollectItem(this);
-                Destroy(gameObject);
-            }
-            else
-            {
-                Debug.LogWarning("ItemCollectible: PlayerActions is null.");
-            }
-        }
     }
 }

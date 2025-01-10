@@ -18,10 +18,10 @@ MonoBehaviour:
   damage: 35
   lifetime: 1
   collisionRadius: 0
-  speed: 30
+  speed: 20
   cooldown: 0.1
-  spellLevel: 3
-  levelUpThreshold: 1
+  spellLevel: 1
+  levelUpThreshold: 6
   type: 0
   areaOfEffect: 0
   spellEffectPrefab: {fileID: 8513041316966859194, guid: 65b20c2094c5f0543a0f3c637d486d4b, type: 3}

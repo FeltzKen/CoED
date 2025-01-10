@@ -31,7 +31,7 @@ namespace CoED
             }
         }
 
-        public void AddQuestItem(Item reward)
+        public void AddQuestItem(QuestItem reward)
         {
             // Add special item from quest.
         }
@@ -49,6 +49,7 @@ namespace CoED
             }
             equipmentPerSlot[equipment.equipmentSlot].Add(equipment);
             Debug.Log($"EquipmentInventory: Added {equipment.equipmentName} to inventory.");
+            EquippableItemsUIManager.Instance.AddEquipmentToUI(equipment);
 
             return true;
         }

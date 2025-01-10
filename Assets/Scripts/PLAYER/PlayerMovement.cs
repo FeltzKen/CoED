@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CoED.Pathfinding;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -7,8 +8,6 @@ namespace CoED
 {
     public class PlayerMovement : MonoBehaviour
     {
-        public static PlayerMovement Instance { get; private set; }
-
         [Header("Movement Settings")]
         [SerializeField]
         private float staminaCostPerRun = 2f;
@@ -41,22 +40,10 @@ namespace CoED
 
         private void Awake()
         {
-            if (Instance == null)
-            {
-                Instance = this;
-                DontDestroyOnLoad(gameObject);
-            }
-            else
-            {
-                Destroy(gameObject);
-                Debug.LogWarning("PlayerMovement: Duplicate instance detected. Destroying.");
-                return;
-            }
-
             rb = GetComponent<Rigidbody2D>();
             if (rb == null)
             {
-                Debug.LogError("PlayerMovement: Missing Rigidbody2D component. Disabling script.");
+                Debug.LogError("PlayerMovement: Missing Rigidbody2D.");
                 enabled = false;
                 return;
             }
@@ -78,6 +65,7 @@ namespace CoED
                 moveCooldownTimer -= Time.deltaTime;
             if (actionCooldownTimer > 0)
                 actionCooldownTimer -= Time.deltaTime;
+
             HandleMovementInput();
         }
 
@@ -94,23 +82,10 @@ namespace CoED
 
         private void HandleMovementInput()
         {
-            if (moveCooldownTimer > 0)
+            if (moveCooldownTimer > 0 || isMoving)
                 return;
-            isMouseHeld = Input.GetMouseButton(0);
 
-            if (Input.GetMouseButton(0) && actionCooldownTimer <= 0)
-            {
-                isInitialClickValid = !IsPointerOverSpecificUIElement();
-            }
-            if (
-                isMouseHeld && IsMouseOverEnemy(Camera.main.ScreenToWorldPoint(Input.mousePosition))
-            )
-            {
-                PerformContinuousAttack(Camera.main.ScreenToWorldPoint(Input.mousePosition));
-                actionCooldownTimer = actionDelay; // Reset action cooldown
-
-                return;
-            }
+            // Handle key-based movement
             Vector2Int direction = Vector2Int.zero;
 
             if (Input.GetKey(KeyCode.UpArrow))
@@ -122,60 +97,24 @@ namespace CoED
             if (Input.GetKey(KeyCode.RightArrow))
                 direction += Vector2Int.right;
 
-            if (direction != Vector2Int.zero)
+            if (direction != Vector2.zero)
             {
                 MoveInDirection(direction);
+                transform.GetComponent<PlayerNavigator>().CancelPath(); // Cancel ongoing pathfinding
                 return;
             }
 
-            if (isMouseHeld && isInitialClickValid)
+            // Handle mouse-based attack
+            isMouseHeld = Input.GetMouseButton(0);
+            if (
+                isMouseHeld
+                && IsMouseOverEnemy(Camera.main.ScreenToWorldPoint(Input.mousePosition))
+                && actionCooldownTimer <= 0
+            )
             {
-                Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                mousePosition.z = 0;
-
-                Transform floorParent = GetCurrentFloorParent();
-                if (floorParent != null)
-                {
-                    mousePosition -= floorParent.position;
-                }
-
-                Vector2 directionToMouse = (mousePosition - transform.position).normalized;
-
-                direction = DetermineDirection(directionToMouse);
-
-                if (!IsMouseOverEnemy(mousePosition))
-                {
-                    MoveInDirection(direction);
-                }
+                PerformContinuousAttack(Camera.main.ScreenToWorldPoint(Input.mousePosition));
+                actionCooldownTimer = actionDelay;
             }
-        }
-
-        private Vector2Int DetermineDirection(Vector2 directionToMouse)
-        {
-            Vector2Int direction = Vector2Int.zero;
-
-            if (Mathf.Abs(directionToMouse.x) > Mathf.Abs(directionToMouse.y))
-            {
-                direction.x = directionToMouse.x > 0 ? 1 : -1;
-            }
-            else
-            {
-                direction.y = directionToMouse.y > 0 ? 1 : -1;
-            }
-
-            if (Mathf.Abs(directionToMouse.x) > 0.5f && Mathf.Abs(directionToMouse.y) > 0.5f)
-            {
-                direction.x = directionToMouse.x > 0 ? 1 : -1;
-                direction.y = directionToMouse.y > 0 ? 1 : -1;
-            }
-
-            return direction;
-        }
-
-        private Transform GetCurrentFloorParent()
-        {
-            int currentFloor = playerStats.currentFloor;
-            return DungeonManager.Instance.GetFloorTransform(currentFloor);
         }
 
         private void MoveInDirection(Vector2Int direction)
@@ -239,7 +178,7 @@ namespace CoED
             return hitCollider == null;
         }
 
-        private bool IsPointerOverSpecificUIElement()
+        public bool IsPointerOverSpecificUIElement()
         {
             if (EventSystem.current.IsPointerOverGameObject())
             {
@@ -272,7 +211,7 @@ namespace CoED
             return false;
         }
 
-        private bool IsMouseOverEnemy(Vector3 mousePosition)
+        public bool IsMouseOverEnemy(Vector3 mousePosition)
         {
             Vector3 roundedMousePosition = new Vector3(
                 Mathf.Round(mousePosition.x),
@@ -300,7 +239,7 @@ namespace CoED
             }
         }
 
-        private bool IsEnemyAtPosition(Vector2Int position)
+        public bool IsEnemyAtPosition(Vector2Int position)
         {
             Vector2 targetPosition = new Vector2(position.x, position.y);
             Collider2D hitCollider = Physics2D.OverlapBox(
@@ -329,11 +268,6 @@ namespace CoED
             TileOccupancyManager.Instance.SetPlayerPosition(
                 Vector2Int.RoundToInt(transform.position)
             );
-        }
-
-        public object GetPlayerTransform()
-        {
-            return transform;
         }
 
         private void UpdateStaminaUI()

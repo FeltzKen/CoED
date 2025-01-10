@@ -37,14 +37,26 @@ namespace CoED
                     dungeonParent.transform
                 );
                 spawningRoom.name = "SpawningRoom";
-                // spawningRoom.transform.localPosition = Vector3.zero;
 
-                // Store the reference to the spawning room in DungeonManager
-                DungeonManager.Instance.SpawningRoomInstance = spawningRoom;
-            }
-            else
-            {
-                Debug.LogError("Spawning room prefab is not assigned in DungeonSettings!");
+                // Create and set FloorData for floor 0
+                floorData = new FloorData(0);
+                floorData.SetTilemaps(
+                    spawningRoom.transform.Find("FloorTiles").GetComponent<Tilemap>(),
+                    spawningRoom.transform.Find("WallTiles").GetComponent<Tilemap>()
+                );
+
+                floorData.AddAllFloorTiles(
+                    GetTilePositions(
+                        spawningRoom.transform.Find("FloorTiles").GetComponent<Tilemap>()
+                    ),
+                    GetTilePositions(
+                        spawningRoom.transform.Find("WallTiles").GetComponent<Tilemap>()
+                    )
+                );
+
+                DungeonManager.Instance.AddFloor(floorData);
+
+                Debug.Log("DungeonGenerator: Floor 0 (Spawning Room) added to DungeonManager.");
             }
             ComputeFloorIntersections();
             PlaceStairs();
@@ -143,6 +155,25 @@ namespace CoED
             ScatterAmbushTriggers();
         }
         #endregion
+
+        private IEnumerable<Vector2Int> GetTilePositions(Tilemap tilemap)
+        {
+            BoundsInt bounds = tilemap.cellBounds;
+            TileBase[] allTiles = tilemap.GetTilesBlock(bounds);
+
+            List<Vector2Int> tilePositions = new List<Vector2Int>();
+            for (int x = 0; x < bounds.size.x; x++)
+            {
+                for (int y = 0; y < bounds.size.y; y++)
+                {
+                    if (allTiles[x + y * bounds.size.x] != null)
+                    {
+                        tilePositions.Add(new Vector2Int(bounds.xMin + x, bounds.yMin + y));
+                    }
+                }
+            }
+            return tilePositions;
+        }
 
         #region CreateTilemaps
         private Tilemap CreateTilemap(Transform parent, string name, bool addCollider = false)

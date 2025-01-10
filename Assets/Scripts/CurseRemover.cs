@@ -18,7 +18,7 @@ namespace CoED
                 equipment.RemoveCurse();
                 FloatingTextManager.Instance.ShowFloatingText(
                     "Curse removed!",
-                    PlayerMovement.Instance.transform,
+                    PlayerStats.Instance.transform,
                     Color.green
                 );
             }
@@ -26,7 +26,7 @@ namespace CoED
             {
                 FloatingTextManager.Instance.ShowFloatingText(
                     "This item is not cursed or cannot be uncursed.",
-                    PlayerMovement.Instance.transform,
+                    PlayerStats.Instance.transform,
                     Color.red
                 );
             }

@@ -105,8 +105,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effectType: 6
-  damagePerSecond: 5
-  duration: 30
+  interval: 0
+  amountPerInterval: 10
+  duration: 120
   speedModifier: 0
   effectName: Shield
   icon: {fileID: 391497253, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}

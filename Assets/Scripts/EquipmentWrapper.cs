@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace CoED
 {
@@ -6,6 +7,9 @@ namespace CoED
     {
         [Header("Equipment Data")]
         public Equipment equipmentData;
+
+        [SerializeField]
+        private string itemDescription;
 
         public void Initialize(Equipment data)
         {
@@ -35,27 +39,6 @@ namespace CoED
             Debug.Log(
                 $"EquipmentWrapper: Applied stat modifiers with scale factor {scaledFactor} to {equipmentData.equipmentName}"
             );
-        }
-
-        private void OnTriggerEnter2D(Collider2D other)
-        {
-            if (other.CompareTag("Player"))
-            {
-                CollectItem(PlayerActions.Instance);
-            }
-        }
-
-        private void CollectItem(PlayerActions playerActions)
-        {
-            if (playerActions != null)
-            {
-                playerActions.CollectItem(this);
-                Destroy(gameObject);
-            }
-            else
-            {
-                Debug.LogWarning("ItemCollectible: PlayerActions is null.");
-            }
         }
     }
 }

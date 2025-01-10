@@ -10,23 +10,29 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3f346ae4d371ef2439c71f3564d02f32, type: 3}
-  m_Name: _healMinorWounds
+  m_Name: _healWounds
   m_EditorClassIdentifier: 
-  spellName: HealMinorWounds
+  spellName: HealWounds
   icon: {fileID: -1259839820, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   magicCost: 20
   damage: 100
+  lifetime: 0
+  collisionRadius: 0
   speed: 0
   cooldown: 20
+  spellLevel: 1
+  levelUpThreshold: 6
   type: 2
-  range: 0
   areaOfEffect: 0
   spellEffectPrefab: {fileID: 4996319237994903159, guid: cdbf24be1af1533428f5fcac741c088e, type: 3}
-  hasBurnEffect: 0
-  burnDamage: 0
-  burnDuration: 0
+  hasPoisonEffect: 0
   hasFreezeEffect: 0
-  freezeDuration: 0
+  hasBurnEffect: 0
+  hasSlowEffect: 0
+  hasStunEffect: 0
+  hasRegenEffect: 0
+  hasShieldEffect: 0
+  hasInvincibleEffect: 0
   selfTargeting: 1
   canChase: 0
   isInstant: 0

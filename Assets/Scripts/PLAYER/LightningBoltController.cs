@@ -142,7 +142,6 @@ namespace CoED
                     // Apply stun effect
                     if (stunEffectPrefab != null)
                     {
-                        Debug.Log($"Applying {stunEffectPrefab.effectType} to {hit.name}.");
                         StatusEffectManager.Instance.AddStatusEffect(
                             hit.gameObject,
                             stunEffectPrefab
@@ -151,7 +150,6 @@ namespace CoED
                 }
             }
 
-            // Destroy the entire lightning bolt after handling the hit
             Destroy(gameObject);
         }
     }

@@ -105,9 +105,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effectType: 1
-  damagePerSecond: 0
-  duration: 0
+  interval: 0
+  amountPerInterval: 0
+  duration: 30
   speedModifier: 0
   effectName: Freeze
   icon: {fileID: 394998665, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
-  hasDuration: 0
+  hasDuration: 1

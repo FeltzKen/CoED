@@ -10,9 +10,6 @@ namespace CoED
         private string loreDescription;
 
         [SerializeField]
-        private string _itemName;
-
-        [SerializeField]
         private bool isKeyItem;
 
         [Header("Stat Modifiers")]

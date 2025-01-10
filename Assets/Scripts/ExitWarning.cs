@@ -18,7 +18,7 @@ public class ExitWarning : MonoBehaviour
     {
         FloatingTextManager.Instance.ShowFloatingText(
             warningMessage,
-            PlayerMovement.Instance.transform,
+            PlayerStats.Instance.transform,
             Color.red
         );
     }

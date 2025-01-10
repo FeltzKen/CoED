@@ -105,8 +105,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effectType: 5
-  damagePerSecond: 10
-  duration: 25
+  interval: 20
+  amountPerInterval: 10
+  duration: 120
   speedModifier: 0
   effectName: Regen
   icon: {fileID: -1259839820, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}

@@ -13,10 +13,6 @@ namespace CoED.Items
         private void Awake()
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
-            if (spriteRenderer == null)
-            {
-                Debug.LogWarning($"{name} has HiddenItemController but no SpriteRenderer on it!");
-            }
         }
 
         private void Start()
@@ -33,19 +29,6 @@ namespace CoED.Items
             if (isHidden)
             {
                 RevealItem();
-                Debug.Log($"{name} was discovered!");
-                if (GetComponent<ItemCollectible>() != null)
-                {
-                    PlayerActions.Instance.CollectItem(GetComponent<ItemCollectible>());
-                }
-                if (GetComponent<EquipmentWrapper>())
-                {
-                    PlayerActions.Instance.CollectItem(GetComponent<EquipmentWrapper>());
-                }
-            }
-            else
-            {
-                Debug.Log($"{name} was already revealed.");
             }
         }
 
@@ -54,7 +37,6 @@ namespace CoED.Items
             if (isHidden)
             {
                 isHidden = false;
-                Debug.Log($"{name}: Hidden item discovered!");
 
                 if (spriteRenderer != null)
                 {

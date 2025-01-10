@@ -15,19 +15,16 @@ MonoBehaviour:
   spellName: Fireball
   icon: {fileID: -1080549867, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   magicCost: 0
-  damage: 5
+  damage: 10
   lifetime: 5
   collisionRadius: 0.5
   speed: 6
-  cooldown: 1
-  spellLevel: 0
+  cooldown: 0.1
+  spellLevel: 1
+  levelUpThreshold: 4
   type: 0
-  range: 15
   areaOfEffect: 0
   spellEffectPrefab: {fileID: 120242553412648062, guid: 9f849c1587a2e994ab6f74842cebee07, type: 3}
-  effectDuration: 20
-  statusSpeedModifier: 0
-  statusEffectDamage: 3
   hasPoisonEffect: 0
   hasFreezeEffect: 0
   hasBurnEffect: 1
@@ -35,6 +32,7 @@ MonoBehaviour:
   hasStunEffect: 0
   hasRegenEffect: 0
   hasShieldEffect: 0
+  hasInvincibleEffect: 0
   selfTargeting: 0
   canChase: 0
   isInstant: 0

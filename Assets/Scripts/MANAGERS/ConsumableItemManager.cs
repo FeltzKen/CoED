@@ -27,26 +27,17 @@ namespace CoED
                 return;
             }
 
-            if (consumableItemButtonPrefab == null)
+            if (
+                consumableItemButtonPrefab == null
+                || consumableItemsPanel == null
+                || inventoryPanel == null
+            )
             {
-                Debug.LogError(
-                    "ConsumableItemsUIManager: consumableItemButtonPrefab is not assigned."
-                );
+                Debug.LogError("ConsumableItemsUIManager: UI references are missing.");
                 return;
             }
 
-            if (consumableItemsPanel == null)
-            {
-                Debug.LogError("ConsumableItemsUIManager: consumableItemsPanel is not assigned.");
-                return;
-            }
-
-            if (inventoryPanel == null)
-            {
-                Debug.LogError("ConsumableItemsUIManager: inventoryPanel is not assigned.");
-                return;
-            }
-
+            TooltipManager.Instance.Initialize();
             ConsumableInventory.Instance.OnInventoryChanged += UpdateConsumableItemsUI;
             UpdateConsumableItemsUI();
 
@@ -55,97 +46,104 @@ namespace CoED
 
         public void UpdateConsumableItemsUI()
         {
-            Debug.Log("ConsumableItemsUIManager: Updating consumable items UI.");
+            // Log for debugging
+            Debug.Log("Updating Consumable Items UI...");
 
+            // Clear old buttons
             foreach (var button in consumableItemButtons)
             {
                 Destroy(button);
             }
             consumableItemButtons.Clear();
-            Debug.Log(
-                $"Total number of items in the inventory: {ConsumableInventory.Instance.GetAllItems().Count}"
-            );
-            Debug.Log(
-                $"Total number of buttons in the consumableItemButtons: {consumableItemButtons.Count}"
-            );
 
-            foreach (var item in ConsumableInventory.Instance.GetAllItems())
+            // Fetch current inventory items
+            var currentItems = ConsumableInventory.Instance.GetAllItems();
+
+            // Log the inventory count
+            Debug.Log($"Inventory contains {currentItems.Count} items.");
+
+            // Create new buttons for each item
+            foreach (var item in currentItems)
             {
-                Debug.Log($"Item in inventory: {item.ItemName}, Type: {item.GetType()}");
+                var currentItem = item;
 
-                if (item is Consumable consumable)
-                {
-                    Debug.Log(
-                        $"ConsumableItemsUIManager: Creating button for {consumable.ItemName}."
-                    );
-                    GameObject buttonInstance = Instantiate(
-                        consumableItemButtonPrefab,
-                        consumableItemsPanel
-                    );
-                    TextMeshProUGUI buttonText = buttonInstance
-                        .transform.Find("Name")
-                        .GetComponent<TextMeshProUGUI>();
-                    Image buttonImage = buttonInstance.transform.Find("Icon").GetComponent<Image>();
+                GameObject buttonInstance = Instantiate(
+                    consumableItemButtonPrefab,
+                    consumableItemsPanel
+                );
 
-                    if (buttonText != null)
-                    {
-                        buttonText.text = consumable.ItemName;
-                    }
-                    else
-                    {
-                        Debug.LogError(
-                            "ConsumableItemsUIManager: TextMeshProUGUI component not found in button prefab."
-                        );
-                    }
+                // Set up button text and image
+                TextMeshProUGUI buttonText = buttonInstance
+                    .transform.Find("Name")
+                    .GetComponent<TextMeshProUGUI>();
+                buttonText.text = currentItem.ItemName;
 
-                    if (buttonImage != null && consumable.Icon != null)
-                    {
-                        buttonImage.sprite = consumable.Icon;
-                    }
-                    else
-                    {
-                        Debug.LogError(
-                            "ConsumableItemsUIManager: Image component not found in button prefab or icon not assigned."
-                        );
-                    }
+                Image buttonImage = buttonInstance.transform.Find("Icon").GetComponent<Image>();
+                buttonImage.sprite = currentItem.Icon;
 
-                    EventTrigger trigger = buttonInstance.AddComponent<EventTrigger>();
-                    EventTrigger.Entry entry = new EventTrigger.Entry();
-                    entry.eventID = EventTriggerType.PointerClick;
-                    entry.callback.AddListener(
-                        (data) =>
-                        {
-                            OnPointerClick((PointerEventData)data, consumable);
-                        }
-                    );
-                    trigger.triggers.Add(entry);
+                // Add event listeners
+                AddEventListener(
+                    buttonInstance,
+                    EventTriggerType.PointerClick,
+                    (eventData) => OnPointerClick((PointerEventData)eventData, currentItem)
+                );
+                AddEventListener(
+                    buttonInstance,
+                    EventTriggerType.PointerEnter,
+                    (eventData) => OnTooltipShow(currentItem)
+                );
+                AddEventListener(
+                    buttonInstance,
+                    EventTriggerType.PointerExit,
+                    (eventData) => OnTooltipHide()
+                );
 
-                    consumableItemButtons.Add(buttonInstance);
-                    Debug.Log($"ConsumableItemsUIManager: Added button for {consumable.ItemName}");
-                }
+                // Add button to the list
+                consumableItemButtons.Add(buttonInstance);
             }
+
+            // Log the updated button count for verification
+            Debug.Log($"UI updated: {consumableItemButtons.Count} buttons created.");
         }
 
-        private void OnPointerClick(PointerEventData data, Consumable consumable)
+        private void AddEventListener(
+            GameObject target,
+            EventTriggerType eventType,
+            UnityEngine.Events.UnityAction<BaseEventData> action
+        )
         {
-            if (data.button == PointerEventData.InputButton.Left)
-            {
-                // Suppress left-clicks
-                return;
-            }
+            EventTrigger trigger =
+                target.GetComponent<EventTrigger>() ?? target.AddComponent<EventTrigger>();
+            EventTrigger.Entry entry = new EventTrigger.Entry { eventID = eventType };
+            entry.callback.AddListener(action);
+            trigger.triggers.Add(entry);
+        }
 
+        private void OnPointerClick(PointerEventData data, ConsumableItemWrapper consumable)
+        {
             if (data.button == PointerEventData.InputButton.Right)
             {
                 ConsumeItem(consumable);
             }
         }
 
-        private void ConsumeItem(Consumable consumable)
+        private void OnTooltipShow(ConsumableItemWrapper consumable)
         {
-            Debug.Log($"ConsumableItemsUIManager: Consuming item {consumable.ItemName}.");
-            consumable.Consume(PlayerStats.Instance);
+            Debug.Log($"[ConsumableItemsUIManager] Showing tooltip for {consumable.ItemName}");
+            TooltipManager.Instance.ShowTooltip(consumable.GetDescription(), Input.mousePosition);
+        }
+
+        private void OnTooltipHide()
+        {
+            TooltipManager.Instance.HideTooltip();
+            Debug.Log("[ConsumableItemsUIManager] Hiding tooltip.");
+        }
+
+        private void ConsumeItem(ConsumableItemWrapper consumable)
+        {
+            Debug.Log($"[ConsumableItemsUIManager] Consuming item {consumable.ItemName}");
             ConsumableInventory.Instance.RemoveItem(consumable);
-            UpdateConsumableItemsUI(); // Update UI after consuming the item
+            UpdateConsumableItemsUI(); // Refresh UI
         }
     }
 }

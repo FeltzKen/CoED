@@ -1,11 +1,10 @@
+using CoED;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "NewEquipment", menuName = "Inventory/Equipment")]
-public class Equipment : ScriptableObject
+public class Equipment : Item
 {
-    public string equipmentName;
-    public Object equipmentButtonPrefab;
-    public GameObject equipmentPrefab;
+    public string equipmentName => itemName;
     public float attackModifier;
     public float defenseModifier;
     public float healthModifier;
@@ -18,13 +17,15 @@ public class Equipment : ScriptableObject
     public EquipmentType equipmentType;
     public EquipmentSlot equipmentSlot;
     public Rarity rarity;
-    public Sprite icon;
 
     private const float enchantmentChance = 0.1f;
     private const float curseChance = 0.1f;
 
-    [TextArea]
-    public string description;
+    [SerializeField]
+    private DescriptionField descriptionField = DescriptionField.None; // Default to None
+
+    [SerializeField, TextArea]
+    private string description = ""; // Optional custom text
 
     public void InitializeEquipment()
     {
@@ -35,6 +36,38 @@ public class Equipment : ScriptableObject
     public void RemoveCurse()
     {
         IsCursed = false;
+    }
+
+    public string Description
+    {
+        get
+        {
+            float value = GetDescriptionValue();
+            string baseDescription = $"{itemName} +{value}";
+
+            // Append the custom description, if it exists
+            if (!string.IsNullOrEmpty(description))
+            {
+                baseDescription += $" {description}";
+            }
+
+            return baseDescription;
+        }
+    }
+
+    private float GetDescriptionValue()
+    {
+        float value = descriptionField switch
+        {
+            DescriptionField.AttackBoost => attackModifier,
+            DescriptionField.DefenseBoost => defenseModifier,
+            DescriptionField.SpeedBoost => speedModifier,
+            DescriptionField.HealthBoost => healthModifier,
+            DescriptionField.MagicBoost => magicModifier,
+            DescriptionField.StaminaBoost => staminaModifier,
+            _ => 0, // Handle None or undefined cases
+        };
+        return value;
     }
 
     public enum EquipmentType
@@ -63,5 +96,16 @@ public class Equipment : ScriptableObject
         Rare,
         Epic,
         Legendary,
+    }
+
+    public enum DescriptionField
+    {
+        None, // To handle cases where no description field is selected
+        AttackBoost,
+        DefenseBoost,
+        SpeedBoost,
+        HealthBoost,
+        MagicBoost,
+        StaminaBoost,
     }
 }

@@ -202,10 +202,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   IsVisible: 1
-  possibleDrops:
-  - {fileID: 3444388741511694390, guid: c9293d22b28d901439827ba92f82273a, type: 3}
-  - {fileID: 6138977369563804488, guid: 97689ad36b792ed49ac2dc631403c5a4, type: 3}
-  - {fileID: 4668065812263961041, guid: 00fadd280e9b5ff47af7dba912246f1b, type: 3}
+  lootTable:
+  - {fileID: 11400000, guid: daaccea728ff9e44aa70eb30afe55880, type: 2}
+  - {fileID: 11400000, guid: 3c0228b54e0eb874e9f7e1dfa6681e71, type: 2}
+  - {fileID: 11400000, guid: 7ae50d9337691e24a8ff2b5443bbc717, type: 2}
+  - {fileID: 11400000, guid: 605187edc7ee8b54f8f6a193b917bc46, type: 2}
+  - {fileID: 11400000, guid: b5cfb27eb9061274dad755db11c3809f, type: 2}
+  - {fileID: 11400000, guid: 3563d9a1e87b87a4ba76be51f9e41eeb, type: 2}
   baseDropRate: 0.3
   dropRateDecreaseFactor: 0.5
   moneyPrefab: {fileID: 5582355417736950124, guid: 94e565f3443a44a4f8d23c4d5a0dc48f, type: 3}

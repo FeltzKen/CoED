@@ -22,7 +22,11 @@ namespace CoED
             FloorNumber = floorNumber;
         }
 
-        public void SetTilemaps(Tilemap floorTilemap, Tilemap wallTilemap, Tilemap voidTilemap)
+        public void SetTilemaps(
+            Tilemap floorTilemap,
+            Tilemap wallTilemap,
+            Tilemap voidTilemap = null
+        )
         {
             FloorTilemap = floorTilemap;
             WallTilemap = wallTilemap;
@@ -32,7 +36,7 @@ namespace CoED
         public void AddAllFloorTiles(
             IEnumerable<Vector2Int> floorTiles,
             IEnumerable<Vector2Int> wallTiles,
-            IEnumerable<Vector2Int> voidTiles
+            IEnumerable<Vector2Int> voidTiles = null
         )
         {
             foreach (var tile in floorTiles)
@@ -43,6 +47,10 @@ namespace CoED
             {
                 WallTiles.Add(tile);
             }
+
+            if (voidTiles == null)
+                return;
+
             foreach (var tile in voidTiles)
             {
                 VoidTiles.Add(tile);
@@ -62,7 +70,7 @@ namespace CoED
             List<Vector2Int> selectedTiles = new List<Vector2Int>();
             for (int i = 0; i < count; i++)
             {
-                selectedTiles.Add(tileList[UnityEngine.Random.Range(0, tileList.Count)]);
+                selectedTiles.Add(tileList[Random.Range(0, tileList.Count)]);
             }
 
             return selectedTiles;

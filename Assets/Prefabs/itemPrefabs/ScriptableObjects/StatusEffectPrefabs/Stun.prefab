@@ -105,8 +105,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effectType: 3
-  damagePerSecond: 0
-  duration: 5
+  interval: 0
+  amountPerInterval: 0
+  duration: 15
   speedModifier: 0
   effectName: Stun
   icon: {fileID: -567571614, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}

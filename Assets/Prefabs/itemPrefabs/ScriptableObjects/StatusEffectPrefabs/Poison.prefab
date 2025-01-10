@@ -105,7 +105,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effectType: 2
-  damagePerSecond: 2
+  interval: 25
+  amountPerInterval: 10
   duration: 0
   speedModifier: 0
   effectName: Poison

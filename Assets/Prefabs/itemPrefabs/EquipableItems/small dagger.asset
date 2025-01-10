@@ -12,9 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 238d564276168b045b3de74cf084bc48, type: 3}
   m_Name: small dagger
   m_EditorClassIdentifier: 
-  equipmentName: small dagger
-  equipmentButtonPrefab: {fileID: 9134042355877932202, guid: edb3a6a9ee1d9c24c97c96ce2d9cb0f6, type: 3}
-  equipmentPrefab: {fileID: 1998612530821210125, guid: 97689ad36b792ed49ac2dc631403c5a4, type: 3}
+  itemPrefab: {fileID: 1998612530821210125, guid: 97689ad36b792ed49ac2dc631403c5a4, type: 3}
+  itemName: Small Dagger
+  icon: {fileID: 279487478, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
+  removedEffects: 
+  addedEffects: 
+  isHidden: 0
   attackModifier: 4
   defenseModifier: 0
   healthModifier: 0
@@ -25,5 +28,4 @@ MonoBehaviour:
   equipmentType: 0
   equipmentSlot: 5
   rarity: 0
-  icon: {fileID: 279487478, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   description: Just a basic dagger.

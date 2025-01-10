@@ -105,9 +105,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effectType: 7
-  damagePerSecond: 0
+  interval: 0
+  amountPerInterval: 0
   duration: 15
-  speedModifier: 0
+  speedModifier: 2
   effectName: Invincible
   icon: {fileID: 1596038618, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   hasDuration: 1

@@ -57,7 +57,7 @@ namespace CoED
         private void CompleteQuest()
         {
             Debug.Log(
-                $"Quest '{questName}' completed! Reward: {rewardItem?.ItemName ?? "No Reward"}."
+                $"Quest '{questName}' completed! Reward: {rewardItem?.itemName ?? "No Reward"}."
             );
             GrantReward();
         }
@@ -69,7 +69,7 @@ namespace CoED
             {
                 equipmentInventory.AddQuestItem(rewardItem);
                 Debug.Log(
-                    $"Quest '{questName}': Special quest reward '{rewardItem.ItemName}' added to player's inventory."
+                    $"Quest '{questName}': Special quest reward '{rewardItem.itemName}' added to player's inventory."
                 );
             }
             else

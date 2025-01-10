@@ -16,6 +16,7 @@ namespace CoED
         private List<Quest> activeQuests = new List<Quest>();
 
         private ConsumableInventory consumableInventory;
+        private EquipmentInventory equipmentInventory = EquipmentInventory.Instance;
 
         private void Awake()
         {
@@ -83,9 +84,9 @@ namespace CoED
         {
             if (quest.RewardItem != null)
             {
-                consumableInventory.AddItem(quest.RewardItem);
+                equipmentInventory.AddQuestItem(quest.RewardItem);
                 Debug.Log(
-                    $"QuestManager: Granted reward '{quest.RewardItem.ItemName}' to the player."
+                    $"QuestManager: Granted reward '{quest.RewardItem.itemName}' to the player."
                 );
             }
             else

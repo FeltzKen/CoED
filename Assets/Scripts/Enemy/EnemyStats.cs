@@ -11,6 +11,7 @@ namespace CoED
 
         [SerializeField, Min(0)]
         private int baseDefense = 5;
+        private float currentShieldValue = 0;
 
         [SerializeField, Min(0)]
         private int baseHealth = 100;
@@ -25,6 +26,8 @@ namespace CoED
         private float baseProjectileLifespan = 2f;
 
         private List<StatusEffect> activeStatusEffects = new List<StatusEffect>();
+        private bool invincible = false;
+        public bool Invincible => invincible;
 
         // Current Stats
         public float PatrolSpeed;
@@ -76,8 +79,14 @@ namespace CoED
             InitializeUI();
         }
 
-        public void TakeDamage(float damage)
+        public void TakeDamage(float damage, bool bypassInvincible = false)
         {
+            if (!bypassInvincible && invincible)
+            {
+                Debug.Log("EnemyStats: Enemy is invincible.");
+                return;
+            }
+
             float effectiveDamage = Mathf.Max(damage - CurrentDefense, 1);
             CurrentHealth = Mathf.Max(CurrentHealth - effectiveDamage, 0);
             FloatingTextManager.Instance.ShowFloatingText(
@@ -116,6 +125,41 @@ namespace CoED
             Debug.Log("Enemy has died.");
             Destroy(gameObject);
             enemy.DropLoot();
+        }
+
+        public void SetInvincible(bool invincible)
+        {
+            this.invincible = invincible;
+        }
+
+        public void AddShield(float shieldValue)
+        {
+            if (shieldValue <= 0)
+            {
+                Debug.LogWarning("EnemyStats: Shield value must be positive.");
+                return;
+            }
+
+            currentShieldValue += shieldValue;
+            CurrentDefense += shieldValue;
+            Debug.Log($"Shield added: {shieldValue}. Current defense: {CurrentDefense}");
+        }
+
+        public void RemoveShield(float shieldValue)
+        {
+            if (shieldValue <= 0)
+            {
+                Debug.LogWarning("EnemyStats: Shield value must be positive.");
+                return;
+            }
+
+            float effectiveShieldRemoval = Mathf.Min(currentShieldValue, shieldValue);
+            currentShieldValue -= effectiveShieldRemoval;
+            CurrentDefense -= effectiveShieldRemoval;
+
+            Debug.Log(
+                $"Shield removed: {effectiveShieldRemoval}. Current defense: {CurrentDefense}"
+            );
         }
 
         private void UpdateHealthUI()

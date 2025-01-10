@@ -22,8 +22,13 @@ namespace CoED
         public TilePalette tilePalette;
 
         [Tooltip("List of item prefabs to spawn in the dungeon.")]
-        public List<ScriptableObject> itemPrefabs = new List<ScriptableObject>();
+        public List<ConsumableItemWrapper> itemPrefabs = new List<ConsumableItemWrapper>();
+        public List<EquipmentWrapper> equipmentPrefabs = new List<EquipmentWrapper>();
+        public MoneyPickup moneyPrefab;
+        public int moneyCountPerFloor = 1;
         public int numberOfItemsPerFloor = 30;
+        public int numberOfHiddenEquipmentItemsPerFloor = 10;
+        public int numberOfHiddenConsumableItemsPerFloor = 10;
 
         [Tooltip("Random seed for procedural generation. Set to 0 for random seed each run.")]
         public int seed;

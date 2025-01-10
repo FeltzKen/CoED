@@ -45,7 +45,7 @@ namespace CoED.Pathfinding
                     if (closedSet.Contains(neighbor) || !neighbor.IsWalkable)
                         continue;
 
-                    int tentativeGCost =
+                    float tentativeGCost =
                         currentNode.GCost + CalculateDistance(currentNode, neighbor);
                     if (tentativeGCost < neighbor.GCost || !openSet.Contains(neighbor))
                     {
@@ -98,7 +98,7 @@ namespace CoED.Pathfinding
 
             while (currentNode != startNode)
             {
-                path.Add(currentNode.Position);
+                path.Add(currentNode.GridPosition);
                 currentNode = currentNode.Parent;
             }
 

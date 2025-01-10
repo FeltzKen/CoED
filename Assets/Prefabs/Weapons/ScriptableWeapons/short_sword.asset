@@ -10,22 +10,22 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 238d564276168b045b3de74cf084bc48, type: 3}
-  m_Name: leather hood
+  m_Name: short_sword
   m_EditorClassIdentifier: 
-  itemPrefab: {fileID: 1998612530821210125, guid: c9293d22b28d901439827ba92f82273a, type: 3}
-  itemName: Leather Hood
-  icon: {fileID: -476460484, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
+  itemPrefab: {fileID: 5975030685694812176, guid: ef24f15babfd65e4fad3619a91601c3d, type: 3}
+  itemName: Short Sword
+  icon: {fileID: -1358193606, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   removedEffects: 
   addedEffects: 
   isHidden: 0
-  attackModifier: 0
-  defenseModifier: 2
+  attackModifier: 8
+  defenseModifier: 0
   healthModifier: 0
   speedModifier: 0
   magicModifier: 0
   staminaModifier: 0
   durability: 0
-  equipmentType: 1
-  equipmentSlot: 1
-  rarity: 0
-  description: a small leather hood
+  equipmentType: 0
+  equipmentSlot: 5
+  rarity: 1
+  description: A decent looking short sword

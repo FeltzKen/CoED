@@ -1,5 +1,9 @@
 using System.Collections;
+using CoED.Items;
+using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace CoED
 {
@@ -30,6 +34,11 @@ namespace CoED
         [SerializeField]
         private LayerMask searchableLayer;
 
+        private void Update()
+        {
+            HandleInput();
+        }
+
         private void Awake()
         {
             if (Instance == null)
@@ -54,11 +63,6 @@ namespace CoED
             ValidateComponents();
         }
 
-        private void Update()
-        {
-            HandleInput();
-        }
-
         private void ValidateComponents()
         {
             if (playerStats == null || consumableInventory == null)
@@ -74,8 +78,11 @@ namespace CoED
         {
             if (Input.GetKeyDown(KeyCode.G))
             {
-                // playerManager.CommitSpecialAction(CollectItems);
-                enemy.ResetEnemyAttackFlags();
+                CollectItems();
+            }
+            else if (Input.GetKeyDown(KeyCode.F))
+            {
+                //ToggleItemPanel();
             }
             else if (Input.GetKeyDown(KeyCode.S))
             {
@@ -101,87 +108,112 @@ namespace CoED
             }
         }
 
-        public void CollectItem(ItemCollectible itemCollectible)
-        {
-            if (itemCollectible.ConsumeItem is Consumable consumable)
-            {
-                if (consumableInventory.AddItem(consumable))
-                {
-                    Destroy(itemCollectible.gameObject);
-                    FloatingTextManager.Instance.ShowFloatingText(
-                        $"Collected {consumable.ItemName}",
-                        transform,
-                        Color.green
-                    );
-                }
-                else
-                {
-                    FloatingTextManager.Instance.ShowFloatingText(
-                        "Inventory is full",
-                        transform,
-                        Color.red
-                    );
-                }
-            }
-            else
-            {
-                Debug.LogWarning("ItemCollectible: Consumable not found.");
-            }
-        }
-
-        public void CollectItem(EquipmentWrapper equipment)
-        {
-            if (equipmentInventory.AddEquipment(equipment.equipmentData))
-            {
-                EquippableItemsUIManager.Instance.AddEquipmentToUI(equipment.equipmentData);
-                Destroy(equipment.gameObject);
-                FloatingTextManager.Instance.ShowFloatingText(
-                    $"Collected {equipment.equipmentData.equipmentName}",
-                    transform,
-                    Color.green
-                );
-            }
-            else
-            {
-                FloatingTextManager.Instance.ShowFloatingText(
-                    "Inventory is full",
-                    transform,
-                    Color.red
-                );
-            }
-        }
-
         public void CollectItems()
         {
-            Collider2D[] items = Physics2D.OverlapCircleAll(transform.position, 0.2f);
+            Collider2D[] itemsInRange = Physics2D.OverlapCircleAll(transform.position, 1.4f);
 
-            foreach (var itemCollider in items)
+            foreach (var itemCollider in itemsInRange)
             {
-                if (itemCollider.CompareTag("Item"))
+                // Ensure we are only processing items
+                if (!itemCollider.CompareTag("Item"))
                 {
-                    Money money = itemCollider.GetComponent<Money>();
-                    if (money != null)
-                    {
-                        money.Collect();
-                    }
+                    Debug.Log($"Skipping non-item collider: {itemCollider.name}");
+                    continue;
+                }
 
-                    ItemCollectible collectible = itemCollider.GetComponent<ItemCollectible>();
-                    if (collectible != null)
+                // Handle MoneyPickup first
+                MoneyPickup money = itemCollider.GetComponent<MoneyPickup>();
+                if (money != null)
+                {
+                    money.Collect();
+                    ItemCollectionAnimator.Instance.AnimateItemCollection(
+                        money.moneyData.Icon,
+                        itemCollider.transform.position,
+                        GameObject.Find("MoneyPanel").GetComponent<RectTransform>()
+                    );
+                    FloatingTextManager.Instance.ShowFloatingText(
+                        $"Collected coins",
+                        transform,
+                        Color.yellow
+                    );
+                    Destroy(itemCollider.gameObject);
+                    continue; // Skip further checks for this collider
+                }
+
+                // Handle items with HiddenItemController (consumables and equipment)
+                var hiddenItemController = itemCollider.GetComponent<HiddenItemController>();
+                if (hiddenItemController != null)
+                {
+                    if (hiddenItemController.isHidden)
                     {
-                        consumableInventory.AddItem(collectible.ConsumeItem);
-                        Destroy(itemCollider.gameObject);
+                        Debug.Log($"Item {itemCollider.name} is hidden. Skipping collection.");
+                        continue;
                     }
-                    if (collectible == null)
+                }
+
+                // Check for Consumable
+                ItemCollectible consumable = itemCollider.GetComponent<ItemCollectible>();
+                if (
+                    consumable != null
+                    && consumable.ConsumeItem is ConsumableItemWrapper consumableWrapper
+                )
+                {
+                    if (consumableInventory.AddItem(consumableWrapper))
                     {
-                        equipmentInventory = itemCollider.GetComponent<EquipmentInventory>();
-                        Debug.LogWarning("ItemCollectible or Money component not found.");
+                        ItemCollectionAnimator.Instance.AnimateItemCollection(
+                            consumableWrapper.Icon,
+                            itemCollider.transform.position,
+                            GameObject.Find("ShowHideConsumablePanel").GetComponent<RectTransform>()
+                        );
                         FloatingTextManager.Instance.ShowFloatingText(
-                            $"Collected {itemCollider.name}",
+                            $"Collected {consumableWrapper.ItemName}",
                             transform,
                             Color.green
                         );
+                        Destroy(itemCollider.gameObject);
                     }
+                    else
+                    {
+                        FloatingTextManager.Instance.ShowFloatingText(
+                            "Inventory is full",
+                            transform,
+                            Color.red
+                        );
+                    }
+                    continue;
                 }
+
+                // Check for Equipment
+                EquipmentWrapper equipment = itemCollider.GetComponent<EquipmentWrapper>();
+                if (equipment != null && equipment.equipmentData != null)
+                {
+                    if (equipmentInventory.AddEquipment(equipment.equipmentData))
+                    {
+                        ItemCollectionAnimator.Instance.AnimateItemCollection(
+                            equipment.equipmentData.Icon,
+                            itemCollider.transform.position,
+                            GameObject.Find("ShowHideEquipmentPanel").GetComponent<RectTransform>()
+                        );
+                        FloatingTextManager.Instance.ShowFloatingText(
+                            $"Collected {equipment.equipmentData.equipmentName}",
+                            transform,
+                            Color.cyan
+                        );
+                        Destroy(itemCollider.gameObject);
+                    }
+                    else
+                    {
+                        FloatingTextManager.Instance.ShowFloatingText(
+                            "Inventory is full",
+                            transform,
+                            Color.red
+                        );
+                    }
+                    continue;
+                }
+
+                // If the item doesn't match any type
+                Debug.LogWarning($"Unrecognized item type: {itemCollider.name}");
             }
         }
 

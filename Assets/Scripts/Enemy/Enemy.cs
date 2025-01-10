@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using CoED.Items;
 using Microsoft.Unity.VisualStudio.Editor;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace CoED
@@ -11,7 +13,7 @@ namespace CoED
 
         [Header("Loot Settings")]
         [SerializeField]
-        private List<EquipmentWrapper> possibleDrops = new List<EquipmentWrapper>();
+        private List<Item> lootTable = new List<Item>();
 
         [SerializeField]
         private float baseDropRate = 0.9f; // Increased for testing
@@ -53,83 +55,81 @@ namespace CoED
 
         public void DropLoot()
         {
-            if (possibleDrops == null || possibleDrops.Count == 0)
+            foreach (var lootItem in lootTable)
             {
-                Debug.LogWarning("Enemy: No possible drops assigned.");
-                return;
-            }
-            int randomIndex = Random.Range(0, possibleDrops.Count);
-
-            if (possibleDrops[randomIndex]?.equipmentData == null)
-            {
-                Debug.LogError($"Enemy.DropLoot: equipmentData is null at index {randomIndex}.");
-                return;
-            }
-            // Drop equipment based on drop rate
-            if (Random.value <= baseDropRate)
-            {
-                Equipment selectedLoot = possibleDrops[
-                    Random.Range(0, possibleDrops.Count)
-                ].equipmentData;
-                if (selectedLoot.equipmentPrefab == null)
+                if (Random.value <= 0.5f) // Example drop chance logic
                 {
-                    Debug.LogError(
-                        $"Enemy: equipmentPrefab is null for {selectedLoot.equipmentName}."
-                    );
-                    return;
+                    DropItem(lootItem);
                 }
-                if (selectedLoot == null)
-                {
-                    Debug.LogError("Enemy: Selected loot is null.");
-                    return;
-                }
+            }
+        }
 
-                // Use prefab instantiation for the loot object
-                GameObject lootPrefab = Instantiate(
-                    selectedLoot.equipmentPrefab,
+        private void DropItem(Item lootItem)
+        {
+            if (lootItem is Equipment equipment)
+            {
+                // Instantiate and initialize the equipment wrapper
+                var equipmentObject = Instantiate(
+                    equipment.itemPrefab,
                     transform.position,
                     Quaternion.identity
                 );
-                EquipmentWrapper lootWrapper = lootPrefab.GetComponent<EquipmentWrapper>();
+                var equipmentWrapper = equipmentObject.GetComponent<EquipmentWrapper>();
 
-                if (lootWrapper == null)
+                if (equipmentWrapper != null)
                 {
-                    Debug.LogError("Enemy: Loot prefab is missing EquipmentWrapper component.");
-                    Destroy(lootPrefab);
-                    return;
-                }
-
-                lootWrapper.Initialize(selectedLoot);
-                lootWrapper.ApplyStatModifiers(enemyStats.ScaledFactor);
-
-                Debug.Log($"Enemy dropped {selectedLoot.equipmentName} with scaled stats.");
-            }
-
-            // Drop money based on money drop rate
-            if (Random.value <= moneyDropRate)
-            {
-                int moneyAmount = Random.Range(minMoneyAmount, maxMoneyDropAmount + 1);
-
-                GameObject money = Instantiate(
-                    moneyPrefab,
-                    transform.position,
-                    Quaternion.identity
-                );
-                Money moneyComponent = money.GetComponent<Money>();
-
-                if (moneyComponent != null)
-                {
-                    moneyComponent.SetAmount(moneyAmount);
-                    FloatingTextManager.Instance.ShowFloatingText(
-                        $"Dropped {moneyAmount} gold",
-                        transform,
-                        Color.yellow
-                    );
+                    equipmentWrapper.Initialize(equipment);
+                    equipmentWrapper.ApplyStatModifiers(enemyStats.ScaledFactor); // Apply scaled factor
+                    Debug.Log($"Dropped equipment: {equipment.equipmentName} with scaled stats.");
+                    equipmentWrapper.GetComponent<HiddenItemController>().isHidden = false;
                 }
                 else
                 {
-                    Debug.LogWarning("Enemy: Money prefab does not have a Money component.");
+                    Debug.LogWarning(
+                        $"Equipment prefab {equipment.equipmentName} is missing an EquipmentWrapper component."
+                    );
+                    Destroy(equipmentObject);
                 }
+            }
+            else if (lootItem is Consumable consumable)
+            {
+                // Instantiate the consumable item
+                GameObject consumableItem = Instantiate(
+                    consumable.itemPrefab,
+                    transform.position,
+                    Quaternion.identity
+                );
+                Debug.Log($"Dropped consumable: {consumable.itemName}");
+                consumableItem.GetComponent<HiddenItemController>().isHidden = false;
+            }
+            else if (lootItem is Money money)
+            {
+                // Instantiate money with a random amount based on ScaledFactor
+                var moneyObject = Instantiate(
+                    money.itemPrefab,
+                    transform.position,
+                    Quaternion.identity
+                );
+                var moneyComponent = moneyObject.GetComponent<MoneyPickup>();
+
+                if (moneyComponent != null)
+                {
+                    int baseMoneyAmount = Random.Range(minMoneyAmount, maxMoneyDropAmount + 1);
+                    int scaledMoneyAmount = Mathf.RoundToInt(
+                        baseMoneyAmount * enemyStats.ScaledFactor
+                    );
+                    moneyComponent.SetAmount(scaledMoneyAmount);
+                    Debug.Log($"Dropped money: {scaledMoneyAmount} gold.");
+                }
+                else
+                {
+                    Debug.LogWarning("Money prefab does not have a Money component.");
+                    Destroy(moneyObject);
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"Unknown loot type: {lootItem.itemName}");
             }
         }
 

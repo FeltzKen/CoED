@@ -8,7 +8,7 @@ namespace CoED
 
         [SerializeField]
         private Equipment equipmentRewardItem;
-        private Item consumableRewardItem;
+        private ConsumableItemWrapper consumableRewardItem;
 
         private QuestManager questManager;
         private EquipmentInventory equipmentInventory;

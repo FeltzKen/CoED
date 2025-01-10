@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 3444388741511694390}
   m_Layer: 9
   m_Name: leather hood
-  m_TagString: Untagged
+  m_TagString: Item
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -162,3 +162,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   equipmentData: {fileID: 11400000, guid: 3c0228b54e0eb874e9f7e1dfa6681e71, type: 2}
+  itemDescription: 

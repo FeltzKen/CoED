@@ -11,7 +11,7 @@ namespace CoED
         [SerializeField]
         private int maxInventorySlots = 20;
 
-        private List<Item> items = new List<Item>();
+        private List<ConsumableItemWrapper> items = new List<ConsumableItemWrapper>();
 
         public delegate void InventoryChangedHandler();
         public event InventoryChangedHandler OnInventoryChanged;
@@ -31,7 +31,7 @@ namespace CoED
             }
         }
 
-        public bool AddItem(Item item)
+        public bool AddItem(ConsumableItemWrapper item)
         {
             if (items.Count >= maxInventorySlots)
             {
@@ -49,7 +49,7 @@ namespace CoED
             // Add special item from quest.
         }
 
-        public bool RemoveItem(Item item)
+        public bool RemoveItem(ConsumableItemWrapper item)
         {
             if (items.Remove(item))
             {
@@ -59,14 +59,14 @@ namespace CoED
             return false;
         }
 
-        public bool HasItem(Item item)
+        public bool HasItem(ConsumableItemWrapper item)
         {
             return items.Contains(item);
         }
 
-        public List<Item> GetAllItems()
+        public List<ConsumableItemWrapper> GetAllItems()
         {
-            return new List<Item>(items);
+            return new List<ConsumableItemWrapper>(items);
         }
 
         public void ClearInventory()

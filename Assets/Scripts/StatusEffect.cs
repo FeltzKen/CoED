@@ -6,7 +6,8 @@ namespace CoED
     public class StatusEffect : MonoBehaviour
     {
         public StatusEffectType effectType;
-        public float damagePerSecond;
+        public float interval;
+        public float amountPerInterval;
         public float duration;
         public float speedModifier;
         public string effectName;
@@ -47,36 +48,38 @@ namespace CoED
                 return;
             }
 
-            ApplyEffect();
+            ApplyEffect(entity);
         }
 
-        private void ApplyEffect()
+        private void ApplyEffect(GameObject entity)
         {
             switch (effectType)
             {
                 case StatusEffectType.Burn:
-                    effectCoroutine = StartCoroutine(EffectCoroutine(ApplyBurnEffect));
+                    effectCoroutine = StartCoroutine(EffectCoroutine(entity, ApplyBurnEffect));
                     break;
                 case StatusEffectType.Freeze:
-                    effectCoroutine = StartCoroutine(EffectCoroutine(ApplyFreezeEffect));
+                    effectCoroutine = StartCoroutine(EffectCoroutine(entity, ApplyFreezeEffect));
                     break;
                 case StatusEffectType.Poison:
-                    effectCoroutine = StartCoroutine(EffectCoroutine(ApplyPoisonEffect));
+                    effectCoroutine = StartCoroutine(EffectCoroutine(entity, ApplyPoisonEffect));
                     break;
                 case StatusEffectType.Stun:
-                    effectCoroutine = StartCoroutine(EffectCoroutine(ApplyStunEffect));
+                    effectCoroutine = StartCoroutine(EffectCoroutine(entity, ApplyStunEffect));
                     break;
                 case StatusEffectType.Slow:
-                    effectCoroutine = StartCoroutine(EffectCoroutine(ApplySlowEffect));
+                    effectCoroutine = StartCoroutine(EffectCoroutine(entity, ApplySlowEffect));
                     break;
                 case StatusEffectType.Regen:
-                    effectCoroutine = StartCoroutine(EffectCoroutine(ApplyRegenEffect));
+                    effectCoroutine = StartCoroutine(EffectCoroutine(entity, ApplyRegenEffect));
                     break;
                 case StatusEffectType.Shield:
-                    effectCoroutine = StartCoroutine(EffectCoroutine(ApplyShieldEffect));
+                    effectCoroutine = StartCoroutine(EffectCoroutine(entity, ApplyShieldEffect));
                     break;
                 case StatusEffectType.Invincible:
-                    effectCoroutine = StartCoroutine(EffectCoroutine(ApplyInvincibleEffect));
+                    effectCoroutine = StartCoroutine(
+                        EffectCoroutine(entity, ApplyInvincibleEffect)
+                    );
                     break;
                 default:
                     Debug.LogWarning($"StatusEffect: Unknown effect type {effectType}.");
@@ -85,27 +88,36 @@ namespace CoED
             }
         }
 
-        private IEnumerator EffectCoroutine(System.Action effectLogic)
+        private IEnumerator EffectCoroutine(GameObject entity, System.Action effectLogic)
         {
             float elapsed = 0f;
+            float intervalTimer = 0f;
+
             while (!hasDuration || elapsed < duration)
             {
-                effectLogic.Invoke();
                 elapsed += Time.deltaTime;
+                intervalTimer += Time.deltaTime;
+
+                if (intervalTimer >= interval)
+                {
+                    effectLogic.Invoke();
+                    intervalTimer = 0f; // Reset interval timer
+                }
+
                 yield return null;
             }
-            RemoveEffect();
+            StatusEffectManager.Instance.RemoveEffect(entity, this);
         }
 
         private void ApplyBurnEffect()
         {
             if (playerStats != null)
             {
-                playerStats.TakeDamage(Mathf.RoundToInt(damagePerSecond * Time.deltaTime));
+                playerStats.TakeDamage(Mathf.RoundToInt(amountPerInterval), true);
             }
             else if (enemyStats != null)
             {
-                enemyStats.TakeDamage(Mathf.RoundToInt(damagePerSecond * Time.deltaTime));
+                enemyStats.TakeDamage(Mathf.RoundToInt(amountPerInterval), true);
             }
         }
 
@@ -125,11 +137,11 @@ namespace CoED
         {
             if (playerStats != null)
             {
-                playerStats.TakeDamage(Mathf.RoundToInt(damagePerSecond * Time.deltaTime));
+                playerStats.TakeDamage(Mathf.RoundToInt(amountPerInterval), true);
             }
             else if (enemyStats != null)
             {
-                enemyStats.TakeDamage(Mathf.RoundToInt(damagePerSecond * Time.deltaTime));
+                enemyStats.TakeDamage(Mathf.RoundToInt(amountPerInterval), true);
             }
         }
 
@@ -161,11 +173,11 @@ namespace CoED
         {
             if (playerStats != null)
             {
-                playerStats.Heal(Mathf.RoundToInt(damagePerSecond * Time.deltaTime));
+                playerStats.Heal(Mathf.RoundToInt(amountPerInterval));
             }
             else if (enemyStats != null)
             {
-                enemyStats.Heal(Mathf.RoundToInt(damagePerSecond * Time.deltaTime));
+                enemyStats.Heal(Mathf.RoundToInt(amountPerInterval));
             }
         }
 
@@ -173,11 +185,11 @@ namespace CoED
         {
             if (playerStats != null)
             {
-                //playerStats.AddShield(10); // Example logic for shield
+                playerStats.AddShield(amountPerInterval);
             }
             else if (enemyStats != null)
             {
-                //enemyStats.AddShield(10); // Example logic for shield
+                enemyStats.AddShield(amountPerInterval);
             }
         }
 
@@ -185,34 +197,12 @@ namespace CoED
         {
             if (playerStats != null)
             {
-                //playerStats.SetInvincible(true);
+                playerStats.SetInvincible(true);
             }
             else if (enemyStats != null)
             {
-                //enemyStats.SetInvincible(true);
+                enemyStats.SetInvincible(true);
             }
-        }
-
-        private void RemoveEffect()
-        {
-            if (effectCoroutine != null)
-            {
-                StopCoroutine(effectCoroutine);
-            }
-
-            if (effectType == StatusEffectType.Invincible)
-            {
-                if (playerStats != null)
-                {
-                    //playerStats.SetInvincible(false);
-                }
-                else if (enemyStats != null)
-                {
-                    //enemyStats.SetInvincible(false);
-                }
-            }
-
-            Destroy(gameObject);
         }
     }
 }

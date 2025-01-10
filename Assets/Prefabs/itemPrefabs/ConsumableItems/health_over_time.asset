@@ -10,19 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ca6e961de5fd58040949a231cc2cd335, type: 3}
-  m_Name: max_health_potion
+  m_Name: health_over_time
   m_EditorClassIdentifier: 
-  itemPrefab: {fileID: 4106867743383400254, guid: 10c9bec27e3cbaf4a82b60df8e0f5e76, type: 3}
-  itemName: Max Heal
-  icon: {fileID: 1644787379, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
+  itemPrefab: {fileID: 4106867743383400254, guid: 61ecea89c9beef64a949e1275366f6f1, type: 3}
+  itemName: Regenerate Potion
+  icon: {fileID: -248547462, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   removedEffects: 
-  addedEffects: 
-  isHidden: 1
+  addedEffects: 05000000
+  isHidden: 0
   attackBoost: 0
   defenseBoost: 0
   speedBoost: 0
-  healthBoost: 5000
+  healthBoost: 0
   magicBoost: 0
   staminaBoost: 0
-  descriptionField: 4
-  description: Restores all health.
+  descriptionField: 0
+  description: heals over time.

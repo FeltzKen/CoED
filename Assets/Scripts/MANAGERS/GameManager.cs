@@ -49,7 +49,6 @@ namespace CoED
         public void RegisterPlayer(GameObject player)
         {
             playerTransform = player.transform;
-            Debug.Log($"Player registered at position: {playerTransform.position}");
         }
 
         public Transform GetPlayerTransform()

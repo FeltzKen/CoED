@@ -105,8 +105,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effectType: 0
-  damagePerSecond: 2
-  duration: 30
+  interval: 20
+  amountPerInterval: 5
+  duration: 120
   speedModifier: 0
   effectName: Burn
   icon: {fileID: -81875440, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}

@@ -105,8 +105,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   effectType: 4
-  damagePerSecond: 0
-  duration: 20
+  interval: 0
+  amountPerInterval: 0
+  duration: 60
   speedModifier: 2
   effectName: Slow
   icon: {fileID: 185213524, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
