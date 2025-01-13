@@ -340,9 +340,7 @@ namespace CoED
                 SpawnItems(
                     floorNum,
                     itemParent,
-                    dungeonSettings
-                        .equipmentPrefabs.Select(equip => equip.equipmentData as Item)
-                        .ToList(),
+                    dungeonSettings.equipmentAssets.Cast<Item>().ToList(),
                     dungeonSettings.numberOfItemsPerFloor
                 );
 
@@ -350,9 +348,7 @@ namespace CoED
                 SpawnItems(
                     floorNum,
                     itemParent,
-                    dungeonSettings
-                        .itemPrefabs.Select(wrapper => wrapper.consumableData as Item)
-                        .ToList(),
+                    dungeonSettings.equipmentAssets.Cast<Item>().ToList(),
                     dungeonSettings.numberOfHiddenConsumableItemsPerFloor,
                     hidden: true
                 );
@@ -360,38 +356,33 @@ namespace CoED
                 // Spawn money
                 SpawnMoney(floorNum, itemParent, dungeonSettings.moneyCountPerFloor);
             }
+            foreach (var item in dungeonSettings.equipmentPrefabs)
+            {
+                Debug.Log(
+                    item != null
+                        ? $"Loaded item: {item.name} (Type: {item.GetType().Name})----------------------"
+                        : "NULL item in the list!----------------------------"
+                );
+            }
         }
 
         private void SpawnItems(
             int floorNumber,
             Transform parent,
-            List<Item> items,
+            List<Item> items, // This might be a mix of both Consumable and Equipment
             int itemCount,
             bool hidden = false
         )
         {
             FloorData floorData = DungeonManager.Instance.GetFloorData(floorNumber);
             if (floorData == null)
-            {
-                Debug.LogError($"No FloorData for floor {floorNumber} to spawn items.");
                 return;
-            }
 
             List<Vector2Int> tiles = hidden
                 ? floorData.WallTiles.ToList()
                 : floorData.FloorTiles.ToList();
-
-            if (tiles.Count == 0)
-            {
-                Debug.LogWarning($"Floor {floorNumber} has no valid tiles to spawn items.");
-                return;
-            }
-
             if (tiles.Count < itemCount)
-            {
-                Debug.LogWarning($"Floor {floorNumber} has only {tiles.Count} valid tiles.");
                 itemCount = tiles.Count;
-            }
 
             for (int i = 0; i < itemCount; i++)
             {
@@ -403,60 +394,73 @@ namespace CoED
                 Vector3 spawnPos =
                     floorData.FloorTilemap.CellToWorld(cellPos) + new Vector3(0.5f, 0.5f, 0);
 
-                Item itemWrapper = items[Random.Range(0, items.Count)];
+                // 2) Instantiate
+                // 1) Pick any random item from the provided list
+                Item baseItem = items[Random.Range(0, items.Count)];
 
-                // Instantiate the item prefab at the desired position
-                GameObject itemInstance = Instantiate(
-                    itemWrapper.itemPrefab,
-                    spawnPos,
-                    Quaternion.identity,
-                    parent
-                );
+                // 2) Branch based on type
+                if (baseItem is Equipment eqItem)
+                {
+                    // This item is actually an Equipment
+                    // => spawn its prefab, do equipment logic
+                    var itemObject = Instantiate(
+                        eqItem.itemPrefab,
+                        spawnPos,
+                        Quaternion.identity,
+                        parent
+                    );
 
-                // Clone ScriptableObject data
-                CloneScriptableObjectAsWrapper(itemInstance);
+                    // If you're using an EquipmentPickup approach:
+                    EquipmentPickup pickupScript = itemObject.GetComponent<EquipmentPickup>();
+                    if (pickupScript != null)
+                    {
+                        // Create the data wrapper, apply random modifiers, etc.
+                        EquipmentWrapper eqWrapper = new EquipmentWrapper();
+                        eqWrapper.Initialize(eqItem);
+                        float modifierScale = !hidden
+                            ? Random.Range(1.1f, 1.5f)
+                            : Random.Range(1.6f, 2f);
+                        ApplyEquipmentModifiers(eqWrapper, modifierScale);
 
-                // Apply modifiers
-                float modifierScale = !hidden ? Random.Range(1.1f, 1.5f) : Random.Range(1.6f, 2f);
-                ApplyModifiers(itemInstance, modifierScale);
-            }
-        }
+                        pickupScript.SetData(eqWrapper);
+                        // Possibly hide if (hidden)
+                        itemObject.GetComponent<HiddenItemController>().isHidden = hidden;
+                    }
+                    Debug.Log((baseItem as Equipment).equipmentName);
+                }
+                else if (baseItem is Consumable coItem)
+                {
+                    // This item is a Consumable => spawn consumable prefab, do consumable logic
+                    var itemObject = Instantiate(
+                        coItem.itemPrefab,
+                        spawnPos,
+                        Quaternion.identity,
+                        parent
+                    );
 
-        private void CloneScriptableObjectAsWrapper(GameObject itemInstance)
-        {
-            // Handle ConsumableItemWrapper
-            ConsumableItemWrapper consumableWrapper =
-                itemInstance.GetComponent<ConsumableItemWrapper>();
-            if (consumableWrapper != null && consumableWrapper.consumableData != null)
-            {
-                consumableWrapper.consumableData = Instantiate(consumableWrapper.consumableData);
-                return;
-            }
+                    // If you have a ConsumableItemWrapper approach:
+                    var consumableWrapper = itemObject.GetComponent<ConsumableItemWrapper>();
+                    if (consumableWrapper != null)
+                    {
+                        // Clone the consumable ScriptableObject
+                        consumableWrapper.consumableData = ScriptableObject.Instantiate(coItem);
+                        float modifierScale = !hidden
+                            ? Random.Range(1.1f, 1.5f)
+                            : Random.Range(1.6f, 2f);
+                        ApplyConsumableModifiers(consumableWrapper, modifierScale);
 
-            // Handle EquipmentWrapper
-            EquipmentWrapper equipmentWrapper = itemInstance.GetComponent<EquipmentWrapper>();
-            if (equipmentWrapper != null && equipmentWrapper.equipmentData != null)
-            {
-                equipmentWrapper.equipmentData = Instantiate(equipmentWrapper.equipmentData);
-            }
-        }
+                        itemObject.GetComponent<HiddenItemController>().isHidden = hidden;
+                    }
+                    Debug.Log((baseItem as Consumable).itemName);
+                }
+                else
+                {
+                    // If neither Equipment nor Consumable, handle or warn
+                    Debug.LogWarning($"Item type not recognized.");
+                }
 
-        private void ApplyModifiers(GameObject itemObject, float modifierScale)
-        {
-            // Check if the item is consumable
-            ConsumableItemWrapper consumableWrapper =
-                itemObject.GetComponent<ConsumableItemWrapper>();
-            if (consumableWrapper != null)
-            {
-                ApplyConsumableModifiers(consumableWrapper, modifierScale);
-                return;
-            }
-
-            // Check if the item is equipment
-            EquipmentWrapper equipmentWrapper = itemObject.GetComponent<EquipmentWrapper>();
-            if (equipmentWrapper != null)
-            {
-                ApplyEquipmentModifiers(equipmentWrapper, modifierScale);
+                // 5) else log a warning
+                Debug.LogWarning($"Item prefab not recognized as Equipment or Consumable.");
             }
         }
 

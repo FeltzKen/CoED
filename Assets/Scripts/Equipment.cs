@@ -5,38 +5,26 @@ using UnityEngine;
 public class Equipment : Item
 {
     public string equipmentName => itemName;
+
+    [Header("Base Modifiers")]
     public float attackModifier;
     public float defenseModifier;
     public float healthModifier;
     public float speedModifier;
     public float magicModifier;
     public float staminaModifier;
-    public int durability;
-    public bool IsEnchanted { get; private set; }
-    public bool IsCursed { get; private set; }
+
+    [Header("Equipment Settings")]
     public EquipmentType equipmentType;
-    public EquipmentSlot equipmentSlot;
+    public EquipmentSlot equipmentSlot; // 🔥 Added this for proper slot mapping
     public Rarity rarity;
-
-    private const float enchantmentChance = 0.1f;
-    private const float curseChance = 0.1f;
-
-    [SerializeField]
-    private DescriptionField descriptionField = DescriptionField.None; // Default to None
+    public StatusEffect resistance;
 
     [SerializeField, TextArea]
-    private string description = ""; // Optional custom text
+    private string description = "";
 
-    public void InitializeEquipment()
-    {
-        IsEnchanted = Random.value < enchantmentChance;
-        IsCursed = !IsEnchanted && Random.value < curseChance;
-    }
-
-    public void RemoveCurse()
-    {
-        IsCursed = false;
-    }
+    [SerializeField]
+    private DescriptionField descriptionField = DescriptionField.None;
 
     public string Description
     {
@@ -44,20 +32,15 @@ public class Equipment : Item
         {
             float value = GetDescriptionValue();
             string baseDescription = $"{itemName} +{value}";
-
-            // Append the custom description, if it exists
             if (!string.IsNullOrEmpty(description))
-            {
                 baseDescription += $" {description}";
-            }
-
             return baseDescription;
         }
     }
 
     private float GetDescriptionValue()
     {
-        float value = descriptionField switch
+        return descriptionField switch
         {
             DescriptionField.AttackBoost => attackModifier,
             DescriptionField.DefenseBoost => defenseModifier,
@@ -65,9 +48,8 @@ public class Equipment : Item
             DescriptionField.HealthBoost => healthModifier,
             DescriptionField.MagicBoost => magicModifier,
             DescriptionField.StaminaBoost => staminaModifier,
-            _ => 0, // Handle None or undefined cases
+            _ => 0,
         };
-        return value;
     }
 
     public enum EquipmentType
@@ -75,18 +57,6 @@ public class Equipment : Item
         Weapon,
         Armor,
         Accessory,
-    }
-
-    public enum EquipmentSlot
-    {
-        None,
-        Head,
-        Chest,
-        Legs,
-        Waist,
-        Weapon,
-        Shield,
-        Boots,
     }
 
     public enum Rarity
@@ -100,12 +70,23 @@ public class Equipment : Item
 
     public enum DescriptionField
     {
-        None, // To handle cases where no description field is selected
+        None,
         AttackBoost,
         DefenseBoost,
         SpeedBoost,
         HealthBoost,
         MagicBoost,
         StaminaBoost,
+    }
+
+    public enum EquipmentSlot
+    {
+        Head,
+        Chest,
+        Legs,
+        Waist,
+        Weapon,
+        Shield,
+        Boots,
     }
 }

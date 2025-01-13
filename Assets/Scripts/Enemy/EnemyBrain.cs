@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.WSA;
 
 namespace CoED
 {
@@ -15,6 +16,8 @@ namespace CoED
             WanderNearPlayer,
         }
 
+        [SerializeField]
+        private List<Projectile> availableProjectiles = new List<Projectile>();
         public EnemyState CurrentState = EnemyState.Patrol;
 
         private EnemyNavigator navigator;
@@ -23,13 +26,20 @@ namespace CoED
         private HashSet<Vector2Int> patrolPoints = new HashSet<Vector2Int>();
         private Vector2Int patrolDestination;
 
-        private Transform playerTransform;
+        public Transform playerTransform;
 
         private FloorData floorData;
         private float thinkCooldown = 0.5f;
         private float nextThinkTime = 0f;
-        private int wanderRange = 5;
+        private float wanderRange = 5;
         public bool CanAttackPlayer = true;
+        private Dictionary<Projectile, float> projectileCooldownTimers =
+            new Dictionary<Projectile, float>();
+
+        [SerializeField]
+        private float projectileCooldownDuration = 15f; // Configurable cooldown duration
+
+        private float launchProjectileCooldown; // Runtime tracker
 
         [SerializeField]
         private LayerMask visualObstructionLayer;
@@ -56,14 +66,33 @@ namespace CoED
 
             ChooseRandomPatrolDestination();
             navigator.SetMoveSpeed(1f / enemyStats.PatrolSpeed); // Delay for patrol movements
+            foreach (var projectile in availableProjectiles)
+            {
+                projectileCooldownTimers[projectile] = 0f;
+            }
+            launchProjectileCooldown = projectileCooldownDuration;
         }
 
         private void Update()
         {
+            UpdateProjectileCooldowns();
+            launchProjectileCooldown -= Time.deltaTime;
             if (Time.time >= nextThinkTime)
             {
                 DecideNextAction();
                 nextThinkTime = Time.time + thinkCooldown;
+            }
+        }
+
+        private void UpdateProjectileCooldowns()
+        {
+            List<Projectile> keys = new List<Projectile>(projectileCooldownTimers.Keys);
+            foreach (var projectile in keys)
+            {
+                if (projectileCooldownTimers[projectile] > 0)
+                {
+                    projectileCooldownTimers[projectile] -= Time.deltaTime;
+                }
             }
         }
 
@@ -72,6 +101,17 @@ namespace CoED
             float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
             bool seesPlayer = HasLineOfSightToPlayer(distanceToPlayer);
             bool isPlayerSurrounded = TileOccupancyManager.Instance.IsPlayerSurroundedByEnemies();
+
+            if (
+                distanceToPlayer <= GetComponent<EnemyStats>().ProjectileCurrentAttackRange
+                && launchProjectileCooldown <= 0
+                && seesPlayer
+                && CanAttackPlayer
+            )
+            {
+                TryFireProjectile();
+                launchProjectileCooldown = projectileCooldownDuration;
+            }
 
             if (distanceToPlayer <= enemyStats.CurrentAttackRange)
             {
@@ -272,6 +312,56 @@ namespace CoED
                 }
                 index--;
             }
+        }
+
+        private void TryFireProjectile()
+        {
+            Projectile selectedProjectile = SelectCooledDownProjectile();
+            if (selectedProjectile != null)
+            {
+                FireProjectile(selectedProjectile);
+            }
+        }
+
+        private Projectile SelectCooledDownProjectile()
+        {
+            var cooledDownProjectiles = availableProjectiles.FindAll(p =>
+                projectileCooldownTimers[p] <= 0
+            );
+            if (cooledDownProjectiles.Count > 0)
+            {
+                return cooledDownProjectiles[Random.Range(0, cooledDownProjectiles.Count)];
+            }
+            return null;
+        }
+
+        private void FireProjectile(Projectile projectile)
+        {
+            // Instantiate the projectile's prefab
+            GameObject projectileObject = Instantiate(
+                projectile.projectilePrefab, // Access from BaseProjectile
+                new Vector3(transform.position.x - 0.25f, transform.position.y, 0),
+                Quaternion.identity
+            );
+            // Get the ProjectileWrapper from the instantiated prefab
+            var wrapperInstance = projectileObject.GetComponent<ProjectileWrapper>();
+            if (wrapperInstance != null)
+            {
+                // Initialize the new wrapper with the BaseProjectile data
+                wrapperInstance.Initialize(projectile);
+
+                // Launch the projectile toward the player
+                Vector2 direction = (playerTransform.position - transform.position).normalized;
+                wrapperInstance.Launch(direction);
+                CanAttackPlayer = false;
+            }
+            else
+            {
+                Debug.LogError("Projectile prefab is missing the ProjectileWrapper component.");
+            }
+
+            // Reset the cooldown timer
+            projectileCooldownTimers[projectile] = projectile.cooldown;
         }
     }
 }

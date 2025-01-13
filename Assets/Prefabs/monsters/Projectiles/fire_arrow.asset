@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dccf123d445f2bd49a5293bb42252337, type: 3}
+  m_Name: fire_arrow
+  m_EditorClassIdentifier: 
+  projectileName: Fire Arrow
+  projectilePrefab: {fileID: 4695070808592603662, guid: 12f08cc1af0889346b48e0e12366637c, type: 3}
+  icon: {fileID: 679878305, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
+  damage: 30
+  lifetime: 3
+  collisionRadius: 0
+  speed: 3
+  cooldown: 10
+  canChase: 0

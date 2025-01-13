@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4305334641535992224}
   - component: {fileID: 2981977345375240177}
   - component: {fileID: 202816574104133317}
-  - component: {fileID: 3444388741511694390}
+  - component: {fileID: 2050211859310186324}
   m_Layer: 9
   m_Name: leather hood
   m_TagString: Item
@@ -149,7 +149,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isHidden: 0
---- !u!114 &3444388741511694390
+--- !u!114 &2050211859310186324
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -158,8 +158,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1998612530821210125}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e683ada41659f0f4881cc9047f1182fe, type: 3}
+  m_Script: {fileID: 11500000, guid: 2a41c1ea9001af34c83e36dd2dd61aca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  equipmentData: {fileID: 11400000, guid: 3c0228b54e0eb874e9f7e1dfa6681e71, type: 2}
-  itemDescription: 
+  baseEquipment: {fileID: 11400000, guid: 3c0228b54e0eb874e9f7e1dfa6681e71, type: 2}

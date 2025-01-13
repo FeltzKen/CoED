@@ -25,9 +25,9 @@ namespace CoED
 
         [Header("Health")]
         [SerializeField, Min(0)]
-        private int baseHealth = 1000;
-        public float CurrentHealth { get; set; }
-        public float MaxHealth { get; set; }
+        private float baseHealth = 1000;
+        public int CurrentHealth { get; set; }
+        public int MaxHealth { get; set; }
         private float equipmentHealth = 0;
         private float currentShieldValue = 0;
         private bool invincible = false;
@@ -36,14 +36,14 @@ namespace CoED
         [Header("Stamina")]
         [SerializeField, Min(0)]
         public int baseStamina = 100;
-        public float CurrentStamina { get; set; }
-        public float MaxStamina { get; set; }
+        public int CurrentStamina { get; set; }
+        public int MaxStamina { get; set; }
 
         [Header("Magic")]
         [SerializeField, Min(0)]
         private int baseMagic = 100;
         public float CurrentMagic { get; set; }
-        public float MaxMagic { get; set; }
+        public int MaxMagic { get; set; }
         public float equipmentMagic = 0;
 
         [Header("Attack")]
@@ -89,6 +89,9 @@ namespace CoED
         [Header("Currency")]
         [SerializeField, Min(0)]
         private int currency = 0;
+
+        [Header("Resistances")]
+        public List<StatusEffectType> activeResistances = new List<StatusEffectType>();
 
         [SerializeField]
         public int currentFloor = 0;
@@ -136,10 +139,12 @@ namespace CoED
         public void CalculateStats()
         {
             MaxStamina = baseStamina + level * 5;
-            MaxHealth = baseHealth + level * 20 + equipmentHealth;
-            MaxMagic = baseMagic + level * 10 + equipmentMagic;
-            CurrentAttack = baseAttack + (baseAttack * level * 0.2f) + equipmentAttack;
-            CurrentDefense = baseDefense + (baseDefense * level * 0.15f) + equipmentDefense;
+            MaxHealth = Mathf.RoundToInt(baseHealth + level * 20 + equipmentHealth);
+            MaxMagic = Mathf.RoundToInt(baseMagic + level * 10 + equipmentMagic);
+            CurrentAttack =
+                baseAttack + Mathf.RoundToInt((baseAttack * level * 0.2f) + equipmentAttack);
+            CurrentDefense =
+                baseDefense + Mathf.RoundToInt((baseDefense * level * 0.15f) + equipmentDefense);
             CurrentProjectileRange = baseProjectileRange + level * 0.1f + equipmentRange;
             CurrentSpeed = baseSpeed + level * 0.05f + equipmentSpeed;
             CurrentFireRate = baseFireRate - level * 0.02f;
@@ -152,9 +157,9 @@ namespace CoED
             InitializeUI();
         }
 
-        public void SetEquipmentStats(IEnumerable<Equipment> equippedItems)
+        public void SetEquipmentStats(IEnumerable<EquipmentWrapper> equippedItems)
         {
-            float totalAttack = 0,
+            int totalAttack = 0,
                 totalDefense = 0,
                 totalHealth = 0,
                 totalMagic = 0,
@@ -162,11 +167,11 @@ namespace CoED
 
             foreach (var item in equippedItems)
             {
-                totalAttack += item.attackModifier;
-                totalDefense += item.defenseModifier;
-                totalHealth += item.healthModifier;
-                totalMagic += item.magicModifier;
-                totalSpeed += item.speedModifier;
+                totalAttack += Mathf.RoundToInt(item.GetTotalAttackModifier());
+                totalDefense += Mathf.RoundToInt(item.GetTotalDefenseModifier());
+                totalHealth += Mathf.RoundToInt(item.GetTotalHealthModifier());
+                totalMagic += Mathf.RoundToInt(item.GetTotalMagicModifier());
+                totalSpeed += Mathf.RoundToInt(item.GetTotalSpeedModifier());
             }
 
             equipmentAttack = totalAttack;
@@ -178,7 +183,7 @@ namespace CoED
             CalculateStats();
         }
 
-        public void AddShield(float shieldValue)
+        public void AddShield(int shieldValue)
         {
             if (shieldValue <= 0)
             {
@@ -308,8 +313,8 @@ namespace CoED
                 return;
             }
 
-            float effectiveDamage = damage - CurrentDefense;
-            CurrentHealth = Mathf.Max(CurrentHealth - effectiveDamage, 0);
+            float effectiveDamage = Mathf.Max(damage - CurrentDefense, 1);
+            CurrentHealth = Mathf.Max(CurrentHealth - Mathf.RoundToInt(effectiveDamage), 0);
             UpdateHealthUI(FindAnyObjectByType<PlayerUI>());
 
             FloatingTextManager floatingTextManager = FindAnyObjectByType<FloatingTextManager>();
@@ -344,7 +349,7 @@ namespace CoED
                 return;
             }
 
-            CurrentHealth = Mathf.Min(CurrentHealth + amount, MaxHealth);
+            CurrentHealth = Mathf.Min(CurrentHealth + Mathf.RoundToInt(amount), MaxHealth);
             UpdateHealthUI(FindAnyObjectByType<PlayerUI>());
 
             Debug.Log(
@@ -366,13 +371,13 @@ namespace CoED
 
         public void IncreaseMaxMagic(float amount)
         {
-            MaxMagic += amount;
+            MaxMagic += Mathf.RoundToInt(amount);
             UpdateMagicUI(FindAnyObjectByType<PlayerUI>());
         }
 
         public void GainStamina(float amount)
         {
-            CurrentStamina = Mathf.Clamp(CurrentStamina + amount, 0, MaxStamina);
+            CurrentStamina = Mathf.Clamp(CurrentStamina + Mathf.RoundToInt(amount), 0, MaxStamina);
             UpdateStaminaUI(FindAnyObjectByType<PlayerUI>());
         }
 

@@ -40,7 +40,7 @@ namespace CoED
         public void CreateLightningBolt(
             Vector3 start,
             Vector3 end,
-            float damage,
+            int damage,
             float speed,
             float lifetime
         )
@@ -61,7 +61,7 @@ namespace CoED
             }
         }
 
-        private IEnumerator AnimateLightning(Vector3 start, Vector3 direction, float damage)
+        private IEnumerator AnimateLightning(Vector3 start, Vector3 direction, int damage)
         {
             isAnimating = true;
             Vector3 currentPosition = start;
@@ -118,7 +118,7 @@ namespace CoED
             segmentIndex = (segmentIndex + 1) % 3;
         }
 
-        private void CheckForCollision(Vector3 position, float damage)
+        private void CheckForCollision(Vector3 position, int damage)
         {
             float radius = 0.25f; // Adjust the radius to fit the size of your collider
             Collider2D hit = Physics2D.OverlapCircle(position, radius, targetLayer);
@@ -130,7 +130,7 @@ namespace CoED
             }
         }
 
-        private void HandleHit(Collider2D hit, float damage)
+        private void HandleHit(Collider2D hit, int damage)
         {
             if (hit.CompareTag("Enemy"))
             {

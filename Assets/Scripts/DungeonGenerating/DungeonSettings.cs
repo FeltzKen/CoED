@@ -22,8 +22,13 @@ namespace CoED
         public TilePalette tilePalette;
 
         [Tooltip("List of item prefabs to spawn in the dungeon.")]
-        public List<ConsumableItemWrapper> itemPrefabs = new List<ConsumableItemWrapper>();
-        public List<EquipmentWrapper> equipmentPrefabs = new List<EquipmentWrapper>();
+        // 🟢 List of the actual data (ScriptableObjects)
+        public List<Equipment> equipmentAssets;
+        public List<Consumable> consumableAssets;
+
+        // 🔴 List of the prefabs in case you need them
+        public List<EquipmentPickup> equipmentPrefabs;
+        public List<ConsumableItemWrapper> itemPrefabs;
         public MoneyPickup moneyPrefab;
         public int moneyCountPerFloor = 1;
         public int numberOfItemsPerFloor = 30;
@@ -72,26 +77,24 @@ namespace CoED
         [Tooltip("Base damage multiplier for enemies.")]
         public float baseDamageMultiplier = 1.0f;
 
+        [Header("Game Difficulty Settings")]
+        [SerializeField, Min(1)]
+        public int difficultyLevel = 1;
+
         [Tooltip("Multiplier per floor for enemy difficulty.")]
         public float floorDifficultyFactor = 0.2f;
 
         [Tooltip("Multiplier per player level for enemy difficulty.")]
         public float playerLevelFactor = 0.1f;
 
-        [Tooltip("Maximum level enemies can scale to.")]
-        public int maxEnemyLevel = 20;
-
-        [Header("Boss Settings")]
-        [Tooltip("Enable boss fights in the dungeon.")]
-        public bool enableBossFights = true;
+        [Header("MiniBoss Settings")]
+        [Tooltip("Enable mini boss fights in the dungeon.")]
+        public bool enableMiniBossFights = true;
 
         [Tooltip("Frequency of boss fights (e.g., every N floors).")]
         public int bossSpawnFloorInterval = 3;
 
         [Header("Ambush Settings")]
-        [Tooltip("Enable ambush mechanics where enemies spawn near the player.")]
-        public bool enableAmbush = true;
-
         [Tooltip("number of ambush tiles to spawn per floor.")]
         public int numberOfAmbushTiles = 100;
 

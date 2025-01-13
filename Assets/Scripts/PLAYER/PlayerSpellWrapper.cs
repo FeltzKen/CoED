@@ -7,26 +7,23 @@ namespace CoED
     {
         public PlayerSpell BaseSpell { get; private set; }
         public Sprite Icon => BaseSpell.icon;
+
         public string SpellName => BaseSpell.spellName;
-        public float MagicCost { get; private set; }
-        public float Damage { get; private set; }
+        public int MagicCost { get; private set; }
+        public int Damage { get; private set; }
         public float Lifetime { get; private set; }
         public float CollisionRadius { get; private set; }
         public float Speed { get; private set; }
         public float Cooldown { get; private set; }
         public int SpellLevel { get; private set; }
-        public bool HasBurnEffect => BaseSpell.hasBurnEffect;
-        public bool HasFreezeEffect => BaseSpell.hasFreezeEffect;
-        public bool HasSlowEffect => BaseSpell.hasSlowEffect;
-        public bool HasStunEffect => BaseSpell.hasStunEffect;
-        public bool HasPoisonEffect => BaseSpell.hasPoisonEffect;
-        public bool HasRegenEffect => BaseSpell.hasRegenEffect;
-        public bool HasShieldEffect => BaseSpell.hasShieldEffect;
-        public bool HasInvincibleEffect => BaseSpell.hasInvincibleEffect;
+        public StatusEffect EffectType;
+        public GameObject SpellEffectPrefab => BaseSpell.spellEffectPrefab;
+        public SpellType Type => BaseSpell.type;
         public bool IsInstant => BaseSpell.isInstant;
         public bool CanChase => BaseSpell.canChase;
         public bool SelfTargeting => BaseSpell.selfTargeting;
         public int LevelUpThreshold => BaseSpell.levelUpThreshold;
+        public float AreaOfEffect => BaseSpell.areaOfEffect;
 
         // Add other relevant properties as needed
         public void Initialize(PlayerSpell baseSpell)
@@ -44,9 +41,9 @@ namespace CoED
         public void LevelUp()
         {
             SpellLevel++;
-            Damage *= 1.2f;
+            Damage += 1;
             Cooldown *= 0.9f;
-            MagicCost *= 1.1f;
+            MagicCost += 1;
 
             Debug.Log($"{SpellName} leveled up to Level {SpellLevel}!");
         }

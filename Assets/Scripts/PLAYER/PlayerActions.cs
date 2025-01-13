@@ -121,7 +121,7 @@ namespace CoED
                     continue;
                 }
 
-                // Handle MoneyPickup first
+                // 1) Handle MoneyPickup first
                 MoneyPickup money = itemCollider.GetComponent<MoneyPickup>();
                 if (money != null)
                 {
@@ -132,7 +132,7 @@ namespace CoED
                         GameObject.Find("MoneyPanel").GetComponent<RectTransform>()
                     );
                     FloatingTextManager.Instance.ShowFloatingText(
-                        $"Collected coins",
+                        "Collected coins",
                         transform,
                         Color.yellow
                     );
@@ -140,7 +140,7 @@ namespace CoED
                     continue; // Skip further checks for this collider
                 }
 
-                // Handle items with HiddenItemController (consumables and equipment)
+                // 2) Handle items with HiddenItemController (consumables and equipment)
                 var hiddenItemController = itemCollider.GetComponent<HiddenItemController>();
                 if (hiddenItemController != null)
                 {
@@ -151,22 +151,20 @@ namespace CoED
                     }
                 }
 
-                // Check for Consumable
-                ItemCollectible consumable = itemCollider.GetComponent<ItemCollectible>();
-                if (
-                    consumable != null
-                    && consumable.ConsumeItem is ConsumableItemWrapper consumableWrapper
-                )
+                // 3) Check for Consumable
+                ConsumableItemWrapper consumable =
+                    itemCollider.GetComponent<ConsumableItemWrapper>();
+                if (consumable != null)
                 {
-                    if (consumableInventory.AddItem(consumableWrapper))
+                    if (consumableInventory.AddItem(consumable))
                     {
                         ItemCollectionAnimator.Instance.AnimateItemCollection(
-                            consumableWrapper.Icon,
+                            consumable.Icon,
                             itemCollider.transform.position,
                             GameObject.Find("ShowHideConsumablePanel").GetComponent<RectTransform>()
                         );
                         FloatingTextManager.Instance.ShowFloatingText(
-                            $"Collected {consumableWrapper.ItemName}",
+                            $"Collected {consumable.ItemName}",
                             transform,
                             Color.green
                         );
@@ -183,22 +181,37 @@ namespace CoED
                     continue;
                 }
 
-                // Check for Equipment
-                EquipmentWrapper equipment = itemCollider.GetComponent<EquipmentWrapper>();
-                if (equipment != null && equipment.equipmentData != null)
+                // 4) Check for EquipmentPickup
+                EquipmentPickup pickup = itemCollider.GetComponent<EquipmentPickup>();
+                if (pickup != null)
                 {
-                    if (equipmentInventory.AddEquipment(equipment.equipmentData))
+                    // A) Get the actual data wrapper
+                    EquipmentWrapper eqData = pickup.GetEquipmentData();
+                    if (eqData == null)
                     {
+                        Debug.LogWarning(
+                            $"EquipmentPickup on {itemCollider.name} has no data. Skipping."
+                        );
+                        continue;
+                    }
+
+                    // B) Try to add the *data* to the inventory
+                    if (equipmentInventory.AddEquipment(eqData))
+                    {
+                        // C) Animate and notify
                         ItemCollectionAnimator.Instance.AnimateItemCollection(
-                            equipment.equipmentData.Icon,
+                            eqData.equipmentData.Icon,
                             itemCollider.transform.position,
                             GameObject.Find("ShowHideEquipmentPanel").GetComponent<RectTransform>()
                         );
+
                         FloatingTextManager.Instance.ShowFloatingText(
-                            $"Collected {equipment.equipmentData.equipmentName}",
+                            $"Collected {eqData.equipmentData.equipmentName}",
                             transform,
                             Color.cyan
                         );
+
+                        // D) Destroy the in-world object
                         Destroy(itemCollider.gameObject);
                     }
                     else

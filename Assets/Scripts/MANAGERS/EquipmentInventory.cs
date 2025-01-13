@@ -11,10 +11,8 @@ namespace CoED
         [SerializeField]
         private int maxInventorySlots = 20;
 
-        private Dictionary<Equipment.EquipmentSlot, List<Equipment>> equipmentPerSlot = new();
-
-        public delegate void InventoryChangedHandler();
-        public event InventoryChangedHandler OnInventoryChanged;
+        private Dictionary<Equipment.EquipmentSlot, List<EquipmentWrapper>> equipmentPerSlot =
+            new();
 
         private void Awake()
         {
@@ -36,22 +34,55 @@ namespace CoED
             // Add special item from quest.
         }
 
-        public bool AddEquipment(Equipment equipment)
+        public bool AddEquipment(EquipmentWrapper equipmentWrapper)
         {
-            if (!equipmentPerSlot.ContainsKey(equipment.equipmentSlot))
+            if (equipmentWrapper == null || equipmentWrapper.equipmentData == null)
             {
-                equipmentPerSlot[equipment.equipmentSlot] = new List<Equipment>();
+                Debug.LogWarning("EquipmentInventory: EquipmentWrapper or its data is null.");
+                return false;
             }
-            if (equipmentPerSlot[equipment.equipmentSlot].Count >= maxInventorySlots)
+
+            var slot = equipmentWrapper.equipmentData.equipmentSlot;
+
+            if (!equipmentPerSlot.ContainsKey(slot))
+            {
+                equipmentPerSlot[slot] = new List<EquipmentWrapper>();
+            }
+
+            if (equipmentPerSlot[slot].Count >= maxInventorySlots)
             {
                 Debug.LogWarning("EquipmentInventory: Inventory is full.");
                 return false;
             }
-            equipmentPerSlot[equipment.equipmentSlot].Add(equipment);
-            Debug.Log($"EquipmentInventory: Added {equipment.equipmentName} to inventory.");
-            EquippableItemsUIManager.Instance.AddEquipmentToUI(equipment);
+
+            equipmentPerSlot[slot].Add(equipmentWrapper);
+            Debug.Log(
+                $"EquipmentInventory: Added {equipmentWrapper.equipmentData.equipmentName} to inventory."
+            );
+            EquippableItemsUIManager.Instance.UpdateEquipmentUI();
 
             return true;
+        }
+
+        public List<EquipmentWrapper> GetAllEquipment(Equipment.EquipmentSlot slot)
+        {
+            if (equipmentPerSlot.ContainsKey(slot))
+            {
+                return equipmentPerSlot[slot];
+            }
+            return null;
+        }
+
+        public void RemoveEquipment(EquipmentWrapper equipmentWrapper)
+        {
+            if (equipmentPerSlot.ContainsKey(equipmentWrapper.equipmentData.equipmentSlot))
+            {
+                equipmentPerSlot[equipmentWrapper.equipmentData.equipmentSlot]
+                    .Remove(equipmentWrapper);
+                Debug.Log(
+                    $"Removed {equipmentWrapper.equipmentData.equipmentName} from inventory."
+                );
+            }
         }
     }
 }

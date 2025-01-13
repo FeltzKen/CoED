@@ -111,7 +111,6 @@ namespace CoED
             if (Instance == null)
             {
                 Instance = this;
-                DontDestroyOnLoad(gameObject);
                 Debug.Log("PlayerSpellCaster: Instance initialized.");
             }
             else

@@ -40,7 +40,7 @@ namespace CoED
             }
         }
 
-        public void ApplyStatModifiers(float scaledFactor)
+        public void ApplyStatModifiers(int scaledFactor)
         {
             // Apply scaled boosts
             consumableData.attackBoost += scaledFactor;

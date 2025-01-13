@@ -17,15 +17,15 @@ MonoBehaviour:
   icon: {fileID: 1184448561, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   removedEffects: 
   addedEffects: 
-  isHidden: 0
   attackModifier: 0
   defenseModifier: 3
   healthModifier: 0
   speedModifier: 0
   magicModifier: 0
   staminaModifier: 0
-  durability: 0
   equipmentType: 1
-  equipmentSlot: 6
+  equipmentSlot: 5
   rarity: 0
+  resistance: {fileID: 0}
   description: Just a basic shield.
+  descriptionField: 0

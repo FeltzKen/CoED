@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -40,6 +41,26 @@ namespace CoED
             bool isPlayer = entity.CompareTag("Player");
             var targetEffects = isPlayer ? playerEffects : enemyEffects;
 
+            // 🚨 Resistance Check for Players
+            if (
+                isPlayer && PlayerStats.Instance.activeResistances.Contains(effectPrefab.effectType)
+            )
+            {
+                Debug.Log($"Player is resistant to {effectPrefab.effectType}. Effect blocked.");
+                return; // Block the effect if the player has resistance
+            }
+            // 🚨 Resistance Check for Enemies
+            if (!isPlayer)
+            {
+                EnemyStats enemyStats = entity.GetComponent<EnemyStats>();
+                if (enemyStats != null && enemyStats.resistances.Contains(effectPrefab.effectType))
+                {
+                    Debug.Log(
+                        $"{entity.name} is resistant to {effectPrefab.effectType}. Effect blocked."
+                    );
+                    return; // Block the effect if the enemy has resistance
+                }
+            }
             Transform targetContainer;
 
             // Determine the appropriate container
@@ -82,20 +103,22 @@ namespace CoED
 
             // Instantiate the effect prefab
             GameObject effectObj = Instantiate(effectPrefab.gameObject);
-            effectObj.transform.SetParent(targetContainer, false); // Assign to the correct container
-            effectObj.SetActive(true); // Ensure the instantiated prefab is active
+            effectObj.transform.SetParent(targetContainer, false);
+            effectObj.SetActive(true);
 
             StatusEffect newEffect = effectObj.GetComponent<StatusEffect>();
-            // Adjust RectTransform for layout group
+
+            // Adjust RectTransform for layout group and enlarge the icon
             RectTransform rectTransform = effectObj.GetComponent<RectTransform>();
             if (rectTransform != null)
             {
-                rectTransform.localScale = Vector3.one;
+                rectTransform.localScale = Vector3.one * 3.0f; // Increase size by 3x
             }
             else
             {
                 Debug.LogWarning("StatusEffectManager: Icon prefab missing RectTransform.");
             }
+
             if (newEffect != null)
             {
                 newEffect.ApplyToEntity(entity); // Apply the effect to the entity
@@ -129,6 +152,8 @@ namespace CoED
                         effects.RemoveAt(i);
                         continue;
                     }
+                    if (!activeEffect.Effect.hasDuration)
+                        continue;
 
                     // Update Effect Duration
                     activeEffect.RemainingDuration -= Time.deltaTime;

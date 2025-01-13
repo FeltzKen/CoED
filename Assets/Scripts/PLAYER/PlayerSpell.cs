@@ -8,29 +8,20 @@ namespace CoED
         [Header("Basic Attributes")]
         public string spellName;
         public Sprite icon;
-        public float magicCost;
-        public float damage;
+        public int magicCost;
+        public int damage;
         public float lifetime;
         public float collisionRadius;
         public float speed;
         public float cooldown;
-        public int spellLevel; // need to implement this
-        public int levelUpThreshold = 5; // Player level required for spell to level up
+        public int spellLevel;
+        public int levelUpThreshold = 5; // Player level multiple required for spell to level up
 
         [Header("Advanced Attributes")]
-        public SpellType type;
         public float areaOfEffect;
-        public GameObject spellEffectPrefab;
+        public SpellType type;
 
-        [Header("Status Effects")]
-        public bool hasPoisonEffect;
-        public bool hasFreezeEffect;
-        public bool hasBurnEffect;
-        public bool hasSlowEffect;
-        public bool hasStunEffect;
-        public bool hasRegenEffect;
-        public bool hasShieldEffect;
-        public bool hasInvincibleEffect;
+        public GameObject spellEffectPrefab;
 
         [Header("Special Attributes")]
         public bool selfTargeting;

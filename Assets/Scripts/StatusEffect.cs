@@ -7,9 +7,9 @@ namespace CoED
     {
         public StatusEffectType effectType;
         public float interval;
-        public float amountPerInterval;
+        public int amountPerInterval;
         public float duration;
-        public float speedModifier;
+        public int speedModifier;
         public string effectName;
         public Sprite icon;
         public bool hasDuration = true;

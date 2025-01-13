@@ -74,7 +74,7 @@ namespace CoED
                 EnemyStats enemyStats = hitCollider.GetComponent<EnemyStats>();
                 if (enemyStats != null)
                 {
-                    float damageDealt = Mathf.Max(playerStats.CurrentAttack, 1);
+                    int damageDealt = Mathf.Max(Mathf.RoundToInt(playerStats.CurrentAttack), 1);
                     enemyStats.TakeDamage(damageDealt);
 
                     lastAttackTime = Time.time;

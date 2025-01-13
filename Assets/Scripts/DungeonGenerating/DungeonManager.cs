@@ -25,7 +25,6 @@ namespace CoED
             else
             {
                 Instance = this;
-                DontDestroyOnLoad(gameObject);
             }
         }
 

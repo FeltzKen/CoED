@@ -9,16 +9,11 @@ namespace CoED
         public bool IsPlayerSpawned => playerTransform != null;
         private GameObject currentPlayer;
 
-        [Header("Game Settings")]
-        [SerializeField, Min(1)]
-        private int difficultyLevel = 1;
-
         private void Awake()
         {
             if (Instance == null)
             {
                 Instance = this;
-                DontDestroyOnLoad(gameObject);
             }
             else
             {
@@ -74,15 +69,12 @@ namespace CoED
 #endif
         }
 
-        public float GetSpawnMultiplier()
-        {
-            return 1f + (difficultyLevel * 0.1f);
-        }
-
         public bool ShouldSpawnSuperGoblin()
         {
             float baseSuperGoblinChance = 0.01f;
-            float spawnChance = baseSuperGoblinChance * difficultyLevel;
+            float spawnChance =
+                baseSuperGoblinChance
+                * DungeonManager.Instance.GetComponent<DungeonSettings>().difficultyLevel;
             bool shouldSpawn = Random.value < spawnChance;
             Debug.Log(
                 $"GameManager: Super Goblin spawn chance: {spawnChance * 100}% - Should Spawn: {shouldSpawn}"

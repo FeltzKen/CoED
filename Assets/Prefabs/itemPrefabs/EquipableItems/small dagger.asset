@@ -17,15 +17,15 @@ MonoBehaviour:
   icon: {fileID: 279487478, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   removedEffects: 
   addedEffects: 
-  isHidden: 0
   attackModifier: 4
   defenseModifier: 0
   healthModifier: 0
   speedModifier: 0
   magicModifier: 0
   staminaModifier: 0
-  durability: 0
   equipmentType: 0
-  equipmentSlot: 5
+  equipmentSlot: 4
   rarity: 0
+  resistance: {fileID: 0}
   description: Just a basic dagger.
+  descriptionField: 0

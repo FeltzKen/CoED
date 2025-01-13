@@ -15,8 +15,8 @@ namespace CoED
         public float lifetime { get; set; } = 5f;
 
         [SerializeField]
-        public float damage { get; set; }
-        public List<StatusEffect> statusEffects;
+        public int damage { get; set; }
+        public StatusEffect statusEffect;
 
         [SerializeField]
         public float collisionRadius { get; set; }
@@ -68,16 +68,13 @@ namespace CoED
                     {
                         enemy.TakeDamage(damage);
 
-                        foreach (var effectPrefab in statusEffects)
+                        if (statusEffect != null)
                         {
-                            if (effectPrefab != null)
-                            {
-                                Debug.Log($"Applying {effectPrefab.effectType} to {hit.name}.");
-                                StatusEffectManager.Instance.AddStatusEffect(
-                                    hit.gameObject,
-                                    effectPrefab
-                                );
-                            }
+                            Debug.Log($"Applying {statusEffect.effectType} to {hit.name}.");
+                            StatusEffectManager.Instance.AddStatusEffect(
+                                hit.gameObject,
+                                statusEffect
+                            );
                         }
                     }
                     Destroy(gameObject);

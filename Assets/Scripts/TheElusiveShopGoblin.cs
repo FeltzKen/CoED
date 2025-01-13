@@ -211,13 +211,13 @@ namespace CoED
             List<Vector2> foggedLocations = new List<Vector2>();
             for (
                 int x = (int)fogOfWar.transform.position.x - 50;
-                x <= (int)fogOfWar.transform.position.x + 50;
+                x <= fogOfWar.transform.position.x + 50;
                 x++
             )
             {
                 for (
                     int y = (int)fogOfWar.transform.position.y - 50;
-                    y <= (int)fogOfWar.transform.position.y + 50;
+                    y <= fogOfWar.transform.position.y + 50;
                     y++
                 )
                 {
@@ -246,7 +246,7 @@ namespace CoED
             Vector2 playerPosition = playerTransform.position;
             Vector2 spawnPosition = GetNearbyPosition(playerPosition, 3, 5);
             //transform.position = spawnPosition;
-            // Debug.Log($"ShopGoblin: Spawned near player at {spawnPosition}.");
+            //Debug.Log($"ShopGoblin: Spawned near player at {spawnPosition}.");
         }
 
         private void GenerateInitialInventory()

@@ -41,9 +41,9 @@ MonoBehaviour:
   - {fileID: -4267969455484681755, guid: bf19b45271bd85e439a6fa931164b95c, type: 3}
   - {fileID: -2541124203162691714, guid: 5d45d65c72a935f41a831b00b77677f4, type: 3}
   equipmentPrefabs:
-  - {fileID: 4668065812263961041, guid: 00fadd280e9b5ff47af7dba912246f1b, type: 3}
-  - {fileID: 6138977369563804488, guid: 97689ad36b792ed49ac2dc631403c5a4, type: 3}
-  - {fileID: 3444388741511694390, guid: c9293d22b28d901439827ba92f82273a, type: 3}
+  - {fileID: 2050211859310186324, guid: c9293d22b28d901439827ba92f82273a, type: 3}
+  - {fileID: 1299741697287901307, guid: 00fadd280e9b5ff47af7dba912246f1b, type: 3}
+  - {fileID: 5522114851101034115, guid: 97689ad36b792ed49ac2dc631403c5a4, type: 3}
   moneyPrefab: {fileID: -7904586264360353201, guid: 94e565f3443a44a4f8d23c4d5a0dc48f, type: 3}
   moneyCountPerFloor: 10
   numberOfItemsPerFloor: 10
@@ -97,12 +97,11 @@ MonoBehaviour:
   enableEnemyScaling: 1
   baseHealthMultiplier: 1.75
   baseDamageMultiplier: 1
+  difficultyLevel: 1
   floorDifficultyFactor: 0.5
   playerLevelFactor: 0.5
-  maxEnemyLevel: 50
-  enableBossFights: 1
+  enableMiniBossFights: 1
   bossSpawnFloorInterval: 1
-  enableAmbush: 1
   numberOfAmbushTiles: 100
   ambushEnemyCount: 4
   ambushTilePrefab: {fileID: 5594940870504256869, guid: 04caad6111fe60d4e8f0ec112e8577c6, type: 3}

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace CoED
@@ -6,40 +7,46 @@ namespace CoED
     public class EnemyStats : MonoBehaviour
     {
         [Header("Base Stats")]
-        [SerializeField, Min(0)]
+        [SerializeField, Min(1)]
         private int baseAttack = 10;
 
-        [SerializeField, Min(0)]
+        [SerializeField, Min(1)]
         private int baseDefense = 5;
-        private float currentShieldValue = 0;
+        private int currentShieldValue = 0;
 
-        [SerializeField, Min(0)]
+        [SerializeField, Min(100)]
         private int baseHealth = 100;
 
-        [SerializeField, Min(0f)]
+        [SerializeField, Min(1f)]
         private float baseAttackRange = 1.0f;
 
-        [SerializeField, Min(0f)]
+        [SerializeField, Min(1f)]
         private float baseFireRate = 1f;
 
-        [SerializeField, Min(0f)]
+        [SerializeField, Min(1f)]
         private float baseProjectileLifespan = 2f;
 
-        private List<StatusEffect> activeStatusEffects = new List<StatusEffect>();
+        [SerializeField, Min(0.5f)]
+        private float projectileBaseAttackRange;
+
         private bool invincible = false;
         public bool Invincible => invincible;
+
+        [Header("Resistances")]
+        public List<StatusEffectType> resistances = new List<StatusEffectType>();
 
         // Current Stats
         public float PatrolSpeed;
         public float ChaseSpeed;
-        public float CurrentAttack { get; set; }
-        public float CurrentDefense { get; set; }
-        public float CurrentHealth { get; set; }
-        public float MaxHealth { get; set; }
+        public int CurrentAttack { get; set; }
+        public int CurrentDefense { get; set; }
+        public int CurrentHealth { get; set; }
+        public int MaxHealth { get; set; }
         public float CurrentAttackRange { get; set; }
         public float CurrentFireRate { get; set; }
         public float CurrentProjectileLifespan { get; set; }
         public float ScaledFactor { get; private set; }
+        public float ProjectileCurrentAttackRange { get; set; }
         public float CurrentSpeed { get; set; } = 1f;
         private EnemyUI enemyUI { get; set; }
         private Enemy enemy { get; set; }
@@ -62,8 +69,14 @@ namespace CoED
 
         private void CalculateStats()
         {
-            float floorMultiplier = 1 + (spawnFloor * 0.5f);
-            ScaledFactor = floorMultiplier * Random.Range(0.9f, 1.1f);
+            var dungeonSettings = FindAnyObjectByType<DungeonGenerator>().dungeonSettings;
+            float floorMultiplier =
+                1
+                + (spawnFloor * dungeonSettings.difficultyLevel * 0.1f)
+                + dungeonSettings.playerLevelFactor
+                + dungeonSettings.floorDifficultyFactor;
+
+            ScaledFactor = floorMultiplier * Random.Range(0.9f, 1.5f);
 
             PatrolSpeed = Mathf.Lerp(1f, 3f, spawnFloor / 6f) + Random.Range(0f, 0.5f);
             ChaseSpeed = PatrolSpeed * 1.5f;
@@ -71,7 +84,8 @@ namespace CoED
             MaxHealth = Mathf.RoundToInt(baseHealth * ScaledFactor);
             CurrentAttack = Mathf.RoundToInt(baseAttack * ScaledFactor);
             CurrentDefense = Mathf.RoundToInt(baseDefense * ScaledFactor);
-            CurrentAttackRange = baseAttackRange * ScaledFactor;
+            ProjectileCurrentAttackRange = projectileBaseAttackRange * ScaledFactor;
+            CurrentAttackRange = baseAttackRange;
             CurrentFireRate = Mathf.Max(baseFireRate * ScaledFactor, 0.1f);
             CurrentProjectileLifespan = baseProjectileLifespan * ScaledFactor;
             CurrentHealth = MaxHealth;
@@ -79,7 +93,7 @@ namespace CoED
             InitializeUI();
         }
 
-        public void TakeDamage(float damage, bool bypassInvincible = false)
+        public void TakeDamage(int damage, bool bypassInvincible = false)
         {
             if (!bypassInvincible && invincible)
             {
@@ -87,7 +101,7 @@ namespace CoED
                 return;
             }
 
-            float effectiveDamage = Mathf.Max(damage - CurrentDefense, 1);
+            int effectiveDamage = Mathf.Max(damage - CurrentDefense, 1);
             CurrentHealth = Mathf.Max(CurrentHealth - effectiveDamage, 0);
             FloatingTextManager.Instance.ShowFloatingText(
                 effectiveDamage.ToString(),
@@ -103,7 +117,7 @@ namespace CoED
             }
         }
 
-        public void Heal(float amount)
+        public void Heal(int amount)
         {
             if (amount <= 0)
             {
@@ -125,6 +139,9 @@ namespace CoED
             Debug.Log("Enemy has died.");
             Destroy(gameObject);
             enemy.DropLoot();
+            TileOccupancyManager.Instance.ReleaseAllTiles(
+                GetComponent<EnemyNavigator>().occupantID
+            );
         }
 
         public void SetInvincible(bool invincible)
@@ -132,7 +149,7 @@ namespace CoED
             this.invincible = invincible;
         }
 
-        public void AddShield(float shieldValue)
+        public void AddShield(int shieldValue)
         {
             if (shieldValue <= 0)
             {
@@ -145,7 +162,7 @@ namespace CoED
             Debug.Log($"Shield added: {shieldValue}. Current defense: {CurrentDefense}");
         }
 
-        public void RemoveShield(float shieldValue)
+        public void RemoveShield(int shieldValue)
         {
             if (shieldValue <= 0)
             {
@@ -153,7 +170,7 @@ namespace CoED
                 return;
             }
 
-            float effectiveShieldRemoval = Mathf.Min(currentShieldValue, shieldValue);
+            int effectiveShieldRemoval = Mathf.Min(currentShieldValue, shieldValue);
             currentShieldValue -= effectiveShieldRemoval;
             CurrentDefense -= effectiveShieldRemoval;
 

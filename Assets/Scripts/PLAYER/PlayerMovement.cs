@@ -34,7 +34,6 @@ namespace CoED
         private bool isMoving = false;
         private Vector2 targetPosition;
         private bool isMouseHeld = false;
-        private bool isInitialClickValid = false;
         private float moveCooldownTimer = 0f;
         private float actionCooldownTimer = 0f;
 
@@ -100,7 +99,7 @@ namespace CoED
             if (direction != Vector2.zero)
             {
                 MoveInDirection(direction);
-                transform.GetComponent<PlayerNavigator>().CancelPath(); // Cancel ongoing pathfinding
+                GetComponent<PlayerNavigator>().CancelPath(); // Cancel ongoing pathfinding
                 return;
             }
 
@@ -194,7 +193,7 @@ namespace CoED
                 {
                     if (result.gameObject.GetComponent<Slider>() != null)
                     {
-                        continue;
+                        return false;
                     }
 
                     if (result.gameObject.GetComponent<Button>() != null)
@@ -263,7 +262,7 @@ namespace CoED
 
             rb.position = position;
             transform.position = position;
-            enemy.ResetEnemyAttackFlags();
+            //enemy.ResetEnemyAttackFlags();
             PlayerStats.Instance.AddStep();
             TileOccupancyManager.Instance.SetPlayerPosition(
                 Vector2Int.RoundToInt(transform.position)

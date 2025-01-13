@@ -18,7 +18,7 @@ namespace CoED
         private float moveCooldownTimer = 0f;
 
         private List<Vector2Int> currentPath;
-        private Vector2Int currentGridPos;
+        public Vector2Int currentGridPos;
         private Vector2Int destination;
 
         private int retryCount = 0;
@@ -90,7 +90,15 @@ namespace CoED
             }
 
             Vector2Int nextTile = currentPath[0];
-
+            Vector3 playerPosition = GameObject.FindGameObjectWithTag("Player").transform.position;
+            Vector2Int playerGridPosition = new Vector2Int(
+                Mathf.RoundToInt(playerPosition.x),
+                Mathf.RoundToInt(playerPosition.y)
+            );
+            if (nextTile == playerGridPosition)
+            {
+                return;
+            }
             if (TileOccupancyManager.Instance.TryReserveTile(nextTile, occupantID))
             {
                 TileOccupancyManager.Instance.ReleaseTile(currentGridPos, occupantID);

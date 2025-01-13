@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace CoED
@@ -194,7 +195,7 @@ namespace CoED
                 return;
             }
             playerStats.ConsumeMagic(spell.MagicCost);
-            ExecuteSpell(spell.BaseSpell, transform.position);
+            ExecuteSpell(spell, transform.position);
 
             PlayerUI.Instance.OnSpellCast(spell);
         }
@@ -233,17 +234,17 @@ namespace CoED
 
             playerStats.ConsumeMagic(selectedSpell.MagicCost);
 
-            ExecuteSpell(selectedSpell.BaseSpell, targetPosition);
+            ExecuteSpell(selectedSpell, targetPosition);
 
             PlayerUI.Instance.OnSpellCast(selectedSpell);
         }
 
-        public void ExecuteSpell(PlayerSpell spell, Vector3 targetPosition)
+        public void ExecuteSpell(PlayerSpellWrapper spell, Vector3 targetPosition)
         {
-            switch (spell.type)
+            switch (spell.BaseSpell.type)
             {
                 case SpellType.Projectile:
-                    if (spell.spellName == "Lightning Bolt")
+                    if (spell.BaseSpell.spellName == "Lightning Bolt")
                     {
                         CastLightningBolt(spell, targetPosition);
                     }
@@ -265,15 +266,15 @@ namespace CoED
                     Debug.LogWarning("Debuff spells are not implemented yet.");
                     break;
                 default:
-                    Debug.LogWarning($"Unsupported spell type: {spell.type}");
+                    Debug.LogWarning($"Unsupported spell type: {spell.Type}");
                     break;
             }
         }
 
-        private void CastLightningBolt(PlayerSpell spell, Vector3 targetPosition)
+        private void CastLightningBolt(PlayerSpellWrapper spell, Vector3 targetPosition)
         {
             GameObject lightning = Instantiate(
-                spell.spellEffectPrefab,
+                spell.SpellEffectPrefab,
                 spellSpawnPoint.position,
                 Quaternion.identity
             );
@@ -284,18 +285,18 @@ namespace CoED
                 controller.CreateLightningBolt(
                     spellSpawnPoint.position,
                     targetPosition,
-                    spell.damage,
-                    spell.speed,
-                    spell.lifetime
+                    spell.Damage,
+                    spell.Speed,
+                    spell.Lifetime
                 );
-                CreateStatusEffectsFromSpell(spell);
+                StatusEffectManager.Instance.AddStatusEffect(currentTarget, spell.EffectType);
             }
         }
 
-        private void CastProjectileSpell(PlayerSpell spell, Vector3 targetPosition)
+        private void CastProjectileSpell(PlayerSpellWrapper spell, Vector3 targetPosition)
         {
             GameObject spellObject = Instantiate(
-                spell.spellEffectPrefab,
+                spell.SpellEffectPrefab,
                 spellSpawnPoint.position,
                 Quaternion.identity
             );
@@ -304,92 +305,52 @@ namespace CoED
             if (projectile != null)
             {
                 projectile.direction = (targetPosition - spellSpawnPoint.position).normalized;
-                projectile.lifetime = spell.lifetime;
-                projectile.collisionRadius = spell.collisionRadius;
-                projectile.speed = spell.speed;
-                projectile.damage = spell.damage;
+                projectile.lifetime = spell.Lifetime;
+                projectile.collisionRadius = spell.CollisionRadius;
+                projectile.speed = spell.Speed;
+                projectile.damage = spell.Damage;
 
-                projectile.statusEffects = CreateStatusEffectsFromSpell(spell);
+                projectile.statusEffect = spell.EffectType;
                 projectile.SetTargetPosition(targetPosition);
             }
         }
 
-        private void CastAoESpell(PlayerSpell spell, Vector3 targetPosition)
+        private void CastAoESpell(PlayerSpellWrapper spell, Vector3 targetPosition)
         {
             // Instantiate AoE effect
-            if (spell.spellEffectPrefab != null)
+            if (spell.SpellEffectPrefab != null)
             {
-                Instantiate(spell.spellEffectPrefab, targetPosition, Quaternion.identity);
+                Instantiate(spell.SpellEffectPrefab, targetPosition, Quaternion.identity);
             }
 
             // Apply effects to enemies within area
             Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(
                 targetPosition,
-                spell.areaOfEffect,
+                spell.AreaOfEffect,
                 LayerMask.GetMask("enemies")
             );
 
             foreach (var enemyCollider in hitEnemies)
             {
                 EnemyStats enemyStats = enemyCollider.GetComponent<EnemyStats>();
-                enemyStats.TakeDamage(spell.damage);
+                enemyStats.TakeDamage(spell.Damage);
                 if (enemyStats != null)
                 {
-                    foreach (var statusEffect in CreateStatusEffectsFromSpell(spell))
-                    {
-                        StatusEffectManager.Instance.AddStatusEffect(
-                            enemyCollider.gameObject,
-                            statusEffect
-                        );
-                    }
+                    StatusEffectManager.Instance.AddStatusEffect(
+                        enemyCollider.gameObject,
+                        spell.GetComponent<StatusEffect>()
+                    );
                 }
             }
         }
 
-        private void CastHealSpell(PlayerSpell spell)
+        private void CastHealSpell(PlayerSpellWrapper spell)
         {
-            playerStats.Heal(spell.damage);
-            if (spell.spellEffectPrefab != null)
+            playerStats.Heal(spell.Damage);
+            if (spell.SpellEffectPrefab != null)
             {
-                Instantiate(spell.spellEffectPrefab, transform.position, Quaternion.identity);
+                Instantiate(spell.SpellEffectPrefab, transform.position, Quaternion.identity);
             }
-        }
-
-        public List<StatusEffect> CreateStatusEffectsFromSpell(PlayerSpell spell)
-        {
-            List<StatusEffect> statusEffects = new List<StatusEffect>();
-
-            void AddEffect(StatusEffectType type)
-            {
-                GameObject prefab = statusEffectLibrary.GetEffectPrefab(type);
-                if (prefab != null)
-                {
-                    StatusEffect effect = prefab.GetComponent<StatusEffect>();
-                    if (effect != null)
-                    {
-                        statusEffects.Add(effect);
-                    }
-                }
-            }
-
-            if (spell.hasBurnEffect)
-                AddEffect(StatusEffectType.Burn);
-            if (spell.hasFreezeEffect)
-                AddEffect(StatusEffectType.Freeze);
-            if (spell.hasPoisonEffect)
-                AddEffect(StatusEffectType.Poison);
-            if (spell.hasStunEffect)
-                AddEffect(StatusEffectType.Stun);
-            if (spell.hasSlowEffect)
-                AddEffect(StatusEffectType.Slow);
-            if (spell.hasRegenEffect)
-                AddEffect(StatusEffectType.Regen);
-            if (spell.hasShieldEffect)
-                AddEffect(StatusEffectType.Shield);
-            if (spell.hasInvincibleEffect)
-                AddEffect(StatusEffectType.Invincible);
-
-            return statusEffects;
         }
 
         private bool IsSpellOnCooldown(PlayerSpellWrapper spell)

@@ -16,7 +16,6 @@ namespace CoED
         public Sprite icon;
         public List<StatusEffectType> removedEffects;
         public List<StatusEffectType> addedEffects;
-        public bool isHidden;
         public Sprite Icon => icon;
     }
 }

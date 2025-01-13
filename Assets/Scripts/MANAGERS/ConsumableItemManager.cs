@@ -123,6 +123,7 @@ namespace CoED
         {
             if (data.button == PointerEventData.InputButton.Right)
             {
+                consumable.Consume(GameObject.FindGameObjectWithTag("Player"));
                 ConsumeItem(consumable);
             }
         }

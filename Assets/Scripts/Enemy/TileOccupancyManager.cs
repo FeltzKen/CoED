@@ -73,6 +73,23 @@ namespace CoED
             }
         }
 
+        public void ReleaseAllTiles(int occupantID)
+        {
+            List<Vector2Int> tilesToRelease = new List<Vector2Int>();
+            foreach (var kvp in tileReservations)
+            {
+                if (kvp.Value == occupantID)
+                {
+                    tilesToRelease.Add(kvp.Key);
+                }
+            }
+
+            foreach (var tile in tilesToRelease)
+            {
+                tileReservations.Remove(tile);
+            }
+        }
+
         public bool IsTileFree(Vector2Int tilePosition)
         {
             return !tileReservations.ContainsKey(tilePosition);
