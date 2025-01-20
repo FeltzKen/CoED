@@ -66,12 +66,14 @@ namespace CoED
         private void InitializeWrappedSpells()
         {
             playerSpellsWrapper = new List<PlayerSpellWrapper>();
-            foreach (var baseSpell in spellPrefabs) // Assuming spellPrefabs holds PlayerSpell ScriptableObjects
+            foreach (var baseSpell in spellPrefabs)
             {
                 GameObject spellWrapperObj = new GameObject($"{baseSpell.spellName}_Wrapper");
                 PlayerSpellWrapper spellWrapper =
                     spellWrapperObj.AddComponent<PlayerSpellWrapper>();
-                spellWrapper.Initialize(baseSpell); // Initialize wrapper with the base spell
+
+                // Initialize wrapper with base spell
+                spellWrapper.Initialize(baseSpell);
 
                 playerSpellsWrapper.Add(spellWrapper);
             }
@@ -274,7 +276,7 @@ namespace CoED
         private void CastLightningBolt(PlayerSpellWrapper spell, Vector3 targetPosition)
         {
             GameObject lightning = Instantiate(
-                spell.SpellEffectPrefab,
+                spell.BaseSpell.spellEffectPrefab,
                 spellSpawnPoint.position,
                 Quaternion.identity
             );
@@ -285,18 +287,21 @@ namespace CoED
                 controller.CreateLightningBolt(
                     spellSpawnPoint.position,
                     targetPosition,
-                    spell.Damage,
                     spell.Speed,
                     spell.Lifetime
                 );
-                StatusEffectManager.Instance.AddStatusEffect(currentTarget, spell.EffectType);
+
+                foreach (var effect in spell.InflictedStatusEffectTypes)
+                {
+                    StatusEffectManager.Instance.AddStatusEffect(currentTarget, effect);
+                }
             }
         }
 
         private void CastProjectileSpell(PlayerSpellWrapper spell, Vector3 targetPosition)
         {
             GameObject spellObject = Instantiate(
-                spell.SpellEffectPrefab,
+                spell.BaseSpell.spellEffectPrefab,
                 spellSpawnPoint.position,
                 Quaternion.identity
             );
@@ -304,26 +309,30 @@ namespace CoED
 
             if (projectile != null)
             {
-                projectile.direction = (targetPosition - spellSpawnPoint.position).normalized;
+                DamageInfo damageInfo = new DamageInfo(
+                    spell.DamageTypes,
+                    spell.InflictedStatusEffectTypes
+                );
+
+                projectile.Initialize(
+                    damageInfo,
+                    (targetPosition - spellSpawnPoint.position).normalized
+                );
+
                 projectile.lifetime = spell.Lifetime;
                 projectile.collisionRadius = spell.CollisionRadius;
                 projectile.speed = spell.Speed;
-                projectile.damage = spell.Damage;
-
-                projectile.statusEffect = spell.EffectType;
                 projectile.SetTargetPosition(targetPosition);
             }
         }
 
         private void CastAoESpell(PlayerSpellWrapper spell, Vector3 targetPosition)
         {
-            // Instantiate AoE effect
-            if (spell.SpellEffectPrefab != null)
+            if (spell.BaseSpell.spellEffectPrefab != null)
             {
-                Instantiate(spell.SpellEffectPrefab, targetPosition, Quaternion.identity);
+                Instantiate(spell.BaseSpell.spellEffectPrefab, targetPosition, Quaternion.identity);
             }
 
-            // Apply effects to enemies within area
             Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(
                 targetPosition,
                 spell.AreaOfEffect,
@@ -333,23 +342,28 @@ namespace CoED
             foreach (var enemyCollider in hitEnemies)
             {
                 EnemyStats enemyStats = enemyCollider.GetComponent<EnemyStats>();
-                enemyStats.TakeDamage(spell.Damage);
                 if (enemyStats != null)
                 {
-                    StatusEffectManager.Instance.AddStatusEffect(
-                        enemyCollider.gameObject,
-                        spell.GetComponent<StatusEffect>()
+                    // ✅ Package dynamic damage and effects
+                    DamageInfo damageInfo = new DamageInfo(
+                        spell.DamageTypes,
+                        spell.InflictedStatusEffectTypes
                     );
+                    enemyStats.TakeDamage(damageInfo);
                 }
             }
         }
 
         private void CastHealSpell(PlayerSpellWrapper spell)
         {
-            playerStats.Heal(spell.Damage);
-            if (spell.SpellEffectPrefab != null)
+            playerStats.Heal(spell.BaseSpell.damage);
+            if (spell.BaseSpell.spellEffectPrefab != null)
             {
-                Instantiate(spell.SpellEffectPrefab, transform.position, Quaternion.identity);
+                Instantiate(
+                    spell.BaseSpell.spellEffectPrefab,
+                    transform.position,
+                    Quaternion.identity
+                );
             }
         }
 

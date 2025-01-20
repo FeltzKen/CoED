@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CoED
@@ -20,6 +21,9 @@ namespace CoED
         [Header("Advanced Attributes")]
         public float areaOfEffect;
         public SpellType type;
+
+        [Header("Status Effects")]
+        public List<StatusEffectType> inflictedStatusEffectTypes = new List<StatusEffectType>();
 
         public GameObject spellEffectPrefab;
 

@@ -87,7 +87,7 @@ namespace CoED
             else if (Input.GetKeyDown(KeyCode.S))
             {
                 SearchForSecrets();
-                enemy.ResetEnemyAttackFlags();
+                PlayerCombat.Instance.ResetEnemyAttackFlags();
             }
 
             if (Input.GetKeyDown(KeyCode.R) && !isResting)
@@ -114,7 +114,7 @@ namespace CoED
 
             foreach (var itemCollider in itemsInRange)
             {
-                // Ensure we are only processing items
+                // Ensure only items are processed
                 if (!itemCollider.CompareTag("Item"))
                 {
                     Debug.Log($"Skipping non-item collider: {itemCollider.name}");
@@ -186,7 +186,7 @@ namespace CoED
                 if (pickup != null)
                 {
                     // A) Get the actual data wrapper
-                    EquipmentWrapper eqData = pickup.GetEquipmentData();
+                    Equipment eqData = pickup.GetEquipmentData();
                     if (eqData == null)
                     {
                         Debug.LogWarning(
@@ -200,13 +200,13 @@ namespace CoED
                     {
                         // C) Animate and notify
                         ItemCollectionAnimator.Instance.AnimateItemCollection(
-                            eqData.equipmentData.Icon,
+                            eqData.baseSprite,
                             itemCollider.transform.position,
                             GameObject.Find("ShowHideEquipmentPanel").GetComponent<RectTransform>()
                         );
-
+                        Debug.Log($"Collected {eqData.itemName} slot: {eqData.slot}");
                         FloatingTextManager.Instance.ShowFloatingText(
-                            $"Collected {eqData.equipmentData.equipmentName}",
+                            $"Collected {eqData.itemName}",
                             transform,
                             Color.cyan
                         );
@@ -238,7 +238,11 @@ namespace CoED
                 Color.yellow
             );
             Vector2 center = transform.position;
-            Collider2D[] hits = Physics2D.OverlapCircleAll(center, searchRadius, searchableLayer);
+            Collider2D[] hits = Physics2D.OverlapCircleAll(
+                center,
+                searchRadius,
+                LayerMask.GetMask("items")
+            );
 
             if (hits.Length == 0)
             {
@@ -248,7 +252,7 @@ namespace CoED
             foreach (var hit in hits)
             {
                 Debug.DrawLine(center, hit.transform.position, Color.cyan, 1f);
-                var searchable = hit.GetComponent<ISearchable>();
+                var searchable = hit.GetComponent<HiddenItemController>();
                 if (searchable != null)
                 {
                     searchable.OnSearch();

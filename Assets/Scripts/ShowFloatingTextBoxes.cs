@@ -48,6 +48,7 @@ namespace CoED
             textComponent.alignment = TextAlignmentOptions.Center;
             textComponent.fontSize = 0.5f;
 
+            new WaitForSeconds(0.2f);
             StartCoroutine(FloatAndDestroy(floatingTextInstance));
         }
 

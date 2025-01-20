@@ -15,14 +15,27 @@ namespace CoED
         public float lifetime { get; set; } = 5f;
 
         [SerializeField]
-        public int damage { get; set; }
-        public StatusEffect statusEffect;
+        public float collisionRadius { get; set; } = 0.5f;
 
-        [SerializeField]
-        public float collisionRadius { get; set; }
         private Vector3 targetPosition;
         private bool hasReachedTarget = false;
         private bool hasCollided = false;
+
+        [Header("Dynamic Damage and Status Effects")]
+        [SerializeField]
+        private Dictionary<DamageType, float> damageTypes = new Dictionary<DamageType, float>();
+
+        [Header("Dynamic Damage and Status Effects")]
+        private DamageInfo damageInfo; // ✅ Store the full DamageInfo object
+
+        /// <summary>
+        /// Initializes the projectile with custom damage and status effects.
+        /// </summary>
+        public void Initialize(DamageInfo info, Vector2 direction)
+        {
+            damageInfo = info; // ✅ Store the dynamic damage and effects
+            this.direction = direction;
+        }
 
         public void SetTargetPosition(Vector3 target)
         {
@@ -45,17 +58,18 @@ namespace CoED
                 {
                     OnCollide();
                     hasReachedTarget = true;
-                    // Optionally instantiate an impact effect here
-                    // Instantiate(impactEffectPrefab, targetPosition, Quaternion.identity);
                     Destroy(gameObject);
                 }
             }
         }
 
+        /// <summary>
+        /// Handles collision with enemies and applies dynamic damage and effects.
+        /// </summary>
         private void OnCollide()
         {
             if (hasCollided)
-                return; // Prevent multiple calls
+                return;
             hasCollided = true;
 
             Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, collisionRadius);
@@ -66,15 +80,14 @@ namespace CoED
                     EnemyStats enemy = hit.GetComponent<EnemyStats>();
                     if (enemy != null)
                     {
-                        enemy.TakeDamage(damage);
+                        // Apply dynamic damage and effects
+                        enemy.TakeDamage(damageInfo);
 
-                        if (statusEffect != null)
+                        foreach (
+                            var effect in GetComponent<PlayerSpellWrapper>().InflictedStatusEffectTypes
+                        )
                         {
-                            Debug.Log($"Applying {statusEffect.effectType} to {hit.name}.");
-                            StatusEffectManager.Instance.AddStatusEffect(
-                                hit.gameObject,
-                                statusEffect
-                            );
+                            StatusEffectManager.Instance.AddStatusEffect(enemy.gameObject, effect);
                         }
                     }
                     Destroy(gameObject);
@@ -86,6 +99,12 @@ namespace CoED
                     return;
                 }
             }
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, collisionRadius);
         }
     }
 }

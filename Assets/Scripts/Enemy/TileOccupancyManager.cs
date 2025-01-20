@@ -35,6 +35,22 @@ namespace CoED
             }
         }
 
+        public void SetPlayerTileOccupied(Vector2Int tilePos)
+        {
+            // e.g. occupant ID = -999 or something you decide is "Player"
+            if (!tileReservations.ContainsKey(tilePos))
+                tileReservations.Add(tilePos, -999);
+        }
+
+        public void ClearPlayerTileOccupied(Vector2Int oldTilePos)
+        {
+            // remove if occupant was -999
+            if (tileReservations.TryGetValue(oldTilePos, out int occupantID) && occupantID == -999)
+            {
+                tileReservations.Remove(oldTilePos);
+            }
+        }
+
         public void SetPlayerPosition(Vector2Int position)
         {
             playerPosition = position;

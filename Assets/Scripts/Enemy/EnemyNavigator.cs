@@ -92,8 +92,8 @@ namespace CoED
             Vector2Int nextTile = currentPath[0];
             Vector3 playerPosition = GameObject.FindGameObjectWithTag("Player").transform.position;
             Vector2Int playerGridPosition = new Vector2Int(
-                Mathf.RoundToInt(playerPosition.x),
-                Mathf.RoundToInt(playerPosition.y)
+                (int)playerPosition.x,
+                (int)playerPosition.y
             );
             if (nextTile == playerGridPosition)
             {

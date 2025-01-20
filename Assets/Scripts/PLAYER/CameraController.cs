@@ -82,13 +82,13 @@ namespace CoED
 
             float clampedX = Mathf.Clamp(
                 playerPosition.x,
-                minBounds.x + halfWidth,
-                maxBounds.x - halfWidth
+                minBounds.x + halfWidth + 0.5f,
+                maxBounds.x - halfWidth - 0.5f
             );
             float clampedY = Mathf.Clamp(
                 playerPosition.y,
-                minBounds.y + halfHeight,
-                maxBounds.y - halfHeight
+                minBounds.y + halfHeight + 0.5f,
+                maxBounds.y - halfHeight - 0.5f
             );
 
             transform.position = new Vector3(clampedX, clampedY, transform.position.z);

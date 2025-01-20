@@ -18,7 +18,7 @@ namespace CoED
         private int baseHealth = 100;
 
         [SerializeField, Min(1f)]
-        private float baseAttackRange = 1.0f;
+        private float baseAttackRange = 1.4f;
 
         [SerializeField, Min(1f)]
         private float baseFireRate = 1f;
@@ -33,7 +33,26 @@ namespace CoED
         public bool Invincible => invincible;
 
         [Header("Resistances")]
-        public List<StatusEffectType> resistances = new List<StatusEffectType>();
+        [Header("Elemental Attributes")]
+        public List<Immunities> immunities = new List<Immunities>();
+
+        [Header("Resistances")]
+        public List<Resistances> resistances = new List<Resistances>();
+
+        [Header("Weaknesses")]
+        public List<Weaknesses> weaknesses = new List<Weaknesses>();
+
+        [Header("Dynamic Damage Types")]
+        public Dictionary<DamageType, float> dynamicDamageTypes =
+            new Dictionary<DamageType, float>();
+
+        [Header("Inflicted Status Effects")]
+        public List<StatusEffectType> inflictedStatusEffects = new List<StatusEffectType>();
+
+        public float chanceToInflictStatusEffect = 0.1f;
+
+        [SerializeField]
+        public List<StatusEffectType> activeStatusEffects = new List<StatusEffectType>();
 
         // Current Stats
         public float PatrolSpeed;
@@ -93,23 +112,70 @@ namespace CoED
             InitializeUI();
         }
 
-        public void TakeDamage(int damage, bool bypassInvincible = false)
+        /// <summary>
+        /// Handles complex damage and applies status effects to enemies.
+        /// </summary>
+        /// <param name="damageInfo">Damage information, including damage types and status effects.</param>
+        /// <param name="bypassInvincible">Whether to bypass invincibility.</param>
+        public void TakeDamage(DamageInfo damageInfo, bool bypassInvincible = false)
         {
             if (!bypassInvincible && invincible)
             {
-                Debug.Log("EnemyStats: Enemy is invincible.");
+                Debug.Log($"{gameObject.name} is invincible.");
                 return;
             }
 
-            int effectiveDamage = Mathf.Max(damage - CurrentDefense, 1);
-            CurrentHealth = Mathf.Max(CurrentHealth - effectiveDamage, 0);
+            float totalDamage = 0f;
+
+            foreach (var damageEntry in damageInfo.DamageAmounts)
+            {
+                DamageType type = damageEntry.Key;
+                float damageAmount = damageEntry.Value;
+
+                // ✅ Check for Immunity
+                if (immunities.Contains((Immunities)type))
+                {
+                    Debug.Log($"{gameObject.name} is immune to {type} damage.");
+                    FloatingTextManager.Instance.ShowFloatingText(
+                        $"{type.ToString().ToUpper()} IMMUNE",
+                        transform,
+                        Color.cyan
+                    );
+                    continue;
+                }
+
+                // ✅ Apply Resistance
+                if (resistances.Contains((Resistances)type))
+                {
+                    damageAmount *= 0.5f;
+                }
+
+                // ❌ Apply Weakness
+                if (weaknesses.Contains((Weaknesses)type))
+                {
+                    damageAmount *= 1.5f;
+                }
+
+                totalDamage += damageAmount;
+            }
+
+            // ✅ Apply defense
+            float effectiveDamage = Mathf.Max(totalDamage - CurrentDefense, 1);
+            CurrentHealth = Mathf.Max(CurrentHealth - Mathf.RoundToInt(effectiveDamage), 0);
+
+            // ✅ Apply all status effects dynamically
+            foreach (var effect in damageInfo.InflictedStatusEffects)
+            {
+                StatusEffectManager.Instance.AddStatusEffect(gameObject, effect);
+            }
+
+            // ✅ UI Updates
+            UpdateHealthUI();
             FloatingTextManager.Instance.ShowFloatingText(
                 effectiveDamage.ToString(),
                 transform,
                 Color.red
             );
-
-            UpdateHealthUI();
 
             if (CurrentHealth <= 0)
             {

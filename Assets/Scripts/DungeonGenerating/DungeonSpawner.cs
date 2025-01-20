@@ -29,6 +29,7 @@ namespace CoED
         private ConsumableItemWrapper spawningRoomPotion;
         private static int occupantIDCounter = 0;
         private Dictionary<int, Pathfinder> floorPathfinders = new Dictionary<int, Pathfinder>();
+        public Material fireOverlayMaterial;
 
         private void Awake()
         {
@@ -293,6 +294,7 @@ namespace CoED
                 return;
             }
             Instantiate(spawningRoomPotion, new Vector3(-15f, -11f, 0), Quaternion.identity);
+            List<Equipment> equipmentDrops = new List<Equipment>();
             foreach (var kvp in DungeonManager.Instance.floors.OrderBy(e => e.Key))
             {
                 int floorNum = kvp.Key;
@@ -316,7 +318,7 @@ namespace CoED
                 }
 
                 // Spawn consumables
-                SpawnItems(
+                SpawnConsumables(
                     floorNum,
                     itemParent,
                     dungeonSettings
@@ -326,7 +328,7 @@ namespace CoED
                 );
 
                 // Spawm hidden consumables
-                SpawnItems(
+                SpawnConsumables(
                     floorNum,
                     itemParent,
                     dungeonSettings
@@ -336,21 +338,20 @@ namespace CoED
                     hidden: true
                 );
 
-                // Spawn equipment
-                SpawnItems(
+                equipmentDrops = GetEquipmentDrops();
+                SpawnEquipment(
                     floorNum,
                     itemParent,
-                    dungeonSettings.equipmentAssets.Cast<Item>().ToList(),
+                    equipmentDrops,
                     dungeonSettings.numberOfItemsPerFloor
                 );
-
-                // Spawn hidden equipment
-                SpawnItems(
+                equipmentDrops = GetEquipmentDrops();
+                SpawnEquipment(
                     floorNum,
                     itemParent,
-                    dungeonSettings.equipmentAssets.Cast<Item>().ToList(),
-                    dungeonSettings.numberOfHiddenConsumableItemsPerFloor,
-                    hidden: true
+                    equipmentDrops,
+                    dungeonSettings.numberOfItemsPerFloor,
+                    true
                 );
 
                 // Spawn money
@@ -366,10 +367,56 @@ namespace CoED
             }
         }
 
-        private void SpawnItems(
+        private List<Equipment> GetEquipmentDrops()
+        {
+            List<Equipment> equipmentDrops = new List<Equipment>();
+
+            for (int i = 0; i < dungeonSettings.numberOfItemsPerFloor; i++)
+            {
+                float roll = Random.value;
+                if (roll < 0.33f)
+                    equipmentDrops.Add(EquipmentGenerator.GenerateRandomEquipment(1, "weapon"));
+                else if (roll < 0.66f)
+                    equipmentDrops.Add(EquipmentGenerator.GenerateRandomEquipment(1, "armor"));
+                else
+                    equipmentDrops.Add(EquipmentGenerator.GenerateRandomEquipment(1, "accessory"));
+            }
+
+            return equipmentDrops;
+        }
+
+        private void ApplyEquipmentModifiers(Equipment equipment, int modifierScale)
+        {
+            if (equipment.attack > 0)
+                equipment.attack += modifierScale;
+            if (equipment.defense > 0)
+                equipment.defense += modifierScale;
+            if (equipment.speed > 0)
+                equipment.speed += modifierScale;
+            if (equipment.health > 0)
+                equipment.health += modifierScale;
+            if (equipment.magic > 0)
+                equipment.magic += modifierScale;
+            if (equipment.stamina > 0)
+                equipment.stamina += modifierScale;
+            if (equipment.intelligence > 0)
+                equipment.intelligence += modifierScale;
+            if (equipment.dexterity > 0)
+                equipment.dexterity += modifierScale;
+            if (equipment.critChance > 0)
+                equipment.critChance += modifierScale;
+
+            var keys = new List<DamageType>(equipment.damageModifiers.Keys);
+            foreach (var key in keys)
+            {
+                equipment.damageModifiers[key] += modifierScale;
+            }
+        }
+
+        private void SpawnEquipment(
             int floorNumber,
             Transform parent,
-            List<Item> items, // This might be a mix of both Consumable and Equipment
+            List<Equipment> equipmentItems,
             int itemCount,
             bool hidden = false
         )
@@ -378,98 +425,155 @@ namespace CoED
             if (floorData == null)
                 return;
 
-            List<Vector2Int> tiles = hidden
-                ? floorData.WallTiles.ToList()
-                : floorData.FloorTiles.ToList();
+            List<Vector2Int> tiles;
+
+            if (hidden)
+            {
+                // Only choose wall tiles that are near floor tiles
+                tiles = floorData
+                    .WallTiles.Where(tile => IsNearFloorTile(tile, floorData, 1.4f))
+                    .ToList();
+            }
+            else
+            {
+                tiles = floorData.FloorTiles.ToList();
+            }
+
             if (tiles.Count < itemCount)
                 itemCount = tiles.Count;
 
             for (int i = 0; i < itemCount; i++)
             {
-                int randIndex = Random.Range(0, tiles.Count);
-                Vector2Int tilePos = tiles[randIndex];
-                tiles.RemoveAt(randIndex);
+                Vector2Int tilePos = tiles[Random.Range(0, tiles.Count)];
+                tiles.Remove(tilePos);
 
-                Vector3Int cellPos = new Vector3Int(tilePos.x, tilePos.y, 0);
                 Vector3 spawnPos =
-                    floorData.FloorTilemap.CellToWorld(cellPos) + new Vector3(0.5f, 0.5f, 0);
+                    (
+                        hidden
+                            ? floorData.WallTilemap.CellToWorld(
+                                new Vector3Int(tilePos.x, tilePos.y, 0)
+                            )
+                            : floorData.FloorTilemap.CellToWorld(
+                                new Vector3Int(tilePos.x, tilePos.y, 0)
+                            )
+                    ) + new Vector3(0.5f, 0.5f, 0);
 
-                // 2) Instantiate
-                // 1) Pick any random item from the provided list
-                Item baseItem = items[Random.Range(0, items.Count)];
+                Equipment equipment = equipmentItems[Random.Range(0, equipmentItems.Count)];
 
-                // 2) Branch based on type
-                if (baseItem is Equipment eqItem)
+                GameObject itemObject = new GameObject(
+                    $"Dungeon_Spawner_Equipment_{equipment.itemName}"
+                );
+                itemObject.transform.position = spawnPos;
+                itemObject.transform.SetParent(parent);
+                itemObject.tag = "Item";
+
+                SpriteRenderer renderer = itemObject.AddComponent<SpriteRenderer>();
+                itemObject.layer = LayerMask.NameToLayer("items");
+                itemObject.AddComponent<CapsuleCollider2D>().isTrigger = true;
+                itemObject.AddComponent<EquipmentPickup>();
+
+                renderer.sprite =
+                    equipment.baseSprite != null
+                        ? equipment.baseSprite
+                        : Resources.Load<Sprite>("Sprites/Items/Weapons/Default");
+
+                renderer.sortingOrder = 3;
+
+                if (hidden)
                 {
-                    // This item is actually an Equipment
-                    // => spawn its prefab, do equipment logic
-                    var itemObject = Instantiate(
-                        eqItem.itemPrefab,
-                        spawnPos,
-                        Quaternion.identity,
-                        parent
-                    );
-
-                    // If you're using an EquipmentPickup approach:
-                    EquipmentPickup pickupScript = itemObject.GetComponent<EquipmentPickup>();
-                    if (pickupScript != null)
-                    {
-                        // Create the data wrapper, apply random modifiers, etc.
-                        EquipmentWrapper eqWrapper = new EquipmentWrapper();
-                        eqWrapper.Initialize(eqItem);
-                        float modifierScale = !hidden
-                            ? Random.Range(1.1f, 1.5f)
-                            : Random.Range(1.6f, 2f);
-                        ApplyEquipmentModifiers(eqWrapper, modifierScale);
-
-                        pickupScript.SetData(eqWrapper);
-                        // Possibly hide if (hidden)
-                        itemObject.GetComponent<HiddenItemController>().isHidden = hidden;
-                    }
-                    Debug.Log((baseItem as Equipment).equipmentName);
+                    itemObject.AddComponent<HiddenItemController>().isHidden = true;
                 }
-                else if (baseItem is Consumable coItem)
+                itemObject.transform.localScale = new Vector3(2f, 2f, 0f);
+                ApplyEquipmentModifiers(equipment, Random.Range(1, 3));
+                itemObject.GetComponent<EquipmentPickup>().SetEquipment(equipment);
+            }
+        }
+
+        private bool IsNearFloorTile(Vector2Int wallTile, FloorData floorData, float radius)
+        {
+            foreach (Vector2Int floorTile in floorData.FloorTiles)
+            {
+                if (Vector2.Distance(wallTile, floorTile) <= radius)
                 {
-                    // This item is a Consumable => spawn consumable prefab, do consumable logic
-                    var itemObject = Instantiate(
+                    return true; // This wall tile is close enough to a floor tile
+                }
+            }
+            return false;
+        }
+
+        #endregion
+
+        #region Consumable Spawning
+
+        private void SpawnConsumables(
+            int floorNumber,
+            Transform parent,
+            List<Item> consumableItems,
+            int itemCount,
+            bool hidden = false
+        )
+        {
+            FloorData floorData = DungeonManager.Instance.GetFloorData(floorNumber);
+            if (floorData == null)
+                return;
+
+            List<Vector2Int> tiles;
+            if (hidden)
+            {
+                tiles = floorData.WallTiles.ToList();
+            }
+            else
+            {
+                tiles = floorData.FloorTiles.ToList();
+            }
+
+            if (tiles.Count < itemCount)
+                itemCount = tiles.Count;
+
+            for (int i = 0; i < itemCount; i++)
+            {
+                Vector2Int tilePos = tiles[Random.Range(0, tiles.Count)];
+                tiles.Remove(tilePos);
+
+                Vector3 spawnPos =
+                    (
+                        hidden
+                            ? floorData.WallTilemap.CellToWorld(
+                                new Vector3Int(tilePos.x, tilePos.y, 0)
+                            )
+                            : floorData.FloorTilemap.CellToWorld(
+                                new Vector3Int(tilePos.x, tilePos.y, 0)
+                            )
+                    ) + new Vector3(0.5f, 0.5f, 0);
+
+                Consumable coItem =
+                    consumableItems[Random.Range(0, consumableItems.Count)] as Consumable;
+
+                if (coItem != null)
+                {
+                    GameObject itemObject = Instantiate(
                         coItem.itemPrefab,
                         spawnPos,
                         Quaternion.identity,
                         parent
                     );
-
-                    // If you have a ConsumableItemWrapper approach:
                     var consumableWrapper = itemObject.GetComponent<ConsumableItemWrapper>();
                     if (consumableWrapper != null)
                     {
-                        // Clone the consumable ScriptableObject
                         consumableWrapper.consumableData = ScriptableObject.Instantiate(coItem);
-                        float modifierScale = !hidden
-                            ? Random.Range(1.1f, 1.5f)
-                            : Random.Range(1.6f, 2f);
-                        ApplyConsumableModifiers(consumableWrapper, modifierScale);
-
-                        itemObject.GetComponent<HiddenItemController>().isHidden = hidden;
+                        ApplyConsumableModifiers(consumableWrapper, Random.Range(1.1f, 1.5f));
                     }
-                    Debug.Log((baseItem as Consumable).itemName);
                 }
-                else
-                {
-                    // If neither Equipment nor Consumable, handle or warn
-                    Debug.LogWarning($"Item type not recognized.");
-                }
-
-                // 5) else log a warning
-                Debug.LogWarning($"Item prefab not recognized as Equipment or Consumable.");
             }
         }
+        #endregion
 
+        #region Utility Methods
         private void ApplyConsumableModifiers(
             ConsumableItemWrapper consumableWrapper,
             float modifierScale
         )
         {
-            // Apply scaled boosts only to stats greater than 0
             if (consumableWrapper.consumableData.attackBoost > 0)
                 consumableWrapper.consumableData.attackBoost += modifierScale;
             if (consumableWrapper.consumableData.defenseBoost > 0)
@@ -483,24 +587,9 @@ namespace CoED
             if (consumableWrapper.consumableData.staminaBoost > 0)
                 consumableWrapper.consumableData.staminaBoost += modifierScale;
         }
+        #endregion
 
-        private void ApplyEquipmentModifiers(EquipmentWrapper equipmentWrapper, float modifierScale)
-        {
-            // Apply scaled modifiers only to stats greater than 0
-            if (equipmentWrapper.equipmentData.attackModifier > 0)
-                equipmentWrapper.equipmentData.attackModifier += modifierScale;
-            if (equipmentWrapper.equipmentData.defenseModifier > 0)
-                equipmentWrapper.equipmentData.defenseModifier += modifierScale;
-            if (equipmentWrapper.equipmentData.healthModifier > 0)
-                equipmentWrapper.equipmentData.healthModifier += modifierScale;
-            if (equipmentWrapper.equipmentData.speedModifier > 0)
-                equipmentWrapper.equipmentData.speedModifier += modifierScale;
-            if (equipmentWrapper.equipmentData.magicModifier > 0)
-                equipmentWrapper.equipmentData.magicModifier += modifierScale;
-            if (equipmentWrapper.equipmentData.staminaModifier > 0)
-                equipmentWrapper.equipmentData.staminaModifier += modifierScale;
-        }
-
+        #region Money Spawning
         private void SpawnMoney(int floorNumber, Transform parent, int moneyCount)
         {
             FloorData floorData = DungeonManager.Instance.GetFloorData(floorNumber);
@@ -551,101 +640,6 @@ namespace CoED
                     .GetComponent<MoneyPickup>();
 
                 moneyPickup.Initialize(dungeonSettings.moneyPrefab.moneyData, scaledAmount);
-            }
-        }
-
-        private void SpawnHiddenItemsOnFloor(int floorNumber, Transform itemParent)
-        {
-            FloorData floorData = DungeonManager.Instance.GetFloorData(floorNumber);
-            if (floorData == null)
-            {
-                Debug.LogError($"No FloorData for floor {floorNumber} to spawn hidden items.");
-                return;
-            }
-
-            List<Vector2Int> wallTiles = floorData.WallTiles.ToList();
-            if (wallTiles.Count == 0)
-            {
-                Debug.LogWarning($"Floor {floorNumber} has no wall tiles to spawn hidden items.");
-                return;
-            }
-
-            int hiddenConsumableCount = Mathf.Min(
-                dungeonSettings.numberOfHiddenConsumableItemsPerFloor,
-                wallTiles.Count / 2
-            );
-            int hiddenEquipmentCount = Mathf.Min(
-                dungeonSettings.numberOfHiddenEquipmentItemsPerFloor,
-                wallTiles.Count / 2
-            );
-
-            SpawnHiddenItemsForType(
-                wallTiles,
-                dungeonSettings.itemPrefabs.Cast<Item>().ToList(),
-                hiddenConsumableCount,
-                itemParent,
-                floorData
-            );
-            SpawnHiddenItemsForType(
-                wallTiles,
-                dungeonSettings.equipmentPrefabs.Cast<Item>().ToList(),
-                hiddenEquipmentCount,
-                itemParent,
-                floorData
-            );
-        }
-
-        private void SpawnHiddenItemsForType(
-            List<Vector2Int> wallTiles,
-            List<Item> itemWrappers,
-            int itemCount,
-            Transform itemParent,
-            FloorData floorData
-        )
-        {
-            for (int i = 0; i < itemCount; i++)
-            {
-                if (wallTiles.Count == 0)
-                {
-                    Debug.LogWarning("No more wall tiles available for hidden item spawning.");
-                    break;
-                }
-
-                int randIndex = Random.Range(0, wallTiles.Count);
-                Vector2Int tilePos = wallTiles[randIndex];
-                wallTiles.RemoveAt(randIndex);
-
-                Vector3Int cellPos = new Vector3Int(tilePos.x, tilePos.y, 0);
-                Vector3 spawnPos =
-                    floorData.WallTilemap.CellToWorld(cellPos) + new Vector3(0.5f, 0.5f, 0);
-
-                Item randomItemWrapper = itemWrappers[Random.Range(0, itemWrappers.Count)];
-                if (randomItemWrapper == null || randomItemWrapper.itemPrefab == null)
-                {
-                    Debug.LogError($"Null item prefab or wrapper. Skipping hidden item spawn.");
-                    continue;
-                }
-
-                GameObject itemInstance = Instantiate(
-                    randomItemWrapper.itemPrefab,
-                    spawnPos,
-                    Quaternion.identity,
-                    itemParent
-                );
-                if (itemInstance == null)
-                {
-                    Debug.LogError(
-                        $"Failed to instantiate hidden item at {spawnPos} on floor {floorData.FloorNumber}."
-                    );
-                    continue;
-                }
-
-                // Mark as hidden
-                HiddenItemController hic = itemInstance.GetComponent<HiddenItemController>();
-                if (hic != null)
-                {
-                    hic.isHidden = true;
-                }
             }
         }
 

@@ -419,34 +419,6 @@ namespace CoED
             }
         }
 
-        /*
-                public void DisplayAbility(string abilityName, Sprite abilityIconSprite)
-                {
-                    if (abilityNameText != null)
-                    {
-                        abilityNameText.text = abilityName;
-                    }
-                    if (abilityIcon != null)
-                    {
-                        abilityIcon.sprite = abilityIconSprite;
-                        abilityIcon.enabled = true;
-                    }
-                }
-        
-                public void HideAbilityDisplay()
-                {
-                    if (abilityNameText != null)
-                    {
-                        abilityNameText.text = "";
-                    }
-                    if (abilityIcon != null)
-                    {
-                        abilityIcon.sprite = null;
-                        abilityIcon.enabled = false;
-                    }
-                }
-        */
-
         public void ShowDeathPanel()
         {
             if (deathPanel != null)
@@ -532,6 +504,14 @@ namespace CoED
         public void OnLoadButtonClicked()
         {
             //GameManager.Instance?.LoadGame();
+        }
+
+        public void UpdateUIPanels()
+        {
+            UpdateHealthBar(PlayerStats.Instance.CurrentHealth, PlayerStats.Instance.MaxHealth);
+            UpdateStaminaBar(PlayerStats.Instance.CurrentStamina, PlayerStats.Instance.MaxStamina);
+            UpdateMagicBar(PlayerStats.Instance.CurrentMagic, PlayerStats.Instance.MaxMagic);
+
         }
     }
 }

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.WSA;
 
 namespace CoED
 {
@@ -23,26 +22,46 @@ namespace CoED
         private EnemyNavigator navigator;
         private EnemyStats enemyStats;
 
+        // Patrol
         private HashSet<Vector2Int> patrolPoints = new HashSet<Vector2Int>();
         private Vector2Int patrolDestination;
 
+        // Player detection
         public Transform playerTransform;
 
-        private FloorData floorData;
+        [SerializeField, Min(0.1f)]
+        private float engageDistance; // The distance at which enemy tries to start the attack
+
+        [SerializeField, Min(0.1f)]
+        private float disengageDistance; // distance to revert to chase
+        private Vector2 lastKnownPlayerPos;
+        private bool hadLOSLastFrame = false;
+
+        [SerializeField]
+        private LayerMask visualObstructionLayer;
+
+        // Timers & state
         private float thinkCooldown = 0.5f;
         private float nextThinkTime = 0f;
-        private float wanderRange = 5;
+        private float wanderRange = 5; // For WanderNearPlayer
+
+        // Attack logic
         public bool CanAttackPlayer = true;
+
+        // NEW: We add a cooldown-based approach
+        [SerializeField]
+        private float meleeAttackCooldown = 1.5f; // Time between hits
+        private float lastAttackTime = 0f;
+
+        // Projectiles
         private Dictionary<Projectile, float> projectileCooldownTimers =
             new Dictionary<Projectile, float>();
 
         [SerializeField]
-        private float projectileCooldownDuration = 15f; // Configurable cooldown duration
+        private float projectileCooldownDuration = 15f;
+        private float launchProjectileCooldown;
 
-        private float launchProjectileCooldown; // Runtime tracker
-
-        [SerializeField]
-        private LayerMask visualObstructionLayer;
+        private FloorData floorData;
 
         public void Initialize(FloorData floorData, IEnumerable<Vector2Int> patrolPoints)
         {
@@ -64,19 +83,27 @@ namespace CoED
                 playerTransform = playerObj.transform;
             }
 
+            // Basic patrol setup
             ChooseRandomPatrolDestination();
-            navigator.SetMoveSpeed(1f / enemyStats.PatrolSpeed); // Delay for patrol movements
+            navigator.SetMoveSpeed(1f / enemyStats.PatrolSpeed);
+
+            // Initialize projectile timers
             foreach (var projectile in availableProjectiles)
             {
                 projectileCooldownTimers[projectile] = 0f;
             }
             launchProjectileCooldown = projectileCooldownDuration;
+
+            // Default engage distances based on CurrentAttackRange
+            engageDistance = enemyStats.CurrentAttackRange + 0.2f; // CHANGED: Slightly bigger
+            disengageDistance = enemyStats.CurrentAttackRange + 0.8f; // CHANGED: bigger gap
         }
 
         private void Update()
         {
             UpdateProjectileCooldowns();
             launchProjectileCooldown -= Time.deltaTime;
+
             if (Time.time >= nextThinkTime)
             {
                 DecideNextAction();
@@ -96,62 +123,33 @@ namespace CoED
             }
         }
 
+        // ===============================
+        // Main State Decision
+        // ===============================
         private void DecideNextAction()
         {
+            if (playerTransform == null)
+                return;
+
             float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
             bool seesPlayer = HasLineOfSightToPlayer(distanceToPlayer);
-            bool isPlayerSurrounded = TileOccupancyManager.Instance.IsPlayerSurroundedByEnemies();
-
-            if (
-                distanceToPlayer <= GetComponent<EnemyStats>().ProjectileCurrentAttackRange
-                && launchProjectileCooldown <= 0
-                && seesPlayer
-                && CanAttackPlayer
-            )
-            {
-                TryFireProjectile();
-                launchProjectileCooldown = projectileCooldownDuration;
-            }
-
-            if (distanceToPlayer <= enemyStats.CurrentAttackRange)
-            {
-                ChangeState(EnemyState.Attack);
-                transform.position = new Vector3(
-                    Mathf.Floor(transform.position.x),
-                    Mathf.Floor(transform.position.y),
-                    0
-                );
-            }
-            else if (
-                distanceToPlayer > enemyStats.CurrentAttackRange
-                && seesPlayer
-                && isPlayerSurrounded
-            )
-            {
-                ChangeState(EnemyState.WanderNearPlayer);
-            }
-            else if (seesPlayer)
-            {
-                ChangeState(EnemyState.Chase);
-            }
-            else
-            {
-                ChangeState(EnemyState.Patrol);
-            }
 
             switch (CurrentState)
             {
-                case EnemyState.Chase:
-                    HandleChase();
-                    break;
-                case EnemyState.Attack:
-                    HandleAttack();
-                    break;
                 case EnemyState.Patrol:
-                    HandlePatrol();
+                    DecidePatrolState(distanceToPlayer, seesPlayer);
                     break;
+
+                case EnemyState.Chase:
+                    DecideChaseState(distanceToPlayer, seesPlayer);
+                    break;
+
+                case EnemyState.Attack:
+                    DecideAttackState(distanceToPlayer, seesPlayer);
+                    break;
+
                 case EnemyState.WanderNearPlayer:
-                    HandleWanderNearPlayer();
+                    DecideWanderNearPlayerState(distanceToPlayer, seesPlayer);
                     break;
             }
         }
@@ -165,9 +163,12 @@ namespace CoED
                 distanceToPlayer,
                 visualObstructionLayer
             );
-            return hit.collider == null || hit.collider.CompareTag("Player");
+            return (hit.collider == null || hit.collider.CompareTag("Player"));
         }
 
+        // ===============================
+        // Change State
+        // ===============================
         private void ChangeState(EnemyState newState)
         {
             if (CurrentState == newState)
@@ -178,19 +179,140 @@ namespace CoED
             {
                 case EnemyState.Patrol:
                     navigator.SetMoveSpeed(1f / enemyStats.PatrolSpeed);
-                    ChooseRandomPatrolDestination(); // Ensure new point is selected immediately
+                    ChooseRandomPatrolDestination();
                     navigator.SetDestination(patrolDestination);
                     break;
+
                 case EnemyState.Chase:
                     navigator.SetMoveSpeed(1f / enemyStats.ChaseSpeed);
                     navigator.ClearPath();
                     break;
+
                 case EnemyState.Attack:
-                    navigator.SetMoveSpeed(0); // Effectively stop movement
+                    // DO NOT forcibly set speed=0 here
+                    // We'll let the attack logic handle movement
                     break;
             }
         }
 
+        // ===============================
+        // Individual State Logic
+        // ===============================
+        private void DecidePatrolState(float distanceToPlayer, bool seesPlayer)
+        {
+            // If the enemy sees the player, we transition to chase
+            if (seesPlayer && distanceToPlayer > engageDistance)
+            {
+                ChangeState(EnemyState.Chase);
+                return;
+            }
+
+            // If we see the player AND they're within engage distance => Attack
+            if (seesPlayer && distanceToPlayer <= engageDistance)
+            {
+                ChangeState(EnemyState.Attack);
+                return;
+            }
+
+            // If neither, remain in patrol
+            HandlePatrol();
+        }
+
+        private void DecideChaseState(float distanceToPlayer, bool seesPlayer)
+        {
+            // "Memory" for last line of sight
+            if (seesPlayer)
+            {
+                lastKnownPlayerPos = playerTransform.position;
+                hadLOSLastFrame = true;
+            }
+            else
+            {
+                // If we just lost LOS, move to last known position
+                if (hadLOSLastFrame)
+                {
+                    Vector2Int lastKnownGrid = new Vector2Int(
+                        Mathf.RoundToInt(lastKnownPlayerPos.x),
+                        Mathf.RoundToInt(lastKnownPlayerPos.y)
+                    );
+                    navigator.SetDestination(lastKnownGrid);
+                    hadLOSLastFrame = false;
+                    return;
+                }
+                else
+                {
+                    // truly revert to Patrol if no LOS for consecutive frames
+                    ChangeState(EnemyState.Patrol);
+                    return;
+                }
+            }
+
+            // If in melee "engage" range, switch to Attack
+            if (distanceToPlayer <= engageDistance)
+            {
+                ChangeState(EnemyState.Attack);
+                return;
+            }
+
+            // Otherwise keep chasing
+            HandleChase();
+        }
+
+        private void DecideAttackState(float distanceToPlayer, bool seesPlayer)
+        {
+            if (!seesPlayer)
+            {
+                ChangeState(EnemyState.Patrol);
+                return;
+            }
+
+            if (distanceToPlayer > disengageDistance)
+            {
+                ChangeState(EnemyState.Chase);
+                return;
+            }
+
+            // Also consider projectile logic
+            if (
+                distanceToPlayer <= enemyStats.ProjectileCurrentAttackRange
+                && launchProjectileCooldown <= 0
+            )
+            {
+                TryFireProjectile();
+                launchProjectileCooldown = projectileCooldownDuration;
+            }
+
+            // Actually handle the "melee approach + attack"
+            HandleAttack();
+        }
+
+        private void DecideWanderNearPlayerState(float distanceToPlayer, bool seesPlayer)
+        {
+            if (!seesPlayer)
+            {
+                ChangeState(EnemyState.Patrol);
+                return;
+            }
+
+            if (distanceToPlayer <= engageDistance)
+            {
+                ChangeState(EnemyState.Attack);
+                return;
+            }
+
+            bool isPlayerSurrounded = TileOccupancyManager.Instance.IsPlayerSurroundedByEnemies();
+            if (!isPlayerSurrounded)
+            {
+                ChangeState(EnemyState.Chase);
+                return;
+            }
+
+            // remain in WanderNearPlayer, if that's your design
+        }
+
+        // ===============================
+        // Movement + Attack Routines
+        // ===============================
         private void HandlePatrol()
         {
             if (!navigator.HasPath())
@@ -200,18 +322,138 @@ namespace CoED
             }
             else
             {
-                if (
-                    IsCongested(
-                        new Vector2Int(
-                            Mathf.RoundToInt(transform.position.x),
-                            Mathf.RoundToInt(transform.position.y)
-                        )
-                    )
-                )
+                if (IsCongested(CurrentGridPos()))
                 {
                     ChooseRandomPatrolDestination();
                     navigator.SetDestination(patrolDestination);
                 }
+            }
+        }
+
+        private void HandleChase()
+        {
+            if (playerTransform == null)
+                return;
+
+            // Attempt to path near the player's tile
+            Vector2Int playerTile = PlayerGridPos();
+            navigator.SetDestination(playerTile);
+        }
+
+        /// <summary>
+        /// The big "swarm" logic: The enemy tries to move closer if not in range.
+        /// Once in range, it attempts an attack (with a cooldown).
+        /// </summary>
+        private void HandleAttack()
+        {
+            float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
+
+            // If still outside actual melee range, keep "inching" forward
+            if (distanceToPlayer > (enemyStats.CurrentAttackRange - 0.1f))
+            {
+                // "Push into the crowd" at half chase speed
+                navigator.SetMoveSpeed(1f / (enemyStats.ChaseSpeed * 2f));
+
+                // Instead of going exactly to player's tile, we find a free adjacent tile if possible
+                Vector2Int bestTile = FindFreeAdjacentTileNearPlayer();
+                navigator.SetDestination(bestTile);
+            }
+            else
+            {
+                // We're truly in striking distance, so hold position
+                navigator.SetMoveSpeed(0f);
+
+                // Check cooldown for multiple attacks
+                if (Time.time >= lastAttackTime + meleeAttackCooldown)
+                {
+                    PerformMeleeAttack();
+                    lastAttackTime = Time.time;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Actually performs the melee attack damage logic.
+        /// Previously you had if(CanAttackPlayer) { ... }
+        /// but now we do a time-based approach.
+        /// You could re-enable CanAttackPlayer if you want a one-and-done approach.
+        /// </summary>
+        private void PerformMeleeAttack()
+        {
+            float distance = Vector2.Distance(transform.position, playerTransform.position);
+            if (distance <= enemyStats.CurrentAttackRange)
+            {
+                // Build damage
+                Dictionary<DamageType, float> damageDealt = new Dictionary<DamageType, float>();
+                foreach (var kvp in enemyStats.dynamicDamageTypes)
+                {
+                    damageDealt[kvp.Key] = kvp.Value;
+                }
+
+                // Build status
+                List<StatusEffectType> successfulEffects = new List<StatusEffectType>();
+
+                foreach (var effect in enemyStats.inflictedStatusEffects)
+                {
+                    if (Random.value < enemyStats.chanceToInflictStatusEffect)
+                        successfulEffects.Add(effect);
+                }
+
+                DamageInfo damageInfo = new DamageInfo(damageDealt, successfulEffects);
+
+                // Apply to player
+                PlayerStats.Instance.TakeDamage(damageInfo);
+
+                Debug.Log($"{name} attacked the player with {damageDealt.Count} damage types.");
+            }
+        }
+
+        /// <summary>
+        /// Attempts to find any free adjacent tile near the player.
+        /// If all are blocked, returns the player's tile itself (which might be blocked).
+        /// This ensures multiple enemies can gather around different tiles.
+        /// </summary>
+        private Vector2Int FindFreeAdjacentTileNearPlayer()
+        {
+            Vector2Int playerPos = PlayerGridPos();
+
+            // Check the 8 surrounding offsets
+            foreach (var offset in TileOccupancyManager.adjacentOffsets)
+            {
+                Vector2Int checkPos = playerPos + offset;
+                if (TileOccupancyManager.Instance.IsTileFree(checkPos))
+                {
+                    return checkPos;
+                }
+            }
+
+            // fallback
+            return playerPos;
+        }
+
+        // ===============================
+        // Utility
+        // ===============================
+
+        private void ChooseRandomPatrolDestination()
+        {
+            if (patrolPoints.Count == 0)
+            {
+                Debug.LogWarning("[EnemyBrain] No patrol points available.");
+                patrolDestination = Vector2Int.RoundToInt(transform.position);
+                return;
+            }
+
+            int index = Random.Range(0, patrolPoints.Count);
+            foreach (var pt in patrolPoints)
+            {
+                if (index == 0)
+                {
+                    patrolDestination = pt;
+                    navigator.SetDestination(patrolDestination);
+                    break;
+                }
+                index--;
             }
         }
 
@@ -234,84 +476,20 @@ namespace CoED
             return false;
         }
 
-        private void HandleChase()
+        private Vector2Int CurrentGridPos()
         {
-            if (playerTransform != null)
-            {
-                Vector2Int playerPosGrid = Vector2Int.RoundToInt(
-                    playerTransform.position
-                        - DungeonManager.Instance.GetFloorTransform(enemyStats.spawnFloor).position
-                );
-                navigator.SetDestination(playerPosGrid);
-            }
+            return Vector2Int.RoundToInt(
+                transform.position
+                    - DungeonManager.Instance.GetFloorTransform(enemyStats.spawnFloor).position
+            );
         }
 
-        private void HandleAttack()
+        private Vector2Int PlayerGridPos()
         {
-            if (CanAttackPlayer)
-            {
-                PlayerStats.Instance.TakeDamage(enemyStats.CurrentAttack);
-                CanAttackPlayer = false;
-            }
-        }
-
-        private float orbitAngle = 0f;
-
-        private void HandleWanderNearPlayer()
-        {
-            if (playerTransform == null)
-                return;
-
-            // Adjust orbit angle with slight randomness
-            orbitAngle += Random.Range(-15f, 15f);
-
-            float radius = 3f; // Consider making this configurable
-            Vector2 playerPos = playerTransform.position;
-
-            // Calculate the target position based on the orbit angle
-            float angleRadians = orbitAngle * Mathf.Deg2Rad;
-            float offsetX = radius * Mathf.Cos(angleRadians);
-            float offsetY = radius * Mathf.Sin(angleRadians);
-
-            Vector2 targetPosWorld = new Vector2(playerPos.x + offsetX, playerPos.y + offsetY);
-
-            // Snap target position to grid
-            Vector3Int targetCellPos = floorData.FloorTilemap.WorldToCell(targetPosWorld);
-            Vector2Int targetTilePos = new Vector2Int(targetCellPos.x, targetCellPos.y);
-
-            // Check for valid position and set destination
-            if (DungeonSpawner.Instance.IsValidSpawnPosition(floorData, targetTilePos))
-            {
-                navigator.SetDestination(targetTilePos);
-            }
-            else
-            {
-                // Adjust orbit angle to find another position
-                orbitAngle += 180f;
-            }
-        }
-
-        private void ChooseRandomPatrolDestination()
-        {
-            if (patrolPoints.Count == 0)
-            {
-                Debug.LogWarning("[EnemyBrain] No patrol points available.");
-                patrolDestination = Vector2Int.RoundToInt(transform.position);
-                return;
-            }
-
-            int index = Random.Range(0, patrolPoints.Count);
-            foreach (var pt in patrolPoints)
-            {
-                if (index == 0)
-                {
-                    patrolDestination = pt;
-                    navigator.SetDestination(patrolDestination);
-
-                    break;
-                }
-                index--;
-            }
+            return Vector2Int.RoundToInt(
+                playerTransform.position
+                    - DungeonManager.Instance.GetFloorTransform(enemyStats.spawnFloor).position
+            );
         }
 
         private void TryFireProjectile()
@@ -339,10 +517,11 @@ namespace CoED
         {
             // Instantiate the projectile's prefab
             GameObject projectileObject = Instantiate(
-                projectile.projectilePrefab, // Access from BaseProjectile
+                projectile.projectilePrefab,
                 new Vector3(transform.position.x - 0.25f, transform.position.y, 0),
                 Quaternion.identity
             );
+
             // Get the ProjectileWrapper from the instantiated prefab
             var wrapperInstance = projectileObject.GetComponent<ProjectileWrapper>();
             if (wrapperInstance != null)
@@ -353,6 +532,10 @@ namespace CoED
                 // Launch the projectile toward the player
                 Vector2 direction = (playerTransform.position - transform.position).normalized;
                 wrapperInstance.Launch(direction);
+
+                // We can remove this line if you only want to stop once after a shot
+                // But if you want a single shot, you can do something else
+                // or use the timer approach so you can shoot repeatedly
                 CanAttackPlayer = false;
             }
             else
@@ -360,7 +543,7 @@ namespace CoED
                 Debug.LogError("Projectile prefab is missing the ProjectileWrapper component.");
             }
 
-            // Reset the cooldown timer
+            // Reset the cooldown
             projectileCooldownTimers[projectile] = projectile.cooldown;
         }
     }

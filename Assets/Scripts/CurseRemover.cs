@@ -5,17 +5,17 @@ namespace CoED
 {
     public static class CurseRemover
     {
-        public static void UseOnEquipment(EquipmentWrapper equipmentWrapper)
+        public static void UseOnEquipment(Equipment equipment)
         {
-            if (equipmentWrapper == null)
+            if (equipment == null)
             {
                 Debug.LogWarning("CurseRemover: Attempted to use on a null item.");
                 return;
             }
 
-            if (equipmentWrapper.IsCursed)
+            if (equipment.itemName.Contains("Cursed"))
             {
-                equipmentWrapper.RemoveCurse();
+                equipment.itemName = equipment.itemName.Replace("Cursed", "");
                 FloatingTextManager.Instance.ShowFloatingText(
                     "Curse removed!",
                     PlayerStats.Instance.transform,

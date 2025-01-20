@@ -1,49 +1,34 @@
+using System;
 using System.Collections.Generic;
-using CoED.Items;
-using Microsoft.Unity.VisualStudio.Editor;
-using Unity.VisualScripting;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace CoED
 {
     public class Enemy : MonoBehaviour
     {
-        private StatusEffectManager statusEffectManager;
-        public bool IsVisible = false;
-
-        [Header("Loot Settings")]
-        [SerializeField]
-        private List<Item> lootTable = new List<Item>();
-
-        [SerializeField]
-        private float baseDropRate = 0.5f; // Increased for testing
-
-        [SerializeField]
-        private float dropRateDecreaseFactor = 0.5f;
-
-        [SerializeField]
-        private int minMoneyAmount = 1;
-
-        [SerializeField]
-        private int maxMoneyDropAmount = 20;
-
         private EnemyStats enemyStats;
         private SpriteRenderer spriteRenderer;
         private Color normalColor = Color.white;
         private Color highlightedColor = Color.red;
 
-        [Header("Resistance Settings")]
+        [Header("Loot Settings")]
         [SerializeField]
-        private float resistanceChance = 0.05f; // 5% chance to add a resistance
+        private float baseDropRate = 0.5f; // Base drop rate for equipment
 
         [SerializeField]
-        private List<StatusEffect> possibleResistances = new List<StatusEffect>(); // List of possible resistances
+        private float dropRateDecreaseFactor = 0.5f;
 
-        [SerializeField, Range(0, 1)]
-        private float enchantmentChance = 0.05f;
+        [Header("Item Stat Modification Settings")]
+        [Tooltip("Chance (0.0 - 1.0) that the enemy will modify stats of the dropped item.")]
+        [SerializeField]
+        private float chanceToModifyStats = 0.3f; // e.g. 30% chance
 
-        [SerializeField, Range(0, 1)]
-        private float curseChance = 0.1f;
+        [Tooltip(
+            "Multiplier for how strongly stats are modified, scaled by enemyStats.ScaledFactor."
+        )]
+        [SerializeField]
+        private float modificationMultiplier = 2f;
 
         private void Start()
         {
@@ -60,251 +45,101 @@ namespace CoED
         {
             float currentDropRate = baseDropRate;
 
-            while (Random.value <= currentDropRate && lootTable.Count > 0)
+            while (Random.value <= currentDropRate)
             {
-                // Pick a random item from the loot table
-                Item randomLoot = lootTable[Random.Range(0, lootTable.Count)];
-
-                // Drop the selected item
-                DropItem(randomLoot);
-
-                // Decrease the drop rate for the next roll
+                DropEquipment();
                 currentDropRate *= dropRateDecreaseFactor;
-
-                // Optional safeguard to avoid infinite loops
                 if (currentDropRate <= 0.01f)
                     break;
             }
         }
 
-        private void DropItem(Item lootItem)
+        private void DropEquipment()
         {
-            if (lootItem is Equipment equipment)
-            {
-                // Instantiate and initialize the equipment wrapper
-                var equipmentObject = Instantiate(
-                    equipment.itemPrefab,
-                    transform.position,
-                    Quaternion.identity
-                );
-                var pickupScript = equipmentObject.GetComponent<EquipmentPickup>();
-                if (pickupScript != null)
-                {
-                    // Step 1: Create a new EquipmentWrapper data object in code
-                    EquipmentWrapper eqData = new EquipmentWrapper();
-                    eqData.Initialize(equipment);
-                    eqData.ApplyStatModifiers(Mathf.RoundToInt(enemyStats.ScaledFactor));
-
-                    // Step 2: Let the enemy apply curses, enchantments, etc.
-                    TryAddSpecialEffect(eqData);
-                    Debug.Log($"Dropped equipment: {equipment.equipmentName} with scaled stats.");
-
-                    // Step 3: Assign it to the pickup script
-                    pickupScript.SetData(eqData);
-
-                    // Step 4: If the prefab also has a HiddenItemController, reveal it:
-                    var hiddenController = equipmentObject.GetComponent<HiddenItemController>();
-                    if (hiddenController != null)
-                        hiddenController.isHidden = false;
-                }
-                else
-                {
-                    Debug.LogWarning("Equipment prefab is missing an EquipmentPickup script!");
-                    Destroy(equipmentObject);
-                }
-            }
-            else if (lootItem is Consumable consumable)
-            {
-                GameObject consumableItem = Instantiate(
-                    consumable.itemPrefab,
-                    transform.position,
-                    Quaternion.identity
-                );
-                Debug.Log($"Dropped consumable: {consumable.itemName}");
-                consumableItem.GetComponent<HiddenItemController>().isHidden = false;
-            }
-            else if (lootItem is Money money)
-            {
-                var moneyObject = Instantiate(
-                    money.itemPrefab,
-                    transform.position,
-                    Quaternion.identity
-                );
-                var moneyComponent = moneyObject.GetComponent<MoneyPickup>();
-
-                if (moneyComponent != null)
-                {
-                    int baseMoneyAmount = Random.Range(minMoneyAmount, maxMoneyDropAmount + 1);
-                    int scaledMoneyAmount = Mathf.RoundToInt(
-                        baseMoneyAmount * enemyStats.ScaledFactor
-                    );
-                    moneyComponent.SetAmount(scaledMoneyAmount);
-                    Debug.Log($"Dropped money: {scaledMoneyAmount} gold.");
-                }
-                else
-                {
-                    Debug.LogWarning("Money prefab does not have a Money component.");
-                    Destroy(moneyObject);
-                }
-            }
+            // 1) Randomly generate an item
+            float roll = Random.value;
+            Equipment droppedEquipment;
+            if (roll < 0.33f)
+                droppedEquipment = EquipmentGenerator.GenerateRandomEquipment(1, "weapon");
+            else if (roll < 0.66f)
+                droppedEquipment = EquipmentGenerator.GenerateRandomEquipment(1, "armor");
             else
-            {
-                Debug.LogWarning($"Unknown loot type: {lootItem.itemName}");
-            }
-        }
+                droppedEquipment = EquipmentGenerator.GenerateRandomEquipment(1, "accessory");
 
-        private void AddResistance(EquipmentWrapper equipmentWrapper)
-        {
-            if (possibleResistances.Count == 0)
-            {
-                Debug.LogWarning("No resistances available for enemies to apply.");
-                return;
-            }
+            // 2) Attempt to modify the item stats based on enemy level/scaleFactor
+            ModifyBaseEquipment(droppedEquipment);
+            // 3) Create a new GameObject in the scene for the drop
+            GameObject dropObject = new GameObject($"Dropped_{droppedEquipment.itemName}");
+            dropObject.transform.position = transform.position;
+            dropObject.tag = "Item";
+            dropObject.transform.localScale = new Vector3(2f, 2f, 0f);
 
-            // Select a random resistance from the list
-            StatusEffect randomResistance = possibleResistances[
-                Random.Range(0, possibleResistances.Count)
-            ];
+            // 4) Add components: a SpriteRenderer to see it, plus EquipmentPickup to store the data
+            SpriteRenderer rend = dropObject.AddComponent<SpriteRenderer>();
+            rend.sprite = droppedEquipment.baseSprite;
+            rend.sortingLayerName = "items";
+            rend.sortingOrder = 3;
 
-            // Apply the resistance to the equipment
-            equipmentWrapper.equipmentData.resistance = randomResistance;
-
-            Debug.Log(
-                $"Applied {randomResistance.effectType} resistance to {equipmentWrapper.equipmentData.equipmentName}."
+            // Ensure correct Z in 2D
+            dropObject.transform.position = new Vector3(
+                dropObject.transform.position.x,
+                dropObject.transform.position.y,
+                0f
             );
+
+            // Optionally add a collider so the item can be detected
+            var col = dropObject.AddComponent<CircleCollider2D>();
+            col.isTrigger = true;
+            // dropObject.tag = "Item"; // If you want a tag
+
+            // 5) Add the EquipmentPickup script and assign the data
+            EquipmentPickup pickup = dropObject.AddComponent<EquipmentPickup>();
+            pickup.SetEquipment(droppedEquipment);
+
+            Debug.Log($"Dropped equipment: {droppedEquipment.itemName}");
         }
 
-        private void TryAddSpecialEffect(EquipmentWrapper equipmentWrapper)
+        /// <summary>
+        /// (NEW) Attempts to modify the generated equipment's stats based on this enemy's ScaledFactor.
+        /// There's a random chance to apply some scaling or bonus.
+        /// </summary>
+        private void ModifyBaseEquipment(Equipment equipment)
         {
-            bool isEnchanted = false;
+            // If there's no enemyStats or scale factor is trivial, skip
+            if (enemyStats == null || enemyStats.ScaledFactor <= 1f)
+                return;
 
-            // Check for enchantment first
-            if (Random.value <= enchantmentChance)
-            {
-                equipmentWrapper.IsEnchanted = true;
-                ApplyEnchantment(equipmentWrapper);
-                isEnchanted = true;
-                Debug.Log($"Enchanted {equipmentWrapper.equipmentData.equipmentName}.");
-            }
-            else if (Random.value <= curseChance)
-            {
-                equipmentWrapper.IsCursed = true;
-                ApplyCurse(equipmentWrapper);
-                Debug.Log($"Cursed {equipmentWrapper.equipmentData.equipmentName}.");
-            }
+            // Check if we should modify stats
+            if (Random.value >= chanceToModifyStats)
+                return;
 
-            // 🎯 Adjusted resistance chance: 50% if enchanted, default value otherwise
-            float chance = isEnchanted ? 0.50f : resistanceChance;
+            float factor = enemyStats.ScaledFactor;
 
-            if (Random.value <= chance)
-            {
-                AddResistance(equipmentWrapper);
-            }
-        }
-
-        private void ApplyEnchantment(EquipmentWrapper equipment)
-        {
-            Dictionary<string, System.Action> enchantableStats = new Dictionary<
-                string,
-                System.Action
+            // Define a mapping of stats to modify
+            Dictionary<Func<int>, Action<int>> statModifiers = new Dictionary<
+                Func<int>,
+                Action<int>
             >
             {
-                {
-                    "Attack",
-                    () =>
-                        equipment.enchantedAttackModifier += Mathf.RoundToInt(
-                            Random.Range(1, 5) * enemyStats.ScaledFactor
-                        )
-                },
-                {
-                    "Defense",
-                    () =>
-                        equipment.enchantedDefenseModifier += Mathf.RoundToInt(
-                            Random.Range(1, 5) * enemyStats.ScaledFactor
-                        )
-                },
-                {
-                    "Magic",
-                    () =>
-                        equipment.enchantedMagicModifier += Mathf.RoundToInt(
-                            Random.Range(1, 5) * enemyStats.ScaledFactor
-                        )
-                },
-                {
-                    "Health",
-                    () =>
-                        equipment.enchantedHealthModifier += Mathf.RoundToInt(
-                            Random.Range(1, 5) * enemyStats.ScaledFactor
-                        )
-                },
-                {
-                    "Speed",
-                    () =>
-                        equipment.enchantedSpeedModifier += Mathf.RoundToInt(
-                            Random.Range(1, 5) * enemyStats.ScaledFactor
-                        )
-                },
+                { () => equipment.attack, value => equipment.attack = value },
+                { () => equipment.defense, value => equipment.defense = value },
+                { () => equipment.magic, value => equipment.magic = value },
+                { () => equipment.health, value => equipment.health = value },
+                { () => equipment.stamina, value => equipment.stamina = value },
+                { () => equipment.intelligence, value => equipment.intelligence = value },
+                { () => equipment.dexterity, value => equipment.dexterity = value },
+                { () => equipment.speed, value => equipment.speed = value },
+                { () => equipment.critChance, value => equipment.critChance = value },
             };
 
-            foreach (var stat in enchantableStats)
+            // Iterate through all stats and apply the modifier
+            foreach (var stat in statModifiers)
             {
-                if (Random.value <= 0.10f) // 10% chance to enhance each stat
+                int currentValue = stat.Key();
+                if (currentValue > 0)
                 {
-                    stat.Value.Invoke();
-                    Debug.Log(
-                        $"Enchanted {equipment.equipmentData.equipmentName}'s {stat.Key} stat."
-                    );
-                }
-            }
-        }
-
-        private void ApplyCurse(EquipmentWrapper equipment)
-        {
-            Dictionary<string, System.Action> curseableStats = new Dictionary<string, System.Action>
-            {
-                {
-                    "Attack",
-                    () =>
-                        equipment.cursedAttackModifier += Mathf.RoundToInt(
-                            Random.Range(1, 3) * enemyStats.ScaledFactor
-                        )
-                },
-                {
-                    "Defense",
-                    () =>
-                        equipment.cursedDefenseModifier += Mathf.RoundToInt(
-                            Random.Range(1, 3) * enemyStats.ScaledFactor
-                        )
-                },
-                {
-                    "Magic",
-                    () =>
-                        equipment.cursedMagicModifier += Mathf.RoundToInt(
-                            Random.Range(1, 3) * enemyStats.ScaledFactor
-                        )
-                },
-                {
-                    "Health",
-                    () =>
-                        equipment.cursedHealthModifier += Mathf.RoundToInt(
-                            Random.Range(1, 3) * enemyStats.ScaledFactor
-                        )
-                },
-                {
-                    "Speed",
-                    () =>
-                        equipment.cursedSpeedModifier += Mathf.RoundToInt(
-                            Random.Range(1, 3) * enemyStats.ScaledFactor
-                        )
-                },
-            };
-
-            foreach (var stat in curseableStats)
-            {
-                if (Random.value <= 1f) // 10% chance to curse each stat
-                {
-                    stat.Value.Invoke();
-                    Debug.Log($"Cursed {equipment.equipmentData.equipmentName}'s {stat.Key} stat.");
+                    int addedValue = Mathf.RoundToInt(factor * modificationMultiplier);
+                    stat.Value(currentValue + addedValue);
                 }
             }
         }
@@ -314,14 +149,6 @@ namespace CoED
             if (spriteRenderer != null)
             {
                 spriteRenderer.color = isHighlighted ? highlightedColor : normalColor;
-            }
-        }
-
-        public void ResetEnemyAttackFlags()
-        {
-            foreach (var enemy in FindObjectsByType<EnemyBrain>(FindObjectsSortMode.None))
-            {
-                enemy.CanAttackPlayer = true;
             }
         }
     }

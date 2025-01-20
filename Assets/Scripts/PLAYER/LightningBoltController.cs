@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CoED
@@ -23,27 +24,30 @@ namespace CoED
         [SerializeField]
         private LayerMask targetLayer; // For collision detection
 
-        private bool isAnimating = false;
-
         [SerializeField]
         private float segmentLength = 0.25f;
         private float movementSpeed;
         private Vector3 targetPosition;
         private float lifetimeTimer;
 
-        private int segmentIndex = 0; // To track the current segment type
+        private int segmentIndex = 0;
         private Coroutine lightningCoroutine;
 
+        [Header("Dynamic Damage and Effects")]
         [SerializeField]
-        private StatusEffect stunEffectPrefab; // Reference the stun effect prefab directly
+        private Dictionary<DamageType, float> damageTypes = new Dictionary<DamageType, float>
+        {
+            { DamageType.Lightning, 20f }, // Base lightning damage
+        };
 
-        public void CreateLightningBolt(
-            Vector3 start,
-            Vector3 end,
-            int damage,
-            float speed,
-            float lifetime
-        )
+        [SerializeField]
+        private List<StatusEffectType> inflictedEffects = new List<StatusEffectType>
+        {
+            StatusEffectType.Stun // Default to stun effect
+            ,
+        };
+
+        public void CreateLightningBolt(Vector3 start, Vector3 end, float speed, float lifetime)
         {
             movementSpeed = speed;
             targetPosition = end;
@@ -52,42 +56,34 @@ namespace CoED
             Vector3 currentPosition = start;
             Vector3 direction = (end - start).normalized;
 
-            // Start animating the lightning
-            if (!isAnimating)
+            if (lightningCoroutine == null)
             {
-                lightningCoroutine = StartCoroutine(
-                    AnimateLightning(currentPosition, direction, damage)
-                );
+                lightningCoroutine = StartCoroutine(AnimateLightning(currentPosition, direction));
             }
         }
 
-        private IEnumerator AnimateLightning(Vector3 start, Vector3 direction, int damage)
+        private IEnumerator AnimateLightning(Vector3 start, Vector3 direction)
         {
-            isAnimating = true;
             Vector3 currentPosition = start;
 
-            // Start cycling through segments
             while (Vector3.Distance(currentPosition, targetPosition) > segmentLength)
             {
                 if (Time.time > lifetimeTimer)
                 {
-                    Destroy(gameObject); // Destroy the entire LightningBoltController
+                    Destroy(gameObject);
                     yield break;
                 }
 
                 currentPosition += direction * (movementSpeed * Time.deltaTime);
 
-                CheckForCollision(currentPosition, damage);
+                CheckForCollision(currentPosition);
                 CreateCycledSegment(currentPosition);
 
-                yield return null; // Wait for the next frame
+                yield return null;
             }
 
-            // Create the final segment to complete the lightning bolt
             CreateCycledSegment(targetPosition);
-
-            isAnimating = false;
-            Destroy(gameObject); // Destroy the entire LightningBoltController
+            Destroy(gameObject);
         }
 
         private void CreateCycledSegment(Vector3 position)
@@ -100,7 +96,6 @@ namespace CoED
             );
             SpriteRenderer spriteRenderer = segment.GetComponent<SpriteRenderer>();
 
-            // Cycle through the segment sprites
             switch (segmentIndex)
             {
                 case 0:
@@ -114,43 +109,49 @@ namespace CoED
                     break;
             }
 
-            // Cycle to the next segment type
             segmentIndex = (segmentIndex + 1) % 3;
         }
 
-        private void CheckForCollision(Vector3 position, int damage)
+        /// <summary>
+        /// Checks for collisions and applies dynamic damage and effects.
+        /// </summary>
+        private void CheckForCollision(Vector3 position)
         {
-            float radius = 0.25f; // Adjust the radius to fit the size of your collider
+            float radius = 0.25f;
             Collider2D hit = Physics2D.OverlapCircle(position, radius, targetLayer);
 
             if (hit != null)
             {
-                Debug.Log($"Hit {hit.gameObject.name}!");
-                HandleHit(hit, damage);
+                Debug.Log($"Lightning hit {hit.gameObject.name}!");
+                HandleHit(hit);
             }
         }
 
-        private void HandleHit(Collider2D hit, int damage)
+        /// <summary>
+        /// Applies dynamic damage and effects on hit.
+        /// </summary>
+        private void HandleHit(Collider2D hit)
         {
+            // ✅ Package dynamic damage and effects
+            DamageInfo damageInfo = new DamageInfo(damageTypes, inflictedEffects);
+
             if (hit.CompareTag("Enemy"))
             {
                 EnemyStats enemy = hit.GetComponent<EnemyStats>();
                 if (enemy != null)
                 {
-                    enemy.TakeDamage(damage);
-
-                    // Apply stun effect
-                    if (stunEffectPrefab != null)
-                    {
-                        StatusEffectManager.Instance.AddStatusEffect(
-                            hit.gameObject,
-                            stunEffectPrefab
-                        );
-                    }
+                    enemy.TakeDamage(damageInfo);
+                    Debug.Log($"{hit.gameObject.name} took dynamic lightning damage!");
                 }
             }
 
             Destroy(gameObject);
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireSphere(transform.position, segmentLength);
         }
     }
 }

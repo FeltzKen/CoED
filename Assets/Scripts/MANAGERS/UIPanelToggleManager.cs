@@ -9,10 +9,27 @@ namespace CoED
         [SerializeField]
         private List<GameObject> panels; // List of all UI panels to manage
 
-        /// <summary>
-        /// Toggles the visibility of a panel and hides all others.
-        /// </summary>
-        /// <param name="panelToShow">The panel to show.</param>
+        [Header("Game State")]
+        [SerializeField]
+        private bool isGamePaused;
+
+        private void Start()
+        {
+            isGamePaused = false;
+        }
+
+        private void PauseGame()
+        {
+            Time.timeScale = 0f;
+            isGamePaused = true;
+        }
+
+        private void UnpauseGame()
+        {
+            Time.timeScale = 1f;
+            isGamePaused = false;
+        }
+
         public void TogglePanel(GameObject panelToShow)
         {
             if (panelToShow == null)
@@ -25,7 +42,17 @@ namespace CoED
             {
                 if (panel == panelToShow)
                 {
-                    panel.SetActive(!panel.activeSelf); // Toggle the clicked panel
+                    bool isActive = !panel.activeSelf;
+                    panel.SetActive(isActive); // Toggle the clicked panel
+
+                    if (isActive)
+                    {
+                        PauseGame();
+                    }
+                    else
+                    {
+                        UnpauseGame();
+                    }
                 }
                 else
                 {

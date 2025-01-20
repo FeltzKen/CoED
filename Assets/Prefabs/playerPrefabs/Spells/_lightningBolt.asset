@@ -22,17 +22,10 @@ MonoBehaviour:
   cooldown: 0.1
   spellLevel: 1
   levelUpThreshold: 6
-  type: 0
   areaOfEffect: 0
+  type: 0
+  inflictedStatusEffectTypes: 02000000
   spellEffectPrefab: {fileID: 8513041316966859194, guid: 65b20c2094c5f0543a0f3c637d486d4b, type: 3}
-  hasPoisonEffect: 0
-  hasFreezeEffect: 0
-  hasBurnEffect: 0
-  hasSlowEffect: 0
-  hasStunEffect: 1
-  hasRegenEffect: 0
-  hasShieldEffect: 0
-  hasInvincibleEffect: 0
   selfTargeting: 0
   canChase: 0
   isInstant: 0

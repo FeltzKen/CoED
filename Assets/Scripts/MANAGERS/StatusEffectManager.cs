@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace CoED
 {
@@ -17,6 +15,21 @@ namespace CoED
             new Dictionary<GameObject, List<ActiveStatusEffect>>();
         private Dictionary<GameObject, List<ActiveStatusEffect>> enemyEffects =
             new Dictionary<GameObject, List<ActiveStatusEffect>>();
+
+        public StatusEffectIconLibrary statusEffectLibrary;
+
+        // Map certain StatusEffectTypes to the elemental Resistances they represent.
+        // If the player has Resistances.Fire, they’ll block Burn, etc.
+        private static readonly Dictionary<StatusEffectType, Resistances> effectToResistanceMap =
+            new Dictionary<StatusEffectType, Resistances>
+            {
+                { StatusEffectType.Burn, Resistances.Fire },
+                { StatusEffectType.Poison, Resistances.Poison },
+                { StatusEffectType.Freeze, Resistances.Ice },
+                { StatusEffectType.Shadow, Resistances.Shadow },
+                { StatusEffectType.Holy, Resistances.Holy },
+                // You can add Slow => Resistances.Ice, Stun => Resistances.Lightning, etc., if desired.
+            };
 
         private void Awake()
         {
@@ -36,41 +49,52 @@ namespace CoED
             UpdateEffects(enemyEffects);
         }
 
-        public void AddStatusEffect(GameObject entity, StatusEffect effectPrefab)
+        /// <summary>
+        /// Spawns the status effect prefab and attaches it to the entity.
+        /// </summary>
+        public void AddStatusEffect(GameObject entity, StatusEffectType effectType)
         {
             bool isPlayer = entity.CompareTag("Player");
             var targetEffects = isPlayer ? playerEffects : enemyEffects;
 
-            // 🚨 Resistance Check for Players
-            if (
-                isPlayer && PlayerStats.Instance.activeResistances.Contains(effectPrefab.effectType)
-            )
-            {
-                Debug.Log($"Player is resistant to {effectPrefab.effectType}. Effect blocked.");
-                return; // Block the effect if the player has resistance
-            }
-            // 🚨 Resistance Check for Enemies
-            if (!isPlayer)
-            {
-                EnemyStats enemyStats = entity.GetComponent<EnemyStats>();
-                if (enemyStats != null && enemyStats.resistances.Contains(effectPrefab.effectType))
-                {
-                    Debug.Log(
-                        $"{entity.name} is resistant to {effectPrefab.effectType}. Effect blocked."
-                    );
-                    return; // Block the effect if the enemy has resistance
-                }
-            }
-            Transform targetContainer;
-
-            // Determine the appropriate container
+            // -- 1) Check Resistances for Players
             if (isPlayer)
             {
-                targetContainer = playerStatusEffectContainer;
+                // If this status effect maps to an elemental damage type that the player resists:
+                if (effectToResistanceMap.TryGetValue(effectType, out Resistances neededResist))
+                {
+                    if (PlayerStats.Instance.activeResistances.Contains(neededResist))
+                    {
+                        Debug.Log($"Player is resistant to {effectType}; effect blocked.");
+                        return;
+                    }
+                }
             }
             else
             {
-                // Dynamically find the StatusEffectsPanel for the enemy
+                // -- 2) Resistance Check for Enemies
+                EnemyStats enemyStats = entity.GetComponent<EnemyStats>();
+                if (
+                    enemyStats != null
+                    && effectToResistanceMap.TryGetValue(effectType, out Resistances neededResist)
+                )
+                {
+                    if (enemyStats.resistances.Contains(neededResist))
+                    {
+                        Debug.Log($"{entity.name} is resistant to {effectType}. Effect blocked.");
+                        return;
+                    }
+                }
+            }
+
+            // Determine container (player or enemy)
+            Transform targetContainer;
+            if (isPlayer)
+            {
+                targetContainer = playerStatusEffectContainer; // The player UI slot
+            }
+            else
+            {
                 var enemyPanel = entity.transform.Find("StatusEffectsPanel");
                 if (enemyPanel == null)
                 {
@@ -80,69 +104,71 @@ namespace CoED
                 targetContainer = enemyPanel;
             }
 
-            // Add the entity to the dictionary if not already present
+            // Ensure entity is in the dictionary
             if (!targetEffects.ContainsKey(entity))
             {
                 targetEffects[entity] = new List<ActiveStatusEffect>();
             }
 
+            // Check for duplicate effect
             List<ActiveStatusEffect> effects = targetEffects[entity];
-
-            // Check for duplicate effects
             foreach (var activeEffect in effects)
             {
-                if (activeEffect.Effect.effectType == effectPrefab.effectType)
+                if (activeEffect.Effect != null && activeEffect.Effect.effectType == effectType)
                 {
+                    // Refresh duration
                     Debug.LogWarning(
-                        $"Effect {effectPrefab.effectType} already applied to {entity.name}. Refreshing duration."
+                        $"Effect {effectType} already on {entity.name}; refreshing duration."
                     );
-                    activeEffect.RemainingDuration = effectPrefab.duration;
+                    activeEffect.RemainingDuration = statusEffectLibrary
+                        .GetEffectPrefab(effectType)
+                        .GetComponent<StatusEffect>()
+                        .duration;
                     return;
                 }
             }
 
             // Instantiate the effect prefab
-            GameObject effectObj = Instantiate(effectPrefab.gameObject);
-            effectObj.transform.SetParent(targetContainer, false);
+            GameObject effectObj = Instantiate(
+                statusEffectLibrary.GetEffectPrefab(effectType),
+                targetContainer
+            );
             effectObj.SetActive(true);
 
-            StatusEffect newEffect = effectObj.GetComponent<StatusEffect>();
-
-            // Adjust RectTransform for layout group and enlarge the icon
+            // Optionally scale the icon
             RectTransform rectTransform = effectObj.GetComponent<RectTransform>();
             if (rectTransform != null)
             {
-                rectTransform.localScale = Vector3.one * 3.0f; // Increase size by 3x
-            }
-            else
-            {
-                Debug.LogWarning("StatusEffectManager: Icon prefab missing RectTransform.");
+                rectTransform.localScale = Vector3.one * 3.0f;
             }
 
+            StatusEffect newEffect = effectObj.GetComponent<StatusEffect>();
             if (newEffect != null)
             {
-                newEffect.ApplyToEntity(entity); // Apply the effect to the entity
+                newEffect.ApplyToEntity(entity);
                 effects.Add(new ActiveStatusEffect(newEffect));
                 Debug.Log($"Applied {newEffect.effectType} to {entity.name}.");
             }
             else
             {
-                Debug.LogWarning("StatusEffectManager: Failed to apply status effect.");
+                Debug.LogWarning("StatusEffectManager: Prefab missing StatusEffect component.");
+                Destroy(effectObj);
             }
         }
 
+        /// <summary>
+        /// Main loop to decrement durations and remove expired effects.
+        /// </summary>
         private void UpdateEffects(Dictionary<GameObject, List<ActiveStatusEffect>> targetEffects)
         {
-            foreach (var entityEntry in targetEffects)
+            foreach (var kvp in targetEffects)
             {
-                GameObject entity = entityEntry.Key;
-                List<ActiveStatusEffect> effects = entityEntry.Value;
+                GameObject entity = kvp.Key;
+                List<ActiveStatusEffect> effects = kvp.Value;
 
                 for (int i = effects.Count - 1; i >= 0; i--)
                 {
                     ActiveStatusEffect activeEffect = effects[i];
-
-                    // Null Safety Check
                     if (
                         entity == null
                         || activeEffect.Effect == null
@@ -152,12 +178,11 @@ namespace CoED
                         effects.RemoveAt(i);
                         continue;
                     }
+
                     if (!activeEffect.Effect.hasDuration)
-                        continue;
+                        continue; // E.g. a permanent effect that doesn’t expire
 
-                    // Update Effect Duration
                     activeEffect.RemainingDuration -= Time.deltaTime;
-
                     if (activeEffect.RemainingDuration <= 0)
                     {
                         RemoveEffect(entity, activeEffect.Effect);
@@ -165,6 +190,8 @@ namespace CoED
                 }
             }
         }
+
+        // -------------- Public Removal Methods -----------------
 
         public void RemoveAllDebuffStatusEffects(GameObject entity)
         {
@@ -195,37 +222,11 @@ namespace CoED
 
         public void RemoveAllStatusEffects(GameObject entity)
         {
+            // Remove everything
             RemoveEffectsByType(
                 entity,
                 System.Enum.GetValues(typeof(StatusEffectType)) as StatusEffectType[]
             );
-        }
-
-        private void RemoveEffectsByType(GameObject entity, StatusEffectType[] effectTypes)
-        {
-            bool isPlayer = playerEffects.ContainsKey(entity);
-            var targetEffects = isPlayer ? playerEffects : enemyEffects;
-
-            if (!targetEffects.ContainsKey(entity))
-            {
-                Debug.LogWarning($"Entity {entity.name} does not have any effects to remove.");
-                return;
-            }
-
-            List<ActiveStatusEffect> effects = targetEffects[entity];
-
-            foreach (var effectType in effectTypes)
-            {
-                for (int i = effects.Count - 1; i >= 0; i--)
-                {
-                    ActiveStatusEffect activeEffect = effects[i];
-                    if (activeEffect.Effect.effectType == effectType)
-                    {
-                        RemoveEffect(entity, activeEffect.Effect);
-                        Debug.Log($"Removed {effectType} from {entity.name}.");
-                    }
-                }
-            }
         }
 
         public void RemoveSpecificEffect(GameObject entity, StatusEffectType effectType)
@@ -235,24 +236,42 @@ namespace CoED
 
             if (!targetEffects.ContainsKey(entity))
             {
-                Debug.LogWarning($"Entity {entity.name} does not have any effects to remove.");
+                Debug.LogWarning($"{entity.name} has no status effects to remove.");
                 return;
             }
 
             List<ActiveStatusEffect> effects = targetEffects[entity];
-
             for (int i = effects.Count - 1; i >= 0; i--)
             {
-                ActiveStatusEffect activeEffect = effects[i];
-                if (activeEffect.Effect.effectType == effectType)
+                if (effects[i].Effect.effectType == effectType)
                 {
-                    RemoveEffect(entity, activeEffect.Effect);
-                    Debug.Log($"Removed {effectType} from {entity.name}.");
+                    RemoveEffect(entity, effects[i].Effect);
                     return;
                 }
             }
+        }
 
-            Debug.LogWarning($"Effect {effectType} not found on {entity.name}.");
+        // --------------- Internal Removal -----------------
+
+        private void RemoveEffectsByType(GameObject entity, StatusEffectType[] effectTypes)
+        {
+            bool isPlayer = playerEffects.ContainsKey(entity);
+            var targetEffects = isPlayer ? playerEffects : enemyEffects;
+
+            if (!targetEffects.ContainsKey(entity))
+                return;
+
+            List<ActiveStatusEffect> effects = targetEffects[entity];
+            foreach (var effectType in effectTypes)
+            {
+                for (int i = effects.Count - 1; i >= 0; i--)
+                {
+                    if (effects[i].Effect.effectType == effectType)
+                    {
+                        RemoveEffect(entity, effects[i].Effect);
+                    }
+                }
+            }
         }
 
         public void RemoveEffect(GameObject entity, StatusEffect effect)
@@ -264,23 +283,11 @@ namespace CoED
                 return;
 
             targetEffects[entity].RemoveAll(ae => ae.Effect == effect);
-            RemoveEffectIcon(effect, isPlayer);
-            Debug.Log($"Removed status effect '{effect.effectName}' from {entity.name}.");
+            Destroy(effect.gameObject); // This triggers OnDestroy in StatusEffect
+            Debug.Log($"Removed effect '{effect.effectName}' from {entity.name}.");
         }
 
-        private void RemoveEffectIcon(StatusEffect effect, bool isPlayer)
-        {
-            if (effect == null || effect.gameObject == null)
-            {
-                Debug.LogWarning(
-                    "StatusEffectManager: Attempted to remove a null or already destroyed effect."
-                );
-                return;
-            }
-
-            // Destroy the effect's game object
-            Destroy(effect.gameObject);
-        }
+        // ----------------------------------------------
 
         private class ActiveStatusEffect
         {

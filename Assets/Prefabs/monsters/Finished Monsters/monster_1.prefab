@@ -201,27 +201,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f96c446ab19ac8148a70147fb636cfa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  IsVisible: 1
-  lootTable:
-  - {fileID: 11400000, guid: daaccea728ff9e44aa70eb30afe55880, type: 2}
-  - {fileID: 11400000, guid: 3c0228b54e0eb874e9f7e1dfa6681e71, type: 2}
-  - {fileID: 11400000, guid: 7ae50d9337691e24a8ff2b5443bbc717, type: 2}
-  - {fileID: 11400000, guid: 605187edc7ee8b54f8f6a193b917bc46, type: 2}
-  - {fileID: 11400000, guid: b5cfb27eb9061274dad755db11c3809f, type: 2}
-  - {fileID: 11400000, guid: 3563d9a1e87b87a4ba76be51f9e41eeb, type: 2}
   baseDropRate: 1
   dropRateDecreaseFactor: 0.5
-  minMoneyAmount: 1
-  maxMoneyDropAmount: 20
-  resistanceChance: 0.05
-  possibleResistances:
-  - {fileID: 93035768914502204, guid: 0aa17d20e746747499743c8c56d9c39d, type: 3}
-  - {fileID: 93035768914502204, guid: b47548b4bad57ba438e2905afc3506f2, type: 3}
-  - {fileID: 93035768914502204, guid: 0ef6bbfacd52bb0418421f03509c32ed, type: 3}
-  - {fileID: 93035768914502204, guid: 18191ae519d901f418e3695a8c514ff3, type: 3}
-  - {fileID: 93035768914502204, guid: a4443e69186e94740a98f2c97e788acd, type: 3}
-  enchantmentChance: 0.05
-  curseChance: 1
 --- !u!114 &1501273931103638685
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -237,11 +218,16 @@ MonoBehaviour:
   baseAttack: 10
   baseDefense: 7
   baseHealth: 100
-  baseAttackRange: 1.4
+  baseAttackRange: 2
   baseFireRate: 5
   baseProjectileLifespan: 2
   projectileBaseAttackRange: 2
+  immunities: 
   resistances: 
+  weaknesses: 
+  inflictedStatusEffects: 05000000
+  elementalDamage: 10
+  activeStatusEffects: 
   PatrolSpeed: 1
   ChaseSpeed: 1.5
 --- !u!114 &3581927541495694504
@@ -286,17 +272,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c87369e3b1304e499f0f41793258f33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  availableProjectiles:
-  - {fileID: 11400000, guid: 12cacbc7aa334c2439c0fc323481857f, type: 2}
-  - {fileID: 11400000, guid: 5cbad5cdb3abbdf44bee8f5fe5c66ddc, type: 2}
-  - {fileID: 11400000, guid: d089453e61fea0f47a036cdac5825633, type: 2}
+  availableProjectiles: []
   CurrentState: 0
   playerTransform: {fileID: 0}
+  engageDistance: 0
+  disengageDistance: 0
   CanAttackPlayer: 1
   projectileCooldownDuration: 15
   visualObstructionLayer:
     serializedVersion: 2
-    m_Bits: 136
+    m_Bits: 128
 --- !u!1 &6512578034227677180
 GameObject:
   m_ObjectHideFlags: 0

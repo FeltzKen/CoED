@@ -151,7 +151,7 @@ namespace CoED
                 UpdateCurrentTilePosition(targetPosition);
                 moveCooldownTimer = moveDelay; // Reset move cooldown
                 isMoving = true;
-                enemy.ResetEnemyAttackFlags();
+                PlayerCombat.Instance.ResetEnemyAttackFlags();
             }
         }
 
@@ -262,11 +262,18 @@ namespace CoED
 
             rb.position = position;
             transform.position = position;
-            //enemy.ResetEnemyAttackFlags();
+            PlayerCombat.Instance.ResetEnemyAttackFlags();
             PlayerStats.Instance.AddStep();
-            TileOccupancyManager.Instance.SetPlayerPosition(
-                Vector2Int.RoundToInt(transform.position)
+            UpdatePlayerTile();
+        }
+
+        public void UpdatePlayerTile()
+        {
+            Vector2Int playerPos = new Vector2Int(
+                (int)transform.position.x,
+                (int)transform.position.y
             );
+            TileOccupancyManager.Instance.SetPlayerTileOccupied(playerPos);
         }
 
         private void UpdateStaminaUI()
@@ -279,9 +286,7 @@ namespace CoED
 
         private void DeductStamina(float amount)
         {
-            playerStats.CurrentStamina = Mathf.RoundToInt(
-                Mathf.Max(playerStats.CurrentStamina - amount, 0)
-            );
+            playerStats.DecreaseStamina(amount);
             UpdateStaminaUI();
         }
     }
