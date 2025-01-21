@@ -2,9 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using CoED.Items;
 using CoED.Pathfinding;
-using Unity.VisualScripting;
+//using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace CoED
 {
@@ -29,6 +28,7 @@ namespace CoED
         private ConsumableItemWrapper spawningRoomPotion;
         private static int occupantIDCounter = 0;
         private Dictionary<int, Pathfinder> floorPathfinders = new Dictionary<int, Pathfinder>();
+        private Dictionary<int, List<GameObject>> enemiesByFloor;
         public Material fireOverlayMaterial;
 
         private void Awake()
@@ -49,6 +49,16 @@ namespace CoED
             dungeonSettings = FindAnyObjectByType<DungeonGenerator>()
                 ?.GetComponent<DungeonGenerator>()
                 .dungeonSettings;
+
+            enemiesByFloor = new Dictionary<int, List<GameObject>>
+            {
+                { 1, dungeonSettings.enemyPrefabsFloor_1 },
+                { 2, dungeonSettings.enemyPrefabsFloor_2 },
+                { 3, dungeonSettings.enemyPrefabsFloor_3 },
+                { 4, dungeonSettings.enemyPrefabsFloor_4 },
+                { 5, dungeonSettings.enemyPrefabsFloor_5 },
+                { 6, dungeonSettings.enemyPrefabsFloor_6 },
+            };
         }
 
         #region Player Transport
@@ -139,103 +149,62 @@ namespace CoED
                     continue;
                 }
 
-                SpawnEnemiesForFloor(floorNum, floorParent, enemyParent);
+                SpawnEnemiesForFloor(floorNum, enemyParent);
             }
         }
 
-        private void SpawnEnemiesForFloor(
-            int floorNumber,
-            Transform floorParent,
-            Transform enemyParent
-        )
+        private void SpawnEnemiesForFloor(int floorNumber, Transform enemyParent)
         {
             FloorData floorData = DungeonManager.Instance.GetFloorData(floorNumber);
-            if (floorData == null)
+            if (floorData == null || floorData.FloorTilemap == null)
             {
-                Debug.LogError($"No FloorData for floor {floorNumber}.");
+                Debug.LogError($"No valid FloorData for floor {floorNumber}.");
                 return;
             }
 
-            Pathfinder pathfinder = GetOrCreateFloorPathfinder(floorData);
-
-            List<Vector2Int> allFloorTiles = DungeonManager
-                .Instance.GetFloorData(floorNumber)
-                .FloorTiles.ToList();
-
-            List<Vector2Int> validTiles = allFloorTiles
-                .Where(pos => IsValidSpawnPosition(floorData, pos))
+            List<Vector2Int> validTiles = floorData
+                .FloorTiles.Where(pos => IsValidSpawnPosition(floorData, pos))
                 .ToList();
 
-            int enemyCount = dungeonSettings.numberOfEnemiesPerFloor;
-            if (validTiles.Count < enemyCount)
+            if (validTiles.Count == 0)
             {
-                Debug.LogWarning(
-                    $"Floor {floorNumber} does not have enough valid tiles for {enemyCount} enemies."
-                );
-                enemyCount = validTiles.Count;
-            }
-
-            if (enemyParent == null)
-            {
-                Debug.LogError(
-                    $"EnemyParent not found under {floorParent.name}. Skipping floor {floorNumber}."
-                );
+                Debug.LogWarning($"No valid tiles available for enemies on floor {floorNumber}.");
                 return;
             }
 
-            for (int i = 0; i < enemyCount; i++)
+            if (
+                !enemiesByFloor.TryGetValue(floorNumber, out List<GameObject> enemyPrefabs)
+                || enemyPrefabs.Count == 0
+            )
             {
-                int randIndex = Random.Range(0, validTiles.Count);
-                Vector2Int tilePos = validTiles[randIndex];
-                validTiles.RemoveAt(randIndex);
+                Debug.LogError($"No enemy prefabs defined for floor {floorNumber}.");
+                return;
+            }
 
-                Vector3Int cellPos = new Vector3Int(tilePos.x, tilePos.y, 0);
-                Vector3 baseWorldPos = floorData.FloorTilemap.CellToWorld(cellPos);
+            int spawnCount = Mathf.Min(dungeonSettings.numberOfEnemiesPerFloor, validTiles.Count);
+            Pathfinder pathfinder = GetOrCreateFloorPathfinder(floorData);
 
-                Vector3 finalSpawnPos = floorParent.position + baseWorldPos;
+            for (int i = 0; i < spawnCount; i++)
+            {
+                Vector2Int tilePos = validTiles[Random.Range(0, validTiles.Count)];
+                validTiles.Remove(tilePos);
 
-                GameObject enemyPrefab = dungeonSettings.enemyPrefabs[
-                    Random.Range(0, dungeonSettings.enemyPrefabs.Count)
-                ];
-                if (enemyPrefab == null)
-                {
-                    Debug.LogError($"Null enemy prefab for floor {floorNumber}, skipping...");
-                    continue;
-                }
-
+                GameObject enemyPrefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Count)];
                 GameObject enemy = Instantiate(
                     enemyPrefab,
-                    baseWorldPos,
+                    floorData.FloorTilemap.CellToWorld((Vector3Int)tilePos),
                     Quaternion.identity,
                     enemyParent
                 );
+
                 if (enemy == null)
                 {
-                    Debug.LogError(
-                        $"Failed to instantiate enemy at {finalSpawnPos} for floor {floorNumber}."
-                    );
+                    Debug.LogWarning($"Failed to spawn enemy at {tilePos} on floor {floorNumber}.");
                     continue;
                 }
 
-                occupantIDCounter++;
-                int occupantID = occupantIDCounter;
-
-                EnemyStats stats = enemy.GetComponent<EnemyStats>();
-                if (stats != null)
-                    stats.spawnFloor = floorNumber;
-
-                EnemyNavigator navigator = enemy.GetComponent<EnemyNavigator>();
-                if (navigator == null)
-                    navigator = enemy.AddComponent<EnemyNavigator>();
-                navigator.Initialize(pathfinder, floorData.FloorTilemap, occupantID);
-
-                EnemyBrain brain = enemy.GetComponent<EnemyBrain>();
-                if (brain == null)
-                    brain = enemy.AddComponent<EnemyBrain>();
-                HashSet<Vector2Int> patrolPoints = new HashSet<Vector2Int>(
-                    floorData.GetRandomFloorTiles(dungeonSettings.numberOfPatrolPoints)
-                );
-                brain.Initialize(floorData, patrolPoints);
+                // Initialize enemy components
+                InitializeEnemy(enemy, pathfinder, floorData, floorNumber);
             }
         }
 
@@ -338,14 +307,14 @@ namespace CoED
                     hidden: true
                 );
 
-                equipmentDrops = GetEquipmentDrops();
+                equipmentDrops = GetEquipmentDrops(floorNum);
                 SpawnEquipment(
                     floorNum,
                     itemParent,
                     equipmentDrops,
                     dungeonSettings.numberOfItemsPerFloor
                 );
-                equipmentDrops = GetEquipmentDrops();
+                equipmentDrops = GetEquipmentDrops(floorNum);
                 SpawnEquipment(
                     floorNum,
                     itemParent,
@@ -357,29 +326,28 @@ namespace CoED
                 // Spawn money
                 SpawnMoney(floorNum, itemParent, dungeonSettings.moneyCountPerFloor);
             }
-            foreach (var item in dungeonSettings.equipmentPrefabs)
-            {
-                Debug.Log(
-                    item != null
-                        ? $"Loaded item: {item.name} (Type: {item.GetType().Name})----------------------"
-                        : "NULL item in the list!----------------------------"
-                );
-            }
         }
 
-        private List<Equipment> GetEquipmentDrops()
+        private List<Equipment> GetEquipmentDrops(int floorNumber)
         {
             List<Equipment> equipmentDrops = new List<Equipment>();
+            int equipmentTier = Mathf.Clamp(Mathf.FloorToInt((floorNumber - 1) / 2) + 1, 1, 3);
 
             for (int i = 0; i < dungeonSettings.numberOfItemsPerFloor; i++)
             {
                 float roll = Random.value;
                 if (roll < 0.33f)
-                    equipmentDrops.Add(EquipmentGenerator.GenerateRandomEquipment(1, "weapon"));
+                    equipmentDrops.Add(
+                        EquipmentGenerator.GenerateRandomEquipment(equipmentTier, "weapon")
+                    );
                 else if (roll < 0.66f)
-                    equipmentDrops.Add(EquipmentGenerator.GenerateRandomEquipment(1, "armor"));
+                    equipmentDrops.Add(
+                        EquipmentGenerator.GenerateRandomEquipment(equipmentTier, "armor")
+                    );
                 else
-                    equipmentDrops.Add(EquipmentGenerator.GenerateRandomEquipment(1, "accessory"));
+                    equipmentDrops.Add(
+                        EquipmentGenerator.GenerateRandomEquipment(equipmentTier, "accessory")
+                    );
             }
 
             return equipmentDrops;
@@ -655,12 +623,10 @@ namespace CoED
                 return;
             }
 
-            Vector3Int centerTile = floorData.FloorTilemap.WorldToCell(center);
-
             List<Vector2Int> spawnPositions = GetValidSpawnPositions(
                 dungeonSettings.ambushEnemyCount,
                 dungeonSettings.ambushRadius,
-                centerTile,
+                floorData.FloorTilemap.WorldToCell(center),
                 floorData
             );
 
@@ -670,73 +636,77 @@ namespace CoED
                 return;
             }
 
+            if (
+                !enemiesByFloor.TryGetValue(
+                    floorData.FloorNumber,
+                    out List<GameObject> enemyPrefabs
+                )
+                || enemyPrefabs == null
+                || enemyPrefabs.Count == 0
+            )
+            {
+                Debug.LogError($"No enemy prefabs defined for floor {floorData.FloorNumber}.");
+                return;
+            }
+
             Pathfinder pathfinder = GetOrCreateFloorPathfinder(floorData);
 
             foreach (Vector2Int tilePos in spawnPositions)
             {
-                PositionHelper.InstantiateOnTile(
-                    floorData.FloorTilemap,
-                    new Vector3Int(tilePos.x, tilePos.y, 0),
-                    dungeonSettings.spawnEffectPrefab,
+                Vector3 spawnPos =
+                    floorData.FloorTilemap.CellToWorld(new Vector3Int(tilePos.x, tilePos.y, 0))
+                    + new Vector3(0.5f, 0.5f, 0);
+
+                GameObject enemyPrefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Count)];
+
+                GameObject enemy = Instantiate(
+                    enemyPrefab,
+                    spawnPos,
+                    Quaternion.identity,
                     enemyParent
                 );
+                Instantiate(
+                    dungeonSettings.spawnEffectPrefab,
+                    spawnPos,
+                    Quaternion.identity,
+                    enemy.transform
+                );
 
-                GameObject enemy = SpawnEnemyAtTile(tilePos, floorData, enemyParent);
-                if (enemy != null)
+                if (enemy == null)
                 {
-                    int occupantID = occupantIDCounter++;
-
-                    EnemyNavigator navigator = enemy.GetComponent<EnemyNavigator>();
-                    if (navigator == null)
-                    {
-                        navigator = enemy.GetComponent<EnemyNavigator>();
-                    }
-                    navigator.Initialize(pathfinder, floorData.FloorTilemap, occupantID);
-
-                    EnemyBrain brain = enemy.GetComponent<EnemyBrain>();
-                    if (brain == null)
-                    {
-                        brain = enemy.GetComponent<EnemyBrain>();
-                    }
-
-                    HashSet<Vector2Int> patrolPoints = new HashSet<Vector2Int>(
-                        floorData.GetRandomFloorTiles(dungeonSettings.numberOfPatrolPoints)
-                    );
-                    brain.Initialize(floorData, patrolPoints);
-
-                    EnemyStats enemyStats = enemy.GetComponent<EnemyStats>();
-                    if (enemyStats != null)
-                    {
-                        enemyStats.spawnFloor = floorData.FloorNumber;
-                    }
+                    Debug.LogWarning($"Failed to spawn ambush enemy at {tilePos}.");
+                    continue;
                 }
+
+                InitializeEnemy(enemy, pathfinder, floorData, floorData.FloorNumber);
             }
         }
 
-        private GameObject SpawnEnemyAtTile(
-            Vector2Int tilePosition,
+        private void InitializeEnemy(
+            GameObject enemy,
+            Pathfinder pathfinder,
             FloorData floorData,
-            Transform parent
+            int floorNumber
         )
         {
-            if (dungeonSettings.enemyPrefabs == null || dungeonSettings.enemyPrefabs.Count == 0)
-            {
-                Debug.LogError("DungeonSpawner: No enemy prefabs available.");
-                return null;
-            }
+            int occupantID = ++occupantIDCounter;
 
-            GameObject enemyPrefab = dungeonSettings.enemyPrefabs[
-                Random.Range(0, dungeonSettings.enemyPrefabs.Count)
-            ];
+            EnemyStats stats = enemy.GetComponent<EnemyStats>();
+            if (stats != null)
+                stats.spawnFloor = floorNumber;
 
-            return PositionHelper.InstantiateOnTile(
-                floorData.FloorTilemap,
-                new Vector3Int(tilePosition.x, tilePosition.y, 0),
-                enemyPrefab,
-                parent
+            EnemyNavigator navigator =
+                enemy.GetComponent<EnemyNavigator>() ?? enemy.AddComponent<EnemyNavigator>();
+            navigator.Initialize(pathfinder, floorData.FloorTilemap, occupantID);
+
+            EnemyBrain brain = enemy.GetComponent<EnemyBrain>() ?? enemy.AddComponent<EnemyBrain>();
+            brain.Initialize(
+                floorData,
+                floorData.GetRandomFloorTiles(dungeonSettings.numberOfPatrolPoints).ToHashSet()
             );
         }
         #endregion
+
         private List<Vector2Int> GetValidSpawnPositions(
             int count,
             float radius,
@@ -825,34 +795,15 @@ namespace CoED
                 new Vector3Int(tilePos.x, tilePos.y, 0)
             );
 
-            Instantiate(dungeonSettings.spawnEffectPrefab, pos, Quaternion.identity);
-
             GameObject boss = Instantiate(bossPrefab, pos, Quaternion.identity, enemyParent);
-            if (boss == null)
-            {
-                Debug.LogError("DungeonSpawner: Failed to instantiate boss.");
-                return;
-            }
-
-            int occupantID = occupantIDCounter++;
-
-            EnemyNavigator navigator = boss.GetComponent<EnemyNavigator>();
-            if (navigator == null)
-            {
-                navigator = boss.AddComponent<EnemyNavigator>();
-            }
-            navigator.Initialize(pathfinder, floorData.FloorTilemap, occupantID);
-
-            EnemyBrain brain = boss.GetComponent<EnemyBrain>();
-            if (brain == null)
-            {
-                brain = boss.AddComponent<EnemyBrain>();
-            }
-
-            HashSet<Vector2Int> bossPatrolPoints = new HashSet<Vector2Int>(
-                floorData.GetRandomFloorTiles(dungeonSettings.numberOfPatrolPoints)
+            Instantiate(
+                dungeonSettings.spawnEffectPrefab,
+                pos,
+                Quaternion.identity,
+                boss.transform
             );
-            brain.Initialize(floorData, bossPatrolPoints);
+
+            InitializeEnemy(boss, pathfinder, floorData, floorData.FloorNumber);
 
             EnemyStats bossStats = boss.GetComponent<EnemyStats>();
             if (bossStats != null)

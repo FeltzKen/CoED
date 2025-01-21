@@ -16,12 +16,37 @@ public class EquipmentGenerator
 
         InitializeEquipment(generatedEquipment, baseEquipment);
 
-        // Apply Pre-Prefix (Enchanted/Cursed)
-        if (RollChance(tier == 1 ? 0.05f : 0.15f))
+        // Base chances for enchantment and curse
+        float baseEnchantmentChance = 0.2f; // 20% at tier 1
+        float baseCurseChance = 0.05f; // 5% at tier 1
+
+        // Scale enchantment and curse chances inversely based on tier
+        float enchantmentChance = Mathf.Clamp(baseEnchantmentChance - (tier * 0.1f), 0.1f, 0.5f); // Min 10%, max 50%
+        float curseChance = Mathf.Clamp(baseCurseChance + (tier * 0.15f), 0.1f, 0.5f); // Min 10%, max 50%
+
+        // Debug the probabilities (optional)
+        Debug.Log(
+            $"Tier {tier} - Enchantment Chance: {enchantmentChance * 100:F2}% | Curse Chance: {curseChance * 100:F2}%"
+        );
+
+        // Roll for enchantment or curse
+        if (RollChance(enchantmentChance))
         {
-            generatedEquipment.prePrefix = EquipmentAffixesDatabase.pre_prefixes[
-                Random.Range(0, EquipmentAffixesDatabase.pre_prefixes.Count)
-            ];
+            // Apply enchantment
+            generatedEquipment.prePrefix = EquipmentAffixesDatabase.pre_prefixes[0]; // "Enchanted"
+            generatedEquipment.isEnchantedOrCursed = true;
+            Debug.Log("Enchanted item created!");
+        }
+        else if (RollChance(enchantmentChance + curseChance))
+        {
+            // Apply curse
+            generatedEquipment.prePrefix = EquipmentAffixesDatabase.pre_prefixes[1]; // "Cursed"
+            generatedEquipment.isEnchantedOrCursed = true;
+            Debug.Log("Cursed item created!");
+        }
+        else
+        {
+            Debug.Log("Normal item created!");
         }
 
         // Apply Prefix

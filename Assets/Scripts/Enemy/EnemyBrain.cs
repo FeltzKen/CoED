@@ -405,6 +405,7 @@ namespace CoED
                 PlayerStats.Instance.TakeDamage(damageInfo);
 
                 Debug.Log($"{name} attacked the player with {damageDealt.Count} damage types.");
+                CanAttackPlayer = false;
             }
         }
 

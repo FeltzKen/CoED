@@ -660,77 +660,28 @@ namespace CoED
                 return;
             }
 
-            if (!equipment.hasBeenRevealed)
-            {
-                itemNameText.text = equipment.itemName;
-                attackModifierText.text = $"+ {equipment.attack}";
-                defenseModifierText.text = $"+ {equipment.defense}";
-                magicModifierText.text = $"+ {equipment.magic}";
-                healthModifierText.text = $"+ {equipment.health}";
-                speedModifierText.text = $"+ {equipment.speed}";
-                intelligenceModifierText.text = $"+ {equipment.intelligence}";
-                dexterityModifierText.text = $"+ {equipment.dexterity}";
-                staminaModifierText.text = $"+ {equipment.stamina}";
-                critChanceModifierText.text = $"+ {equipment.critChance}";
-                burnDamageModifierText.text =
-                    $"+ {equipment.damageModifiers.GetValueOrDefault(DamageType.Fire, 0)}";
-                iceDamageModifierText.text =
-                    $"+ {equipment.damageModifiers.GetValueOrDefault(DamageType.Ice, 0)}";
-                lightningDamageModifierText.text =
-                    $"+ {equipment.damageModifiers.GetValueOrDefault(DamageType.Lightning, 0)}";
-                poisonDamageModifierText.text =
-                    $"+ {equipment.damageModifiers.GetValueOrDefault(DamageType.Poison, 0)}";
-                activeStatusEffectsText.text = "Concealed";
-                inflictedStatusEffectsText.text = "Concealed";
-                resistanceEffectsText.text = "Concealed";
-                weaknessEffectsText.text = "Concealed";
-            }
-            else
-            {
-                itemNameText.text = equipment.itemName;
-                attackModifierText.text = equipment.GetTotalAttackModifier().ToString();
-                defenseModifierText.text = equipment.GetTotalDefenseModifier().ToString();
-                magicModifierText.text = equipment.GetTotalMagicModifier().ToString();
-                healthModifierText.text = equipment.GetTotalHealthModifier().ToString();
-                speedModifierText.text = equipment.GetTotalSpeedModifier().ToString();
-                intelligenceModifierText.text = equipment.GetTotalIntelligenceModifier().ToString();
-                dexterityModifierText.text = equipment.GetTotalDexterityModifier().ToString();
-                staminaModifierText.text = equipment.GetTotalStaminaModifier().ToString();
-                critChanceModifierText.text = equipment.GetTotalCritChanceModifier().ToString();
-                burnDamageModifierText.text = equipment.GetTotalBurnDamage().ToString();
-                iceDamageModifierText.text = equipment.GetTotalIceDamage().ToString();
-                lightningDamageModifierText.text = equipment.GetTotalLightningDamage().ToString();
-                poisonDamageModifierText.text = equipment.GetTotalPoisonDamage().ToString();
-
-                if (
-                    equipment.activeStatusEffects != null
-                    && equipment.activeStatusEffects.Count > 0
-                )
-                    activeStatusEffectsText.text = string.Join(", ", equipment.activeStatusEffects);
-                else
-                    activeStatusEffectsText.text = "None";
-
-                if (
-                    equipment.inflictedStatusEffects != null
-                    && equipment.inflictedStatusEffects.Count > 0
-                )
-                    inflictedStatusEffectsText.text = string.Join(
-                        ", ",
-                        equipment.inflictedStatusEffects
-                    );
-                else
-                    inflictedStatusEffectsText.text = "None";
-
-                if (equipment.resistanceEffects != null && equipment.resistanceEffects.Count > 0)
-                    resistanceEffectsText.text = string.Join(", ", equipment.resistanceEffects);
-                else
-                    resistanceEffectsText.text = "None";
-
-                if (equipment.weaknessEffects != null && equipment.weaknessEffects.Count > 0)
-                    weaknessEffectsText.text = string.Join(", ", equipment.weaknessEffects);
-                else
-                    weaknessEffectsText.text = "None";
-            }
+            itemNameText.text = equipment.itemName;
+            attackModifierText.text = $"+ {equipment.attack}";
+            defenseModifierText.text = $"+ {equipment.defense}";
+            magicModifierText.text = $"+ {equipment.magic}";
+            healthModifierText.text = $"+ {equipment.health}";
+            speedModifierText.text = $"+ {equipment.speed}";
+            intelligenceModifierText.text = $"+ {equipment.intelligence}";
+            dexterityModifierText.text = $"+ {equipment.dexterity}";
+            staminaModifierText.text = $"+ {equipment.stamina}";
+            critChanceModifierText.text = $"+ {equipment.critChance}";
+            burnDamageModifierText.text =
+                $"+ {equipment.damageModifiers.GetValueOrDefault(DamageType.Fire, 0)}";
+            iceDamageModifierText.text =
+                $"+ {equipment.damageModifiers.GetValueOrDefault(DamageType.Ice, 0)}";
+            lightningDamageModifierText.text =
+                $"+ {equipment.damageModifiers.GetValueOrDefault(DamageType.Lightning, 0)}";
+            poisonDamageModifierText.text =
+                $"+ {equipment.damageModifiers.GetValueOrDefault(DamageType.Poison, 0)}";
+            activeStatusEffectsText.text = string.Join(", ", equipment.activeStatusEffects);
+            inflictedStatusEffectsText.text = string.Join(", ", equipment.inflictedStatusEffects);
+            resistanceEffectsText.text = string.Join(", ", equipment.resistanceEffects);
+            weaknessEffectsText.text = string.Join(", ", equipment.weaknessEffects);
         }
         #endregion
     }

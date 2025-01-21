@@ -41,7 +41,7 @@ namespace CoED
 
             if (!equipment.hasBeenRevealed)
             {
-                RevealItem(equipment);
+                equipment.RevealHiddenAttributes();
             }
 
             equippedItems[slot] = equipment;
@@ -53,16 +53,6 @@ namespace CoED
             PlayerStats.Instance?.SetEquipmentStats(equippedItems.Values.ToList());
             PlayerStats.Instance?.CalculateStats(refillResources: false);
             EquippableItemsUIManager.Instance.UpdateEquipmentUI();
-        }
-
-        private void RevealItem(Equipment equipment)
-        {
-            equipment.hasBeenRevealed = true;
-        }
-
-        private void ChangeItemSprite(Equipment equipment, Color color)
-        {
-            //
         }
 
         public Equipment GetEquippedItem(EquipmentSlot slot)

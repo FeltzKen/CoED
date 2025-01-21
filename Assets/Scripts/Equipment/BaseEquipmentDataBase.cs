@@ -22,7 +22,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Sword"),
         },
@@ -40,7 +40,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Wooden_Staff"),
         },
@@ -58,7 +58,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 3,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Light_Bow"),
         },
@@ -76,7 +76,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 7,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Steel_Dagger"),
         },
@@ -94,7 +94,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Light_Axe"),
         },
@@ -112,7 +112,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Simple_Wand"),
         },
@@ -130,7 +130,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 5,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Mace"),
         },
@@ -148,7 +148,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Spear"),
         },
@@ -188,7 +188,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Armor/Default"),
         },
@@ -206,7 +206,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Armor/Default"),
         },
@@ -224,7 +224,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Armor/Default"),
         },
@@ -242,7 +242,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Armor/Default"),
         },
@@ -260,7 +260,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Armor/Default"),
         },
@@ -278,7 +278,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Armor/Default"),
         },
@@ -301,7 +301,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Accessories/Default"),
         },
@@ -319,7 +319,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Accessories/Default"),
         },
@@ -337,7 +337,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Accessories/Default"),
         },
@@ -355,7 +355,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Accessories/Default"),
         },
@@ -378,7 +378,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Default"),
         },
@@ -396,7 +396,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Default"),
         },
@@ -414,7 +414,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 6,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Default"),
         },
@@ -432,7 +432,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 14,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Default"),
         },
@@ -450,7 +450,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Default"),
         },
@@ -468,7 +468,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Default"),
         },
@@ -486,7 +486,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 10,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -504,7 +504,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -527,7 +527,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -545,7 +545,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -563,7 +563,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -581,7 +581,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -599,7 +599,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -617,7 +617,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -635,7 +635,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -658,7 +658,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -676,7 +676,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -694,7 +694,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -712,7 +712,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -735,7 +735,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -753,7 +753,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -771,7 +771,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 9,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -789,7 +789,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 21,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -807,7 +807,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -825,7 +825,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -843,7 +843,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 15,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -861,7 +861,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -884,7 +884,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -902,7 +902,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -920,7 +920,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -938,7 +938,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -956,7 +956,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -974,7 +974,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -992,7 +992,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -1015,7 +1015,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -1033,7 +1033,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -1051,7 +1051,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },
@@ -1069,7 +1069,7 @@ public static class EquipmentDatabase
             dexterity = 0,
             speed = 0,
             critChance = 0,
-            
+
             isOneTimeEffect = false,
             baseSprite = Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Fury"),
         },

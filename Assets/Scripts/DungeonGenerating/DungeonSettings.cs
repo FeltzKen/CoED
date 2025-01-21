@@ -22,12 +22,7 @@ namespace CoED
         public TilePalette tilePalette;
 
         [Tooltip("List of item prefabs to spawn in the dungeon.")]
-        // 🟢 List of the actual data (ScriptableObjects)
-        public List<Equipment> equipmentAssets;
-        public List<Consumable> consumableAssets;
-
         // 🔴 List of the prefabs in case you need them
-        public List<EquipmentPickup> equipmentPrefabs;
         public List<ConsumableItemWrapper> itemPrefabs;
         public MoneyPickup moneyPrefab;
         public int moneyCountPerFloor = 1;
@@ -54,7 +49,12 @@ namespace CoED
 
         [Header("Enemy Settings")]
         [Tooltip("List of enemy prefabs to use in the dungeon.")]
-        public List<GameObject> enemyPrefabs = new List<GameObject>();
+        public List<GameObject> enemyPrefabsFloor_1 = new List<GameObject>();
+        public List<GameObject> enemyPrefabsFloor_2 = new List<GameObject>();
+        public List<GameObject> enemyPrefabsFloor_3 = new List<GameObject>();
+        public List<GameObject> enemyPrefabsFloor_4 = new List<GameObject>();
+        public List<GameObject> enemyPrefabsFloor_5 = new List<GameObject>();
+        public List<GameObject> enemyPrefabsFloor_6 = new List<GameObject>();
 
         [Header("UI Elements")]
         [SerializeField]

@@ -35,20 +35,23 @@ namespace CoED
 
         public void ShowFloatingText(string message, Transform parentTransform, Color color)
         {
-            new WaitForSeconds(0.2f);
+            // Create floating text object
             GameObject floatingTextInstance = new GameObject("FloatingText");
 
-            floatingTextInstance.transform.SetParent(parentTransform);
-
+            // Ensure it appears on the UI
+            floatingTextInstance.transform.SetParent(parentTransform, false);
             floatingTextInstance.transform.localPosition = offset;
+            floatingTextInstance.transform.SetAsLastSibling(); // Ensure it's on top of other UI elements
 
+            // Add and configure TextMeshProUGUI component
             TextMeshProUGUI textComponent = floatingTextInstance.AddComponent<TextMeshProUGUI>();
             textComponent.text = message;
             textComponent.color = color;
             textComponent.alignment = TextAlignmentOptions.Center;
-            textComponent.fontSize = 0.5f;
+            textComponent.fontSize = 0.5f; // size = 0.5f
+            textComponent.raycastTarget = false; // Prevent blocking other UI interactions
 
-            new WaitForSeconds(0.2f);
+            // Start animation and destroy after completion
             StartCoroutine(FloatAndDestroy(floatingTextInstance));
         }
 

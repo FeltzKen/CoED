@@ -12,6 +12,8 @@ namespace CoED
         private Color normalColor = Color.white;
         private Color highlightedColor = Color.red;
 
+        private int equipmentTier; // Default tier for equipment drops
+
         [Header("Loot Settings")]
         [SerializeField]
         private float baseDropRate = 0.5f; // Base drop rate for equipment
@@ -39,18 +41,23 @@ namespace CoED
             {
                 Debug.LogError("Enemy: Missing EnemyStats component.");
             }
+            equipmentTier = Mathf.Clamp(Mathf.FloorToInt(enemyStats.spawnFloor / 3) + 1, 1, 3);
         }
 
         public void DropLoot()
         {
             float currentDropRate = baseDropRate;
+            int maxDrops = 3; // Maximum number of items to drop
+            int itemsDropped = 0;
 
-            while (Random.value <= currentDropRate)
+            while (itemsDropped < maxDrops && Random.value <= currentDropRate)
             {
-                DropEquipment();
-                currentDropRate *= dropRateDecreaseFactor;
+                DropEquipment(); // Attempt to drop equipment
+                currentDropRate *= dropRateDecreaseFactor; // Reduce the drop rate
+                itemsDropped++;
+
                 if (currentDropRate <= 0.01f)
-                    break;
+                    break; // Exit if the drop chance becomes negligible
             }
         }
 
@@ -60,11 +67,20 @@ namespace CoED
             float roll = Random.value;
             Equipment droppedEquipment;
             if (roll < 0.33f)
-                droppedEquipment = EquipmentGenerator.GenerateRandomEquipment(1, "weapon");
+                droppedEquipment = EquipmentGenerator.GenerateRandomEquipment(
+                    equipmentTier,
+                    "weapon"
+                );
             else if (roll < 0.66f)
-                droppedEquipment = EquipmentGenerator.GenerateRandomEquipment(1, "armor");
+                droppedEquipment = EquipmentGenerator.GenerateRandomEquipment(
+                    equipmentTier,
+                    "armor"
+                );
             else
-                droppedEquipment = EquipmentGenerator.GenerateRandomEquipment(1, "accessory");
+                droppedEquipment = EquipmentGenerator.GenerateRandomEquipment(
+                    equipmentTier,
+                    "accessory"
+                );
 
             // 2) Attempt to modify the item stats based on enemy level/scaleFactor
             ModifyBaseEquipment(droppedEquipment);

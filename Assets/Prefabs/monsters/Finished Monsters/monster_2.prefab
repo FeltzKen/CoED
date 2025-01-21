@@ -201,8 +201,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f96c446ab19ac8148a70147fb636cfa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baseDropRate: 1
+  baseDropRate: 0.3
   dropRateDecreaseFactor: 0.5
+  chanceToModifyStats: 0.3
+  modificationMultiplier: 2
 --- !u!114 &499285718735250053
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -226,7 +228,7 @@ MonoBehaviour:
   resistances: 
   weaknesses: 
   inflictedStatusEffects: 
-  elementalDamage: 0
+  chanceToInflictStatusEffect: 0.1
   activeStatusEffects: 
   PatrolSpeed: 1.5
   ChaseSpeed: 2
@@ -277,11 +279,12 @@ MonoBehaviour:
   playerTransform: {fileID: 0}
   engageDistance: 0
   disengageDistance: 0
-  CanAttackPlayer: 1
-  projectileCooldownDuration: 15
   visualObstructionLayer:
     serializedVersion: 2
     m_Bits: 128
+  CanAttackPlayer: 1
+  meleeAttackCooldown: 1.5
+  projectileCooldownDuration: 15
 --- !u!1001 &983023871481882242
 PrefabInstance:
   m_ObjectHideFlags: 0
