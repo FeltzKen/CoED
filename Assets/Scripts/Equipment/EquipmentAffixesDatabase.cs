@@ -4,9 +4,9 @@ using CoED;
 public static class EquipmentAffixesDatabase
 {
     // 🔹 Enchanted and Cursed prefixes
-    public static List<PrefixData> pre_prefixes = new List<PrefixData>()
+    public static List<EquipmentPrefixData> pre_prefixes = new List<EquipmentPrefixData>()
     {
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Enchanted",
             description = "Adds random positive effects",
@@ -20,7 +20,7 @@ public static class EquipmentAffixesDatabase
             speedModifier = 5,
             critChanceModifier = 5,
         },
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Cursed",
             description = "Adds random negative effects",
@@ -38,67 +38,67 @@ public static class EquipmentAffixesDatabase
     };
 
     // 🔹 Basic Prefixes (Standard Positive Modifiers)
-    public static List<PrefixData> basicPrefixes = new List<PrefixData>()
+    public static List<EquipmentPrefixData> basicPrefixes = new List<EquipmentPrefixData>()
     {
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Fiery",
             description = "Adds fire damage",
             attackModifier = 5,
             damageModifiers = new Dictionary<DamageType, int> { { DamageType.Fire, 5 } },
         },
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Freezing",
             description = "Adds ice damage",
             attackModifier = 5,
             damageModifiers = new Dictionary<DamageType, int> { { DamageType.Ice, 5 } },
         },
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Shocking",
             description = "Adds lightning damage",
             attackModifier = 5,
             damageModifiers = new Dictionary<DamageType, int> { { DamageType.Lightning, 5 } },
         },
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Venomous",
             description = "Adds poison damage",
             attackModifier = 5,
             damageModifiers = new Dictionary<DamageType, int> { { DamageType.Poison, 5 } },
         },
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Swift",
             description = "Increases attack speed",
             speedModifier = 10,
         },
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Mighty",
             description = "Increases attack power",
             attackModifier = 10,
         },
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Stalwart",
             description = "Increases defense",
             defenseModifier = 10,
         },
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Mystic",
             description = "Increases magic power",
             magicModifier = 10,
         },
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Vigilant",
             description = "Increases critical hit chance",
             critChanceModifier = 5,
         },
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Fortified",
             description = "Increases maximum health",
@@ -108,9 +108,9 @@ public static class EquipmentAffixesDatabase
     };
 
     // 🔹 Greater Prefixes (Enhanced Positive Modifiers)
-    public static List<PrefixData> greaterPrefixes = new List<PrefixData>()
+    public static List<EquipmentPrefixData> greaterPrefixes = new List<EquipmentPrefixData>()
     {
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Blazing",
             description = "Adds stronger fire damage and burn effect",
@@ -118,7 +118,7 @@ public static class EquipmentAffixesDatabase
             damageModifiers = new Dictionary<DamageType, int> { { DamageType.Fire, 20 } },
             inflictedStatusEffects = new List<StatusEffectType> { StatusEffectType.Burn },
         },
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Frostforged",
             description = "Adds freezing ice damage and freeze effect",
@@ -126,7 +126,7 @@ public static class EquipmentAffixesDatabase
             damageModifiers = new Dictionary<DamageType, int> { { DamageType.Ice, 20 } },
             inflictedStatusEffects = new List<StatusEffectType> { StatusEffectType.Freeze },
         },
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Storming",
             description = "Enhances lightning damage and stuns",
@@ -134,21 +134,21 @@ public static class EquipmentAffixesDatabase
             damageModifiers = new Dictionary<DamageType, int> { { DamageType.Lightning, 20 } },
             inflictedStatusEffects = new List<StatusEffectType> { StatusEffectType.Stun },
         },
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Titanic",
             description = "Massive strength boost",
             attackModifier = 25,
             staminaModifier = 25,
         },
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Arcane",
             description = "Boosts intelligence",
             magicModifier = 25,
             intelligenceModifier = 25,
         },
-        new PrefixData
+        new EquipmentPrefixData
         {
             prefixName = "Guardian's",
             description = "Provides a shield",
@@ -158,27 +158,27 @@ public static class EquipmentAffixesDatabase
     };
 
     // 🔹 Basic Suffixes (Standard Utility Modifiers)
-    public static List<SuffixData> basicSuffixes = new List<SuffixData>()
+    public static List<EquipmentSuffixData> basicSuffixes = new List<EquipmentSuffixData>()
     {
-        new SuffixData
+        new EquipmentSuffixData
         {
             suffixName = "of the Bear",
             description = "Boosts strength",
             staminaBonus = 20,
         },
-        new SuffixData
+        new EquipmentSuffixData
         {
             suffixName = "of the Wolf",
             description = "Boosts agility",
             dexterityBonus = 20,
         },
-        new SuffixData
+        new EquipmentSuffixData
         {
             suffixName = "of the Eagle",
             description = "Boosts crit chance",
             critChanceBonus = 5,
         },
-        new SuffixData
+        new EquipmentSuffixData
         {
             suffixName = "of Vitality",
             description = "Increases health regen",
@@ -186,7 +186,7 @@ public static class EquipmentAffixesDatabase
 
             activeStatusEffects = new List<StatusEffectType> { StatusEffectType.Regen },
         },
-        new SuffixData
+        new EquipmentSuffixData
         {
             suffixName = "of the Wind",
             description = "Increases movement speed",
@@ -195,40 +195,40 @@ public static class EquipmentAffixesDatabase
     };
 
     // 🔹 Greater Suffixes (Enhanced Utility Modifiers)
-    public static List<SuffixData> greaterSuffixes = new List<SuffixData>()
+    public static List<EquipmentSuffixData> greaterSuffixes = new List<EquipmentSuffixData>()
     {
-        new SuffixData
+        new EquipmentSuffixData
         {
             suffixName = "of the Colossus",
             description = "Massive health boost",
             healthBonus = 400,
         },
-        new SuffixData
+        new EquipmentSuffixData
         {
             suffixName = "of Fury",
             description = "Increases attack speed",
             speedBonus = 25,
         },
-        new SuffixData
+        new EquipmentSuffixData
         {
             suffixName = "of the Phoenix",
             description = "Revives once upon death",
-            activeStatusEffects = new List<StatusEffectType> { StatusEffectType.Rebirth },
+            equipmentEffects = new List<ActiveWhileEquipped> { ActiveWhileEquipped.ReviveOnce },
             isOneTimeEffect = true,
         },
-        new SuffixData
+        new EquipmentSuffixData
         {
             suffixName = "of Shadows",
             description = "Increases stealth movement speed",
             speedBonus = 30,
         },
-        new SuffixData
+        new EquipmentSuffixData
         {
             suffixName = "of Thorns",
             description = "Reflects a portion of damage back to attackers",
             activeStatusEffects = new List<StatusEffectType> { StatusEffectType.DamageReflect },
         },
-        new SuffixData
+        new EquipmentSuffixData
         {
             suffixName = "of Absorption",
             description = "Grants a damage-absorbing shield",

@@ -1,114 +1,183 @@
-using CoED;
+using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New Consumable", menuName = "Item/Consumable")]
-public class Consumable : Item
+namespace CoED
 {
-    [SerializeField]
-    public float attackBoost = 0;
-
-    [SerializeField]
-    public float defenseBoost = 0;
-
-    [SerializeField]
-    public float speedBoost = 0;
-
-    [SerializeField]
-    public float healthBoost = 0;
-
-    [SerializeField]
-    public float magicBoost = 0;
-
-    [SerializeField]
-    public float staminaBoost = 0;
-
-    [SerializeField]
-    private DescriptionField descriptionField = DescriptionField.None; // Default to None
-
-    [SerializeField, TextArea]
-    private string description = ""; // Optional custom text
-
-    public string ItemName => itemName;
-    public float AttackBoost => attackBoost;
-    public float DefenseBoost => defenseBoost;
-    public float SpeedBoost => speedBoost;
-    public float HealthBoost => healthBoost;
-    public float MagicBoost => magicBoost;
-    public float StaminaBoost => staminaBoost;
-
-    public string Description
+    public class ConsumableItem : IShopItem
     {
-        get
-        {
-            float value = GetDescriptionValue();
-            string baseDescription = $"{itemName} +{value}";
+        [Header("Base Stats")]
+        public string name;
+        public string description;
+        public Sprite icon;
+        public bool hasDuration = false;
+        public float duration;
+        public float attackBoost = 0;
+        public float defenseBoost = 0;
+        public float speedBoost = 0;
+        public float healthBoost = 0;
+        public float magicBoost = 0;
+        public float staminaBoost = 0;
+        public float dexterityBoost = 0;
+        public float intelligenceBoost = 0;
+        public float critChanceBoost = 0;
+        public bool canHaveAffixes = true;
+        public int amountPerInterval = 0;
 
-            // Append the custom description, if it exists
-            if (!string.IsNullOrEmpty(description))
+        [Header("Affixes")]
+        public ConsumablePrefixData prefix;
+        public ConsumableSuffixData suffix;
+
+        [Header("Effects")]
+        public List<StatusEffectType> addedEffects = new();
+        public List<StatusEffectType> removedEffects = new();
+        public string GetName() => name;
+        public Sprite GetSprite() => icon;
+
+        public void Initialize(
+            string name,
+            string description,
+            Sprite icon,
+            float attackBoost,
+            float defenseBoost,
+            float speedBoost,
+            float healthBoost,
+            float magicBoost,
+            float staminaBoost,
+            float dexterityBoost,
+            float intelligenceBoost,
+            float critChanceBoost,
+            List<StatusEffectType> addedEffects,
+            List<StatusEffectType> removedEffects,
+            bool canHaveAffixes,
+            int amountPerInterval
+        )
+        {
+            // apply prefix and suffix if not null.
+            this.name = name;
+            this.description = description;
+            this.icon = icon;
+            this.attackBoost = attackBoost;
+            this.defenseBoost = defenseBoost;
+            this.speedBoost = speedBoost;
+            this.healthBoost = healthBoost;
+            this.magicBoost = magicBoost;
+            this.staminaBoost = staminaBoost;
+            this.dexterityBoost = dexterityBoost;
+            this.intelligenceBoost = intelligenceBoost;
+            this.critChanceBoost = critChanceBoost;
+            this.addedEffects = addedEffects;
+            this.removedEffects = removedEffects;
+            this.canHaveAffixes = canHaveAffixes;
+            this.amountPerInterval = amountPerInterval;
+        }
+
+        public string GetDescription()
+        {
+            string desc = "";
+            if (prefix != null)
+                desc = prefix.prefixName + " " + name;
+            if (suffix != null)
+                desc = desc + " " + suffix.suffixName;
+            desc = desc + "\n" + description;
+            return desc;
+        }
+
+        public void Consume()
+        {
+            var playerStats = PlayerStats.Instance;
+            if (playerStats != null)
             {
-                baseDescription += $" {description}";
+                if (healthBoost < 0)
+                    playerStats.Heal(healthBoost);
+                if (magicBoost > 0)
+                    playerStats.RefillMagic(magicBoost);
+                if (staminaBoost > 0)
+                    playerStats.RefillStamina(staminaBoost);
+                if (dexterityBoost > 0)
+                    playerStats.StartCoroutine(playerStats.GainDexterity(dexterityBoost, duration));
+                if (intelligenceBoost > 0)
+                    playerStats.StartCoroutine(
+                        playerStats.GainIntelligence(intelligenceBoost, duration)
+                    );
+                if (critChanceBoost > 0)
+                    playerStats.StartCoroutine(
+                        playerStats.GainCritChance(critChanceBoost / 100, duration)
+                    );
+                if (attackBoost > 0)
+                    playerStats.StartCoroutine(playerStats.GainAttack(attackBoost, duration));
+                if (defenseBoost > 0)
+                    playerStats.StartCoroutine(playerStats.GainDefense(defenseBoost, duration));
+                if (speedBoost > 0)
+                    playerStats.StartCoroutine(playerStats.GainSpeed(speedBoost, duration));
             }
 
-            return baseDescription;
-        }
-    }
+            foreach (var effect in addedEffects)
+                StatusEffectManager.Instance.AddStatusEffect(playerStats.gameObject, effect);
 
-    private float GetDescriptionValue()
-    {
-        float value = descriptionField switch
-        {
-            DescriptionField.AttackBoost => attackBoost,
-            DescriptionField.DefenseBoost => defenseBoost,
-            DescriptionField.SpeedBoost => speedBoost,
-            DescriptionField.HealthBoost => healthBoost,
-            DescriptionField.MagicBoost => magicBoost,
-            DescriptionField.StaminaBoost => staminaBoost,
-            _ => 0, // Handle None or undefined cases
-        };
-        return value;
-    }
-
-    public void Consume(GameObject entity)
-    {
-        // Apply boosts
-        var playerStats = entity.GetComponent<PlayerStats>();
-        if (playerStats != null)
-        {
-            playerStats.Heal(healthBoost);
-            playerStats.RefillMagic(magicBoost);
-            playerStats.GainStamina(staminaBoost);
+            foreach (var effect in removedEffects)
+                StatusEffectManager.Instance.RemoveSpecificEffect(playerStats.gameObject, effect);
         }
 
-        // Add effects
-        foreach (var effectType in addedEffects)
+        public int GetPrice()
         {
-            var statusEffectIconLibrary = new StatusEffectIconLibrary();
-            var effectPrefab = statusEffectIconLibrary.GetEffectPrefab(effectType);
-            if (effectPrefab != null)
-            {
-                StatusEffectManager.Instance.AddStatusEffect(entity, effectType);
-            }
-            else
-            {
-                Debug.LogWarning($"Effect prefab for {effectType} not found.");
-            }
+            float basePrice =
+                healthBoost
+                + magicBoost
+                + staminaBoost
+                + attackBoost
+                + defenseBoost
+                + dexterityBoost
+                + intelligenceBoost
+                + speedBoost
+                + critChanceBoost;
+            int affixMultiplier = canHaveAffixes ? (prefix != null || suffix != null ? 2 : 1) : 1;
+            return (int)basePrice * affixMultiplier;
         }
 
-        // Remove effects
-        foreach (var effectType in removedEffects)
+        public void ApplyPrefix(ConsumablePrefixData prefix)
         {
-            StatusEffectManager.Instance.RemoveSpecificEffect(entity, effectType);
-        }
-    }
+            this.prefix = prefix;
+            if (attackBoost < 0)
+                attackBoost *= prefix.modifierAmount;
+            if (defenseBoost < 0)
+                defenseBoost *= prefix.modifierAmount;
+            if (speedBoost < 0)
+                speedBoost *= prefix.modifierAmount;
+            if (healthBoost < 0)
+                healthBoost *= prefix.modifierAmount;
+            if (magicBoost < 0)
+                magicBoost *= prefix.modifierAmount;
+            if (staminaBoost < 0)
+                staminaBoost *= prefix.modifierAmount;
+            if (dexterityBoost < 0)
+                dexterityBoost *= prefix.modifierAmount;
+            if (intelligenceBoost < 0)
+                intelligenceBoost *= prefix.modifierAmount;
+            if (critChanceBoost < 0)
+                critChanceBoost += prefix.modifierAmount / 100;
 
-    public enum DescriptionField
-    {
-        None, // To handle cases where no description field is selected
-        AttackBoost,
-        DefenseBoost,
-        SpeedBoost,
-        HealthBoost,
-        MagicBoost,
-        StaminaBoost,
+            foreach (var effect in prefix.activeStatusEffects)
+                addedEffects.Add(effect);
+
+            foreach (var effect in prefix.inflictedStatusEffects)
+                removedEffects.Add(effect);
+        }
+
+        public void ApplySuffix(ConsumableSuffixData suffix)
+        {
+            this.suffix = suffix;
+            attackBoost += suffix.attackBoost;
+            defenseBoost += suffix.defenseBoost;
+            speedBoost += suffix.speedBoost;
+            healthBoost += suffix.healthBoost;
+            magicBoost += suffix.magicBoost;
+            staminaBoost += suffix.staminaBoost;
+            dexterityBoost += suffix.dexterityBoost;
+            intelligenceBoost += suffix.intelligenceBoost;
+            critChanceBoost += suffix.critChanceBoost;
+
+            foreach (var effect in suffix.addedEffects)
+                addedEffects.Add(effect);
+        }
     }
 }

@@ -10,6 +10,12 @@ namespace CoED
         [SerializeField, Min(1)]
         private int baseAttack = 10;
 
+        [SerializeField]
+        private DamageType elementalBase;
+
+        [SerializeField, Min(0)]
+        private int elementalDamage;
+
         [SerializeField, Min(1)]
         private int baseDefense = 5;
         private int currentShieldValue = 0;
@@ -73,6 +79,11 @@ namespace CoED
 
         private void Start()
         {
+            if (elementalBase != DamageType.Physical)
+            {
+                dynamicDamageTypes.Add(elementalBase, elementalDamage);
+            }
+            dynamicDamageTypes.Add(DamageType.Physical, baseAttack);
             CalculateStats();
         }
 
@@ -166,7 +177,10 @@ namespace CoED
             // ✅ Apply all status effects dynamically
             foreach (var effect in damageInfo.InflictedStatusEffects)
             {
-                StatusEffectManager.Instance.AddStatusEffect(gameObject, effect);
+                if (Random.value < PlayerStats.Instance.chanceToInflictStatusEffect)
+                {
+                    StatusEffectManager.Instance.AddStatusEffect(gameObject, effect);
+                }
             }
 
             // ✅ UI Updates

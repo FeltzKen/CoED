@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using CoED;
 
 [System.Serializable]
-public class SuffixData
+public class EquipmentSuffixData
 {
     public string suffixName;
     public string description;
@@ -20,5 +20,6 @@ public class SuffixData
     public Dictionary<DamageType, int> damageModifiers = new Dictionary<DamageType, int>();
     public bool isOneTimeEffect;
     public List<StatusEffectType> activeStatusEffects = new List<StatusEffectType>();
+    public List<ActiveWhileEquipped> equipmentEffects = new List<ActiveWhileEquipped>();
     public List<StatusEffectType> inflictedStatusEffects = new List<StatusEffectType>();
 }

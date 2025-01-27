@@ -9,6 +9,7 @@ namespace CoED
         public Sprite Icon => BaseProjectile.icon;
         public string ProjectileName => BaseProjectile.projectileName;
         public GameObject ProjectilePrefab => BaseProjectile.projectilePrefab;
+        public float chanceToApplyStatusEffect => BaseProjectile.chanceToApplyStatusEffect;
         public float Damage { get; private set; }
         public float Lifetime { get; private set; }
         public float ProjectileRange { get; private set; }
@@ -92,7 +93,7 @@ namespace CoED
                     DamageInfo damageInfo = new DamageInfo(damageTypes, inflictedEffects);
 
                     // ✅ Apply damage and effects to the player
-                    PlayerStats.Instance.TakeDamage(damageInfo);
+                    PlayerStats.Instance.TakeDamage(damageInfo, chanceToApplyStatusEffect);
 
                     Debug.Log(
                         $"Player took {Damage} damage and received {inflictedEffects.Count} effects."

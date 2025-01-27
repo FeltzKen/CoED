@@ -265,19 +265,19 @@ namespace CoED
                 uiElement.button.interactable = false;
                 uiElement.maskImage.fillAmount = 0f;
 
-                StartCoroutine(CooldownCoroutine(spell.BaseSpell, uiElement));
+                StartCoroutine(CooldownCoroutine(spell, uiElement));
             }
 
             UpdateMagicBar(PlayerStats.Instance.CurrentMagic, PlayerStats.Instance.MaxMagic);
         }
 
-        private IEnumerator CooldownCoroutine(PlayerSpell spell, SpellUIElement uiElement)
+        private IEnumerator CooldownCoroutine(PlayerSpellWrapper spell, SpellUIElement uiElement)
         {
             while (uiElement.cooldownTimer > 0)
             {
                 yield return null;
                 uiElement.cooldownTimer -= Time.deltaTime;
-                uiElement.maskImage.fillAmount = 1 - (uiElement.cooldownTimer / spell.cooldown);
+                uiElement.maskImage.fillAmount = 1 - (uiElement.cooldownTimer / spell.Cooldown);
             }
 
             uiElement.maskImage.fillAmount = 0f;

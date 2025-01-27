@@ -35,18 +35,6 @@ MonoBehaviour:
     - {fileID: 11400000, guid: ae2bc12a08fee464598a9e77553ca5fc, type: 2}
     stairsUpTile: {fileID: 1638260800072365795, guid: 6c82c2d46b3613b4a89b278b9901da4d, type: 3}
     stairsDownTile: {fileID: 926577741634186297, guid: 619db7b191317044e995e508dedd5224, type: 3}
-  equipmentAssets: []
-  consumableAssets:
-  - {fileID: 11400000, guid: 58a9759b0ef1aca4a86f750b1b06b321, type: 2}
-  - {fileID: 11400000, guid: daaccea728ff9e44aa70eb30afe55880, type: 2}
-  - {fileID: 11400000, guid: 7ae50d9337691e24a8ff2b5443bbc717, type: 2}
-  - {fileID: 11400000, guid: 007b7639d5cb737478bdc254faa3aaef, type: 2}
-  equipmentPrefabs: []
-  itemPrefabs:
-  - {fileID: -5124992483909295579, guid: 61ecea89c9beef64a949e1275366f6f1, type: 3}
-  - {fileID: 5914308480101746505, guid: 2f0cfc5b91f9d9d4bbc84b36180f56de, type: 3}
-  - {fileID: -4267969455484681755, guid: bf19b45271bd85e439a6fa931164b95c, type: 3}
-  - {fileID: -2541124203162691714, guid: 5d45d65c72a935f41a831b00b77677f4, type: 3}
   moneyPrefab: {fileID: -7904586264360353201, guid: 94e565f3443a44a4f8d23c4d5a0dc48f, type: 3}
   moneyCountPerFloor: 10
   numberOfItemsPerFloor: 10
@@ -89,7 +77,22 @@ MonoBehaviour:
     radialGrowthCorridorChance: 20
   spawningRoomPrefab: {fileID: 5500069649626026940, guid: 836c7b25195eacb41916fcf5dc76305b, type: 3}
   spawnEffectPrefab: {fileID: 4985454231279368892, guid: aed4c3bbbee4901408f729fded73a077, type: 3}
-  enemyPrefabs:
+  enemyPrefabsFloor_1:
+  - {fileID: 3198391839532095026, guid: 04a11b60e34b443448123f1b3fb662f3, type: 3}
+  - {fileID: 3198391839532095026, guid: e63b6f03d1c9eba448e1a722c613b4e6, type: 3}
+  enemyPrefabsFloor_2:
+  - {fileID: 3198391839532095026, guid: e63b6f03d1c9eba448e1a722c613b4e6, type: 3}
+  - {fileID: 3198391839532095026, guid: 04a11b60e34b443448123f1b3fb662f3, type: 3}
+  enemyPrefabsFloor_3:
+  - {fileID: 3198391839532095026, guid: e63b6f03d1c9eba448e1a722c613b4e6, type: 3}
+  - {fileID: 3198391839532095026, guid: 04a11b60e34b443448123f1b3fb662f3, type: 3}
+  enemyPrefabsFloor_4:
+  - {fileID: 3198391839532095026, guid: e63b6f03d1c9eba448e1a722c613b4e6, type: 3}
+  - {fileID: 3198391839532095026, guid: 04a11b60e34b443448123f1b3fb662f3, type: 3}
+  enemyPrefabsFloor_5:
+  - {fileID: 3198391839532095026, guid: e63b6f03d1c9eba448e1a722c613b4e6, type: 3}
+  - {fileID: 3198391839532095026, guid: 04a11b60e34b443448123f1b3fb662f3, type: 3}
+  enemyPrefabsFloor_6:
   - {fileID: 3198391839532095026, guid: e63b6f03d1c9eba448e1a722c613b4e6, type: 3}
   - {fileID: 3198391839532095026, guid: 04a11b60e34b443448123f1b3fb662f3, type: 3}
   healthBarPrefab: {fileID: 7920171421989906631, guid: 25e4b1c51ff90d54895cec756acb5a26, type: 3}

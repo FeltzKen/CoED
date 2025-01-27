@@ -1,7 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace CoED
 {
@@ -131,11 +132,12 @@ namespace CoED
         // Resistances, Weaknesses, Immunities
         [Header("Elemental Attributes & Statuses")]
         public List<StatusEffectType> activeStatusEffects = new List<StatusEffectType>();
+        public List<ActiveWhileEquipped> EquippedmentEffects = new List<ActiveWhileEquipped>();
         public List<StatusEffectType> inflictableStatusEffects = new List<StatusEffectType>();
         public List<Weaknesses> activeWeaknesses = new List<Weaknesses>();
         public List<Resistances> activeResistances = new List<Resistances>();
         public List<Immunities> activeImmunities = new List<Immunities>();
-        private float chanceToInflictStatusEffect = 0.1f;
+        public float chanceToInflictStatusEffect = 0.1f;
         public float CurrentChanceToInflictStatusEffect { get; private set; }
 
         // Death event
@@ -466,9 +468,9 @@ namespace CoED
             foreach (var spell in spells)
             {
                 if (
-                    spell.BaseSpell.levelUpThreshold > 0
-                    && level % spell.BaseSpell.levelUpThreshold == 0
-                    && spell.BaseSpell.spellLevel < level / spell.BaseSpell.levelUpThreshold
+                    spell.LevelUpThreshold > 0
+                    && level % spell.LevelUpThreshold == 0
+                    && spell.SpellLevel < level / spell.LevelUpThreshold
                 )
                 {
                     spell.LevelUp();
@@ -514,7 +516,11 @@ namespace CoED
         /// </summary>
         /// <param name="damageInfo">Damage package with typed damage and inflicted statuses.</param>
         /// <param name="bypassInvincible">If true, ignore the invincible flag.</param>
-        public void TakeDamage(DamageInfo damageInfo, bool bypassInvincible = false)
+        public void TakeDamage(
+            DamageInfo damageInfo,
+            float chanceToInflictStatusEffect = 0.05f,
+            bool bypassInvincible = false
+        )
         {
             // 1) Invincibility check
             if (!bypassInvincible && invincible)
@@ -540,7 +546,6 @@ namespace CoED
                     // Immunity check
                     if (activeImmunities.Contains((Immunities)type))
                     {
-                        Debug.Log($"Player is immune to {type} damage.");
                         FloatingTextManager.Instance.ShowFloatingText(
                             $"{type.ToString().ToUpper()} IMMUNE",
                             transform,
@@ -588,7 +593,8 @@ namespace CoED
                 // but typically, we just add the effect to the player
                 if (!inflictableStatusEffects.Contains(effect))
                 {
-                    StatusEffectManager.Instance.AddStatusEffect(gameObject, effect);
+                    if (Random.value < chanceToInflictStatusEffect)
+                        StatusEffectManager.Instance.AddStatusEffect(gameObject, effect);
                 }
             }
 
@@ -613,17 +619,15 @@ namespace CoED
         private void HandleDeath()
         {
             // Check for "ReviveOnce"
-            if (activeStatusEffects.Contains(StatusEffectType.ReviveOnce))
+            if (EquippedmentEffects.Contains(ActiveWhileEquipped.ReviveOnce))
             {
                 // Remove the effect from the manager so it doesn't trigger again
-                StatusEffectManager.Instance.RemoveSpecificEffect(
-                    gameObject,
-                    StatusEffectType.ReviveOnce
-                );
+                StatusEffectManager.Instance.RemoveEquipmentEffects(ActiveWhileEquipped.ReviveOnce);
 
                 // Restore partial HP
                 CurrentHealth = Mathf.RoundToInt(MaxHealth * 0.25f);
                 Debug.Log("ReviveOnce triggered! Player revived at 25% HP.");
+                FloatingTextManager.Instance.ShowFloatingText("Revived!", transform, Color.green);
                 return;
             }
 
@@ -661,7 +665,6 @@ namespace CoED
             }
             CurrentHealth = Mathf.Min(CurrentHealth + Mathf.RoundToInt(amount), MaxHealth);
             UpdateHealthUI();
-            Debug.Log($"Player healed {amount}. Current: {CurrentHealth}/{MaxHealth}");
         }
 
         public void ConsumeMagic(float amount)
@@ -682,7 +685,7 @@ namespace CoED
             UpdateMagicUI();
         }
 
-        public void GainStamina(float amount)
+        public void RefillStamina(float amount)
         {
             CurrentStamina = Mathf.Clamp(CurrentStamina + Mathf.RoundToInt(amount), 0, MaxStamina);
             UpdateStaminaUI();
@@ -704,6 +707,48 @@ namespace CoED
             {
                 playerUI.UpdateExperienceBar(currentExp, expToNextLevel);
             }
+        }
+
+        public IEnumerator GainAttack(float amount, float duration)
+        {
+            CurrentAttack += amount;
+            yield return new WaitForSeconds(duration);
+            CurrentAttack -= amount;
+        }
+
+        public IEnumerator GainDefense(float amount, float duration)
+        {
+            CurrentDefense += amount;
+            yield return new WaitForSeconds(duration);
+            CurrentDefense -= amount;
+        }
+
+        public IEnumerator GainSpeed(float amount, float duration)
+        {
+            CurrentSpeed += amount;
+            yield return new WaitForSeconds(duration);
+            CurrentSpeed -= amount;
+        }
+
+        public IEnumerator GainDexterity(float amount, float duration)
+        {
+            CurrentDexterity += amount;
+            yield return new WaitForSeconds(duration);
+            CurrentDexterity -= amount;
+        }
+
+        public IEnumerator GainIntelligence(float amount, float duration)
+        {
+            CurrentIntelligence += amount;
+            yield return new WaitForSeconds(duration);
+            CurrentIntelligence -= amount;
+        }
+
+        public IEnumerator GainCritChance(float amount, float duration)
+        {
+            CurrentCritChance += amount;
+            yield return new WaitForSeconds(duration);
+            CurrentCritChance -= amount;
         }
 
         private void UpdateMagicUI()

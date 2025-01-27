@@ -6,6 +6,7 @@ namespace CoED
     {
         [Header("General Effect Info")]
         public StatusEffectType effectType;
+        public ActiveWhileEquipped equipmentEffects;
         public string effectName;
         public bool hasDuration = true;
 
@@ -107,14 +108,15 @@ namespace CoED
                         }
                     }
                     break;
+            }
 
+            // etc. for any other immediate changes
+            if (entity.CompareTag("Player"))
+            {
                 // “ReviveOnce” gets handled in PlayerStats.HandleDeath
                 // We do not need to do anything here except maybe track a bool
-                case StatusEffectType.ReviveOnce:
-                    // no immediate action; the logic is in PlayerStats.HandleDeath
-                    break;
-
-                // etc. for any other immediate changes
+                playerStats.EquippedmentEffects.Add(ActiveWhileEquipped.ReviveOnce);
+                // no immediate action; the logic is in PlayerStats.HandleDeath
             }
         }
 

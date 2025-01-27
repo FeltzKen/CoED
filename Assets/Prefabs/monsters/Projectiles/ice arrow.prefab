@@ -47,7 +47,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc0ea0bec9c367a4098ca40d67158b72, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  statusEffect: {fileID: 93035768914502204, guid: b47548b4bad57ba438e2905afc3506f2, type: 3}
+  statusEffectTypes: 04000000
 --- !u!212 &4589189559032346645
 SpriteRenderer:
   m_ObjectHideFlags: 0

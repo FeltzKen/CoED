@@ -1,15 +1,16 @@
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using UnityEngine;
 
 namespace CoED
 {
     [System.Serializable]
-    public class Equipment
+    public class Equipment : IShopItem
     {
         public string itemID;
-        public PrefixData prePrefix = null;
-        public PrefixData prefix = null;
-        public SuffixData suffix = null;
+        public EquipmentPrefixData prePrefix = null;
+        public EquipmentPrefixData prefix = null;
+        public EquipmentSuffixData suffix = null;
         public string itemName;
         public string hiddenNameData;
         public EquipmentSlot slot;
@@ -23,6 +24,8 @@ namespace CoED
         public int speed;
         public int critChance;
         public bool isEnchantedOrCursed;
+
+        public string GetName() => itemName;
 
         // Elemental Damage
         public Dictionary<DamageType, int> damageModifiers = new Dictionary<DamageType, int>();
@@ -42,6 +45,8 @@ namespace CoED
         public bool hasBeenRevealed;
         public Sprite baseSprite;
         public Rarity rarity;
+
+        public Sprite GetSprite() => baseSprite;
 
         // Initialize default stats to prevent unintentional nulls
         public void InitializeEquipment(
@@ -205,10 +210,37 @@ namespace CoED
                 + $"{(suffix != null ? " " + suffix.suffixName : "")}";
         }
 
+        public string GetDescription()
+        {
+            string desc = "";
+            if (prePrefix != null)
+                desc = prePrefix.prefixName + " " + itemName;
+            if (suffix != null)
+                desc = desc + " " + suffix.suffixName;
+            desc = desc + "\n" + itemName;
+            return desc;
+        }
+
+        public int GetPrice()
+        {
+            int basePrice =
+                attack
+                + defense
+                + magic
+                + health
+                + stamina
+                + intelligence
+                + dexterity
+                + speed
+                + critChance;
+            int affixMultiplier = prePrefix != null || suffix != null ? 2 : 1;
+            return basePrice * affixMultiplier;
+        }
+
         private void ApplyStats(
-            PrefixData prePrefix = null,
-            PrefixData prefix = null,
-            SuffixData suffix = null
+            EquipmentPrefixData prePrefix = null,
+            EquipmentPrefixData prefix = null,
+            EquipmentSuffixData suffix = null
         )
         {
             if (prePrefix != null)

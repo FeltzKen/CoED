@@ -16,6 +16,7 @@ MonoBehaviour:
   projectilePrefab: {fileID: 4695070808592603662, guid: 12f08cc1af0889346b48e0e12366637c, type: 3}
   icon: {fileID: 679878305, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   damage: 30
+  chanceToApplyStatusEffect: 0.1
   lifetime: 3
   collisionRadius: 0
   speed: 3

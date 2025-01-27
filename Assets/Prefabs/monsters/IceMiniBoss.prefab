@@ -34,7 +34,7 @@ RectTransform:
   m_GameObject: {fileID: 1829670326822989897}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 3, y: 3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8667034218252950723}
@@ -116,7 +116,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 2
   m_Sprite: {fileID: -2146418257, guid: 95fa356b31a385941bd84ea3521cfde0, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -200,7 +200,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f96c446ab19ac8148a70147fb636cfa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  equipmentTier: 2
   baseDropRate: 0.3
   dropRateDecreaseFactor: 0.5
   chanceToModifyStats: 0.3
@@ -234,20 +233,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   baseAttack: 10
+  elementalBase: 4
+  elementalDamage: 15
   baseDefense: 20
   baseHealth: 1500
   baseAttackRange: 4
   baseFireRate: 4
   baseProjectileLifespan: 4
   projectileBaseAttackRange: 7
-  immunities: 02000000
-  resistances: 00000000
-  weaknesses: 01000000
-  inflictedStatusEffects: 
+  immunities: 01000000
+  resistances: 
+  weaknesses: 00000000
+  inflictedStatusEffects: 04000000
   chanceToInflictStatusEffect: 0.1
-  activeStatusEffects: 
-  PatrolSpeed: 0
-  ChaseSpeed: 0
+  activeStatusEffects: 03000000
+  PatrolSpeed: 1.5
+  ChaseSpeed: 3
 --- !u!114 &-2184909833564617962
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -274,7 +275,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c87369e3b1304e499f0f41793258f33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  availableProjectiles: []
+  availableProjectiles:
+  - {fileID: 11400000, guid: 5cbad5cdb3abbdf44bee8f5fe5c66ddc, type: 2}
   CurrentState: 0
   playerTransform: {fileID: 0}
   engageDistance: 0

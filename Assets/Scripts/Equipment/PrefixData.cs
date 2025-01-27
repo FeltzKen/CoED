@@ -3,7 +3,7 @@ using CoED;
 using UnityEngine;
 
 [System.Serializable]
-public class PrefixData
+public class EquipmentPrefixData
 {
     public string prefixName;
     public string description;

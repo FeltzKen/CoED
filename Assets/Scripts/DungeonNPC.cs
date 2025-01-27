@@ -8,7 +8,7 @@ namespace CoED
 
         [SerializeField]
         private Equipment equipmentRewardItem;
-        private ConsumableItemWrapper consumableRewardItem;
+        private ConsumableItem consumableRewardItem;
 
         private QuestManager questManager;
         private EquipmentInventory equipmentInventory;
@@ -49,7 +49,7 @@ namespace CoED
             {
                 consumableInventory.AddItem(consumableRewardItem);
                 FloatingTextManager.Instance.ShowFloatingText(
-                    $"{consumableRewardItem.ItemName} added to inventory!",
+                    $"{consumableRewardItem.name} added to inventory!",
                     transform,
                     Color.green
                 );

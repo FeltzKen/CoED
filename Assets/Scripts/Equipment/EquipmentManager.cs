@@ -55,6 +55,11 @@ namespace CoED
             EquippableItemsUIManager.Instance.UpdateEquipmentUI();
         }
 
+        public List<Equipment> GetAllEquippedItems()
+        {
+            return equippedItems.Values.ToList();
+        }
+
         public Equipment GetEquippedItem(EquipmentSlot slot)
         {
             return equippedItems.ContainsKey(slot) ? equippedItems[slot] : null;

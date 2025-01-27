@@ -209,6 +209,7 @@ MonoBehaviour:
   searchableLayer:
     serializedVersion: 2
     m_Bits: 640
+  shopGoblinPrefab: {fileID: 8495418548794293491, guid: e2f0308c96fcf7742aeeda564ade46de, type: 3}
 --- !u!114 &1948119710454645371
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -273,30 +274,32 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   level: 1
-  CurrentExp: 0
-  ExpToNextLevel: 100
+  currentExp: 0
+  expToNextLevel: 100
   maxLevel: 50
   restInterval: 3
   baseHealth: 1000
   baseStamina: 100
   baseMagic: 50
-  equipmentMagic: 0
   baseAttack: 40
-  CurrentAttack: 0
   AttackRange: 3
   baseDefense: 5
-  CurrentDefense: 0
   baseProjectileRange: 5
-  CurrentProjectileRange: 0
   targetingRange: 7
+  baseDexterity: 5
+  baseIntelligence: 5
+  baseCritChance: 5
   baseSpeed: 5
-  CurrentSpeed: 0
   baseFireRate: 1
-  CurrentFireRate: 0
   baseProjectileLifespan: 2
-  CurrentProjectileLifespan: 0
   currency: 0
   currentFloor: 0
+  activeStatusEffects: 
+  inflictableStatusEffects: 
+  activeWeaknesses: 
+  activeResistances: 
+  activeImmunities: 
+  chanceToInflictStatusEffect: 0.1
 --- !u!114 &-4137153357304739670
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -20,6 +20,7 @@ namespace CoED
         private PlayerStats playerStats;
         public ConsumableInventory consumableInventory;
         public EquipmentInventory equipmentInventory;
+        private GameObject goblinPrefab;
         private Enemy enemy;
 
         [SerializeField]
@@ -33,6 +34,10 @@ namespace CoED
 
         [SerializeField]
         private LayerMask searchableLayer;
+
+        [Header("Shop Settings")]
+        [SerializeField]
+        private GameObject shopGoblinPrefab;
 
         private void Update()
         {
@@ -88,6 +93,23 @@ namespace CoED
             {
                 SearchForSecrets();
                 PlayerCombat.Instance.ResetEnemyAttackFlags();
+            }
+            else if (Input.GetKeyDown(KeyCode.T))
+            {
+                Debug.Log("Shop goblin key pressed");
+
+                TheElusiveShopGoblin.Instance.InitializeShop(playerStats.currentFloor); // Replace with your current floor logic
+                if (
+                    Vector2.Distance(transform.position, shopGoblinPrefab.transform.position) < 1.5f
+                )
+                {
+                    // Open the shop UI
+                    Debug.Log("ShopGoblin should be called.");
+                }
+                else
+                {
+                    //
+                }
             }
 
             if (Input.GetKeyDown(KeyCode.R) && !isResting)
@@ -152,19 +174,27 @@ namespace CoED
                 }
 
                 // 3) Check for Consumable
-                ConsumableItemWrapper consumable =
-                    itemCollider.GetComponent<ConsumableItemWrapper>();
+                ConsumablePickup consumable = itemCollider.GetComponent<ConsumablePickup>();
                 if (consumable != null)
                 {
-                    if (consumableInventory.AddItem(consumable))
+                    ConsumableItem consumableData = consumable.GetConsumableData();
+                    if (consumableData == null)
+                    {
+                        Debug.LogWarning(
+                            $"ConsumablePickup on {itemCollider.name} has no data. Skipping."
+                        );
+                        continue;
+                    }
+                    if (consumableInventory.AddItem(consumableData))
                     {
                         ItemCollectionAnimator.Instance.AnimateItemCollection(
-                            consumable.Icon,
+                            consumableData.icon,
                             itemCollider.transform.position,
-                            GameObject.Find("ShowHideConsumablePanel").GetComponent<RectTransform>()
+                            GameObject.Find("ShowHideEquipmentPanel").GetComponent<RectTransform>()
                         );
+                        Debug.Log($"Collected {consumable.name}");
                         FloatingTextManager.Instance.ShowFloatingText(
-                            $"Collected {consumable.ItemName}",
+                            $"Collected {consumable.name}",
                             transform,
                             Color.green
                         );

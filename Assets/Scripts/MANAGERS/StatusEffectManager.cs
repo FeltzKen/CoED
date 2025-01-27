@@ -20,14 +20,14 @@ namespace CoED
 
         // Map certain StatusEffectTypes to the elemental Resistances they represent.
         // If the player has Resistances.Fire, they’ll block Burn, etc.
-        private static readonly Dictionary<StatusEffectType, Resistances> effectToResistanceMap =
-            new Dictionary<StatusEffectType, Resistances>
+        private static readonly Dictionary<StatusEffectType, Immunities> effectToImmunityMap =
+            new Dictionary<StatusEffectType, Immunities>
             {
-                { StatusEffectType.Burn, Resistances.Fire },
-                { StatusEffectType.Poison, Resistances.Poison },
-                { StatusEffectType.Freeze, Resistances.Ice },
-                { StatusEffectType.Shadow, Resistances.Shadow },
-                { StatusEffectType.Holy, Resistances.Holy },
+                { StatusEffectType.Burn, Immunities.Fire },
+                { StatusEffectType.Poison, Immunities.Poison },
+                { StatusEffectType.Freeze, Immunities.Ice },
+                { StatusEffectType.Stun, Immunities.Lightning },
+                { StatusEffectType.Blindness, Immunities.Darkness },
                 // You can add Slow => Resistances.Ice, Stun => Resistances.Lightning, etc., if desired.
             };
 
@@ -61,9 +61,9 @@ namespace CoED
             if (isPlayer)
             {
                 // If this status effect maps to an elemental damage type that the player resists:
-                if (effectToResistanceMap.TryGetValue(effectType, out Resistances neededResist))
+                if (effectToImmunityMap.TryGetValue(effectType, out Immunities neededImmunity))
                 {
-                    if (PlayerStats.Instance.activeResistances.Contains(neededResist))
+                    if (PlayerStats.Instance.activeImmunities.Contains(neededImmunity))
                     {
                         Debug.Log($"Player is resistant to {effectType}; effect blocked.");
                         return;
@@ -76,10 +76,10 @@ namespace CoED
                 EnemyStats enemyStats = entity.GetComponent<EnemyStats>();
                 if (
                     enemyStats != null
-                    && effectToResistanceMap.TryGetValue(effectType, out Resistances neededResist)
+                    && effectToImmunityMap.TryGetValue(effectType, out Immunities neededImmunity)
                 )
                 {
-                    if (enemyStats.resistances.Contains(neededResist))
+                    if (enemyStats.immunities.Contains(neededImmunity))
                     {
                         Debug.Log($"{entity.name} is resistant to {effectType}. Effect blocked.");
                         return;
@@ -203,6 +203,11 @@ namespace CoED
                     StatusEffectType.Poison,
                     StatusEffectType.Stun,
                     StatusEffectType.Slow,
+                    StatusEffectType.Freeze,
+                    StatusEffectType.Blindness,
+                    StatusEffectType.Silence,
+                    StatusEffectType.Curse,
+                    StatusEffectType.Bleed,
                 }
             );
         }
@@ -216,6 +221,8 @@ namespace CoED
                     StatusEffectType.Regen,
                     StatusEffectType.Shield,
                     StatusEffectType.Invincible,
+                    StatusEffectType.PoisonAura,
+                    StatusEffectType.StealHealth,
                 }
             );
         }
@@ -249,6 +256,15 @@ namespace CoED
                     return;
                 }
             }
+        }
+        public void RemoveEquipmentEffects(ActiveWhileEquipped effectType)
+        {
+            if (playerEffects.Count == 0)
+            {
+                Debug.LogWarning("No player effects to remove.");
+                return;
+            }
+
         }
 
         // --------------- Internal Removal -----------------

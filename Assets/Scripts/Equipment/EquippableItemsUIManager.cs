@@ -11,71 +11,16 @@ namespace CoED
     {
         public static EquippableItemsUIManager Instance { get; private set; }
 
-        [Header("Equippable Items Panel References")]
+        [Header("Item Panel Reference")]
         [SerializeField]
-        private Transform headSlot;
-
-        [SerializeField]
-        private Transform chestSlot;
-
-        [SerializeField]
-        private Transform legsSlot;
-
-        [SerializeField]
-        private Transform waistSlot;
-
-        [SerializeField]
-        private Transform handsSlot;
-
-        [SerializeField]
-        private Transform weaponSlot;
-
-        [SerializeField]
-        private Transform shieldSlot;
-
-        [SerializeField]
-        private Transform bootsSlot;
-
-        [SerializeField]
-        private Transform ringSlot;
-
-        [SerializeField]
-        private Transform amuletSlot;
-
-        [Header("Equipped Items Panel References")]
-        [SerializeField]
-        private Transform equippedHeadSlot;
-
-        [SerializeField]
-        private Transform equippedChestSlot;
-
-        [SerializeField]
-        private Transform equippedLegsSlot;
-
-        [SerializeField]
-        private Transform equippedWaistSlot;
-
-        [SerializeField]
-        private Transform equippedHandsSlot;
-
-        [SerializeField]
-        private Transform equippedWeaponSlot;
-
-        [SerializeField]
-        private Transform equippedShieldSlot;
-
-        [SerializeField]
-        private Transform equippedBootsSlot;
-
-        [SerializeField]
-        private Transform equippedRingSlot;
-
-        [SerializeField]
-        private Transform equippedAmuletSlot;
+        private Transform equipmentPanel;
+        private Transform consumablesPanel;
+        private Transform equipmentParent;
+        private Transform consumablesParent;
 
         [Header("Description Panel References")]
         [SerializeField]
-        private TextMeshProUGUI itemNameText;
+        private TextMeshProUGUI equipmentNameText;
 
         [SerializeField]
         private TextMeshProUGUI attackModifierText;
@@ -180,6 +125,37 @@ namespace CoED
         [SerializeField]
         private TextMeshProUGUI playerInflictedStatusText;
 
+        [Header("Equipped Items Panel References")]
+        [SerializeField]
+        private Transform equippedHeadSlot;
+
+        [SerializeField]
+        private Transform equippedChestSlot;
+
+        [SerializeField]
+        private Transform equippedLegsSlot;
+
+        [SerializeField]
+        private Transform equippedWaistSlot;
+
+        [SerializeField]
+        private Transform equippedHandsSlot;
+
+        [SerializeField]
+        private Transform equippedWeaponSlot;
+
+        [SerializeField]
+        private Transform equippedShieldSlot;
+
+        [SerializeField]
+        private Transform equippedBootsSlot;
+
+        [SerializeField]
+        private Transform equippedRingSlot;
+
+        [SerializeField]
+        private Transform equippedAmuletSlot;
+
         [Header("Equip/Unequip/Drop Buttons")]
         [SerializeField]
         private Button equipButton;
@@ -190,16 +166,14 @@ namespace CoED
         [SerializeField]
         private Button dropButton;
 
-        // Maps each EquipmentSlot -> the container in the "unequipped" items panel
-        private Dictionary<EquipmentSlot, Transform> equippableSlotMapping;
-
         // Maps each EquipmentSlot -> the container in the "equipped" items panel
         private Dictionary<EquipmentSlot, Transform> equippedSlotMapping;
 
         // Tracks the item-button GameObjects for each slot
         private Dictionary<EquipmentSlot, List<GameObject>> equipmentButtonMapping;
 
-        // Current selections
+        private Equipment selectedEquipment;
+        private GameObject selectedButton;
         private Equipment selectedEquippableItem;
         private Equipment selectedEquippedItem;
         private GameObject selectedEquippableButton;
@@ -218,8 +192,6 @@ namespace CoED
                 return;
             }
 
-            InitializeSlotMappings();
-
             if (equipButton == null)
                 Debug.LogError("Equip Button is not assigned in inspector!");
             if (unequipButton == null)
@@ -231,62 +203,22 @@ namespace CoED
             equipButton.onClick.AddListener(HandleEquipButton);
             unequipButton.onClick.AddListener(HandleUnequipButton);
             dropButton.onClick.AddListener(HandleDropButton);
+            InitializeSlotMappings();
         }
 
         private void Start()
         {
             UpdateEquipmentUI();
         }
-        #endregion
-
-        #region Setup & UI Building
-        private void InitializeSlotMappings()
-        {
-            equippableSlotMapping = new Dictionary<EquipmentSlot, Transform>
-            {
-                { EquipmentSlot.Head, headSlot },
-                { EquipmentSlot.Chest, chestSlot },
-                { EquipmentSlot.Legs, legsSlot },
-                { EquipmentSlot.Waist, waistSlot },
-                { EquipmentSlot.Weapon, weaponSlot },
-                { EquipmentSlot.Shield, shieldSlot },
-                { EquipmentSlot.Boots, bootsSlot },
-                { EquipmentSlot.Ring, ringSlot },
-                { EquipmentSlot.Amulet, amuletSlot },
-                { EquipmentSlot.Hands, handsSlot },
-            };
-
-            equippedSlotMapping = new Dictionary<EquipmentSlot, Transform>
-            {
-                { EquipmentSlot.Head, equippedHeadSlot },
-                { EquipmentSlot.Chest, equippedChestSlot },
-                { EquipmentSlot.Legs, equippedLegsSlot },
-                { EquipmentSlot.Waist, equippedWaistSlot },
-                { EquipmentSlot.Weapon, equippedWeaponSlot },
-                { EquipmentSlot.Shield, equippedShieldSlot },
-                { EquipmentSlot.Boots, equippedBootsSlot },
-                { EquipmentSlot.Ring, equippedRingSlot },
-                { EquipmentSlot.Amulet, equippedAmuletSlot },
-                { EquipmentSlot.Hands, equippedHandsSlot },
-            };
-
-            equipmentButtonMapping = new Dictionary<EquipmentSlot, List<GameObject>>();
-            foreach (var slot in equippableSlotMapping.Keys)
-            {
-                equipmentButtonMapping[slot] = new List<GameObject>();
-            }
-        }
 
         public void UpdateEquipmentUI()
         {
             // 1) Clear existing buttons from both equippable and equipped panels
-            foreach (var slotParent in equippableSlotMapping.Values)
+            foreach (Transform child in equipmentPanel)
             {
-                foreach (Transform child in slotParent)
-                {
-                    Destroy(child.gameObject);
-                }
+                Destroy(child.gameObject);
             }
+
             foreach (var slotParent in equippedSlotMapping.Values)
             {
                 foreach (Transform child in slotParent)
@@ -295,28 +227,21 @@ namespace CoED
                 }
             }
 
-            // 2) Reset the mapping so we start fresh
+            // 2) Reset the mapping
             foreach (var slot in equipmentButtonMapping.Keys.ToList())
             {
                 equipmentButtonMapping[slot].Clear();
             }
 
             // 3) Populate the equippable panel from inventory
-            foreach (var kvp in equippableSlotMapping)
+            List<Equipment> itemsInInventory = EquipmentInventory.Instance.GetAllEquipment();
+            if (itemsInInventory == null)
+                return;
+
+            foreach (var item in itemsInInventory)
             {
-                EquipmentSlot equipmentSlot = kvp.Key;
-                Transform slotContainer = kvp.Value;
-
-                List<Equipment> itemsInInventory = EquipmentInventory.Instance.GetAllEquipment(
-                    equipmentSlot
-                );
-                if (itemsInInventory == null)
-                    continue;
-
-                foreach (var item in itemsInInventory)
-                {
-                    CreateItemButton(item, slotContainer, false);
-                }
+                // Pass equipmentPanel (the correct transform), not transform.GetChild(0)
+                CreateItemButton(item, equipmentPanel, false);
             }
 
             // 4) Populate the equipped panel
@@ -336,25 +261,50 @@ namespace CoED
             DisplayPlayerStats();
         }
 
+        private void InitializeSlotMappings()
+        {
+            equippedSlotMapping = new Dictionary<EquipmentSlot, Transform>
+            {
+                { EquipmentSlot.Head, equippedHeadSlot },
+                { EquipmentSlot.Chest, equippedChestSlot },
+                { EquipmentSlot.Legs, equippedLegsSlot },
+                { EquipmentSlot.Waist, equippedWaistSlot },
+                { EquipmentSlot.Weapon, equippedWeaponSlot },
+                { EquipmentSlot.Shield, equippedShieldSlot },
+                { EquipmentSlot.Boots, equippedBootsSlot },
+                { EquipmentSlot.Ring, equippedRingSlot },
+                { EquipmentSlot.Amulet, equippedAmuletSlot },
+                { EquipmentSlot.Hands, equippedHandsSlot },
+            };
+
+            equipmentButtonMapping = new Dictionary<EquipmentSlot, List<GameObject>>();
+        }
+
         private void CreateItemButton(Equipment equipment, Transform parentSlot, bool isEquipped)
         {
+            if (equipment == null)
+            {
+                Debug.LogWarning("Cannot create button for null equipment.");
+                return;
+            }
+            GameObject buttonObj = new GameObject($"{equipment.itemName}_{Guid.NewGuid()}");
+            buttonObj.transform.SetParent(parentSlot, false);
+
             var slot = equipment.slot;
             if (!equipmentButtonMapping.ContainsKey(slot))
             {
                 equipmentButtonMapping[slot] = new List<GameObject>();
             }
-
-            GameObject buttonObj = new GameObject($"{equipment.itemName}_{Guid.NewGuid()}");
-            buttonObj.transform.SetParent(parentSlot, false);
+            equipmentButtonMapping[slot].Add(buttonObj);
 
             RectTransform buttonRect = buttonObj.AddComponent<RectTransform>();
-            buttonRect.sizeDelta = new Vector2(0.65f, 0.65f); // permanent size
+            buttonRect.sizeDelta = new Vector2(1.65f, 1.65f); // permanent size
 
             // Create the background layer
             GameObject background = new GameObject("Border");
             background.transform.SetParent(buttonObj.transform, false);
             RectTransform bgRect = background.AddComponent<RectTransform>();
-            bgRect.sizeDelta = new Vector2(0.75f, 0.75f); // permanent size
+            bgRect.sizeDelta = new Vector2(1.75f, 1.75f); // permanent size
             Image bgImage = background.AddComponent<Image>();
             bgImage.color = Color.green; // Highlight color
 
@@ -362,7 +312,7 @@ namespace CoED
             GameObject mask = new GameObject("Mask");
             mask.transform.SetParent(buttonObj.transform, false);
             RectTransform maskRect = mask.AddComponent<RectTransform>();
-            maskRect.sizeDelta = new Vector2(0.65f, 0.65f); // permanent size
+            maskRect.sizeDelta = new Vector2(1.65f, 1.65f); // permanent size
             Image maskImage = mask.AddComponent<Image>();
             maskImage.color = Color.black; // black
 
@@ -370,7 +320,7 @@ namespace CoED
             GameObject icon = new GameObject("Icon");
             icon.transform.SetParent(buttonObj.transform, false);
             RectTransform iconRect = icon.AddComponent<RectTransform>();
-            iconRect.sizeDelta = new Vector2(0.65f, 0.65f); // permanent size
+            iconRect.sizeDelta = new Vector2(1.65f, 1.65f); // permanent size
             Image iconImage = icon.AddComponent<Image>();
             iconImage.sprite = equipment.baseSprite;
             iconImage.preserveAspect = true;
@@ -382,12 +332,16 @@ namespace CoED
             });
             mask.SetActive(false);
             background.SetActive(false);
-            equipmentButtonMapping[slot].Add(buttonObj);
         }
+
         #endregion
 
         #region Selection Handling
-        private void OnItemButtonClicked(Equipment equipment, GameObject buttonObj, bool isEquipped)
+        private void OnItemButtonClicked(
+            Equipment equipment,
+            GameObject buttonObj,
+            bool isEquipped = false
+        )
         {
             // 1) Deselect previous item (no matter what)
             DeselectCurrentlySelectedItems();
@@ -444,13 +398,13 @@ namespace CoED
         }
         #endregion
 
-        #region Equipment Buttons
+        #region (Un)Equip + Drop
         private void HandleEquipButton()
         {
-            // If we are trying to equip, we must have selected an unequipped item
+            // ONLY do something if an unequipped equipment item is selected
             if (selectedEquippableItem == null)
             {
-                Debug.LogWarning("No unequipped item selected to equip.");
+                Debug.LogWarning("No unequipped equipment selected to equip.");
                 return;
             }
 
@@ -461,9 +415,7 @@ namespace CoED
             {
                 if (currentlyEquipped.itemName.Contains("Cursed"))
                 {
-                    Debug.LogWarning(
-                        $"Cannot replace {currentlyEquipped.itemName} because it is cursed."
-                    );
+                    Debug.LogWarning("Cannot replace a cursed item.");
                     FloatingTextManager.Instance.ShowFloatingText(
                         "Cannot unequip a cursed item.",
                         PlayerStats.Instance.transform,
@@ -471,34 +423,33 @@ namespace CoED
                     );
                     return;
                 }
+                // Remove old from equip
                 EquipmentManager.Instance.UnequipItem(currentlyEquipped);
+                // Put old back in inventory
                 EquipmentInventory.Instance.AddEquipment(currentlyEquipped);
             }
 
+            // Now equip the new one
             EquipmentManager.Instance.EquipItem(selectedEquippableItem);
             EquipmentInventory.Instance.RemoveEquipment(selectedEquippableItem);
 
-            // After equipping, forcibly clear the selection
             DeselectCurrentlySelectedItems();
             PlayerUI.Instance.UpdateUIPanels();
-            // Refresh UI
             UpdateEquipmentUI();
         }
 
         private void HandleUnequipButton()
         {
-            // If we are trying to unequip, we must have selected an equipped item
+            // ONLY do something if an equipped equipment item is selected
             if (selectedEquippedItem == null)
             {
-                Debug.LogWarning("No equipped item selected to unequip.");
+                Debug.LogWarning("No equipped equipment selected to unequip.");
                 return;
             }
 
             if (selectedEquippedItem.itemName.Contains("Cursed"))
             {
-                Debug.LogWarning(
-                    $"{selectedEquippedItem.itemName} is cursed and cannot be unequipped."
-                );
+                Debug.LogWarning("Cannot unequip a cursed item.");
                 FloatingTextManager.Instance.ShowFloatingText(
                     "Cannot unequip a cursed item.",
                     PlayerStats.Instance.transform,
@@ -510,7 +461,6 @@ namespace CoED
             EquipmentManager.Instance.UnequipItem(selectedEquippedItem);
             EquipmentInventory.Instance.AddEquipment(selectedEquippedItem);
 
-            // After unequipping, forcibly clear the selection
             DeselectCurrentlySelectedItems();
             PlayerUI.Instance.UpdateUIPanels();
             UpdateEquipmentUI();
@@ -518,34 +468,12 @@ namespace CoED
 
         private void HandleDropButton()
         {
-            // We can drop either an equipped or unequipped item, but exactly one
-            if (selectedEquippedItem == null && selectedEquippableItem == null)
-            {
-                Debug.LogWarning("No item selected to drop.");
-                return;
-            }
-
-            if (selectedEquippedItem.itemName.Contains("Cursed"))
-            {
-                Debug.LogWarning(
-                    "Cannot drop a cursed item. Please select an item that is not cursed."
-                );
-                FloatingTextManager.Instance.ShowFloatingText(
-                    "Cannot drop a cursed item.",
-                    PlayerStats.Instance.transform,
-                    Color.red
-                );
-                return;
-            }
-
-            // 1) If an equipped item is selected
+            // 1) If we have an equipped or unequipped *equipment* selected, drop it
             if (selectedEquippedItem != null)
             {
                 if (selectedEquippedItem.itemName.Contains("Cursed"))
                 {
-                    Debug.LogWarning(
-                        $"{selectedEquippedItem.itemName} is cursed and cannot be dropped."
-                    );
+                    Debug.LogWarning("Cannot drop a cursed equipment item.");
                     FloatingTextManager.Instance.ShowFloatingText(
                         "Cannot drop a cursed item.",
                         PlayerStats.Instance.transform,
@@ -554,16 +482,23 @@ namespace CoED
                     return;
                 }
 
+                // First unequip
                 EquipmentManager.Instance.UnequipItem(selectedEquippedItem);
-                DropItem(selectedEquippedItem);
+
+                // Then drop
+                DropEquipment(selectedEquippedItem);
+
+                // Done
+                DeselectCurrentlySelectedItems();
+                PlayerUI.Instance.UpdateUIPanels();
+                UpdateEquipmentUI();
+                return;
             }
-            else
+            else if (selectedEquippableItem != null)
             {
                 if (selectedEquippableItem.itemName.Contains("Cursed"))
                 {
-                    Debug.LogWarning(
-                        $"{selectedEquippableItem.itemName} is cursed and cannot be dropped."
-                    );
+                    Debug.LogWarning("Cannot drop a cursed equipment item.");
                     FloatingTextManager.Instance.ShowFloatingText(
                         "Cannot drop a cursed item.",
                         PlayerStats.Instance.transform,
@@ -571,21 +506,47 @@ namespace CoED
                     );
                     return;
                 }
+                // Remove from inventory
                 EquipmentInventory.Instance.RemoveEquipment(selectedEquippableItem);
-                DropItem(selectedEquippableItem);
+
+                // Drop
+                DropEquipment(selectedEquippableItem);
+
+                // Done
+                DeselectCurrentlySelectedItems();
+                PlayerUI.Instance.UpdateUIPanels();
+                UpdateEquipmentUI();
+                return;
             }
 
-            // Clear the selected item(s)
-            DeselectCurrentlySelectedItems();
-            PlayerUI.Instance.UpdateUIPanels();
-            // Refresh UI
-            UpdateEquipmentUI();
+            // 2) If no equipment selected, check if a consumable is selected in the Consumable UI
+            var selectedConsumable = ConsumableItemsUIManager.Instance.GetSelectedConsumable();
+            if (selectedConsumable != null)
+            {
+                // (Optional) check if cursed
+                if (selectedConsumable.name.Contains("Cursed"))
+                {
+                    Debug.LogWarning("Cannot drop a cursed consumable item.");
+                    FloatingTextManager.Instance.ShowFloatingText(
+                        "Cannot drop a cursed item.",
+                        PlayerStats.Instance.transform,
+                        Color.red
+                    );
+                    return;
+                }
+
+                // Use the Consumable UI Manager's drop logic
+                ConsumableItemsUIManager.Instance.DropConsumable(selectedConsumable);
+                return;
+            }
+
+            // 3) If neither an equipment item nor a consumable is selected
+            Debug.LogWarning("No item selected to drop.");
         }
 
-        private void DropItem(Equipment equipment)
+        private void DropEquipment(Equipment equipment)
         {
-            if (equipment == null)
-                return;
+            if (equipment == null) return;
 
             Vector3 dropPosition = PlayerStats.Instance.transform.position;
             GameObject dropObj = new GameObject($"DroppedItem_{equipment.itemName}");
@@ -593,11 +554,15 @@ namespace CoED
             dropObj.transform.localScale = new Vector3(2f, 2f, 0f);
 
             dropObj.layer = LayerMask.NameToLayer("items");
+            dropObj.tag = "Item";
+
             var sr = dropObj.AddComponent<SpriteRenderer>();
+            sr.sortingOrder = 3;
+            sr.sprite = equipment.baseSprite; // show the equipment's sprite
+
             var col = dropObj.AddComponent<CircleCollider2D>();
             col.isTrigger = true;
-            dropObj.tag = "Item";
-            sr.sortingOrder = 3;
+
             EquipmentPickup pickup = dropObj.AddComponent<EquipmentPickup>();
             pickup.SetEquipment(equipment);
 
@@ -639,7 +604,7 @@ namespace CoED
         {
             if (clear || equipment == null)
             {
-                itemNameText.text = "No Item";
+                equipmentNameText.text = "No Item";
                 attackModifierText.text = "0";
                 defenseModifierText.text = "0";
                 magicModifierText.text = "0";
@@ -660,7 +625,7 @@ namespace CoED
                 return;
             }
 
-            itemNameText.text = equipment.itemName;
+            equipmentNameText.text = equipment.itemName;
             attackModifierText.text = $"+ {equipment.attack}";
             defenseModifierText.text = $"+ {equipment.defense}";
             magicModifierText.text = $"+ {equipment.magic}";

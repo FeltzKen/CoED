@@ -10,6 +10,7 @@ namespace CoED
         public GameObject projectilePrefab;
         public Sprite icon;
         public int damage;
+        public float chanceToApplyStatusEffect;
         public float lifetime;
         public float collisionRadius;
         public float speed;

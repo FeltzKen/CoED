@@ -61,14 +61,16 @@ namespace CoED
             return true;
         }
 
-        public List<Equipment> GetAllEquipment(EquipmentSlot slot)
+        public List<Equipment> GetAllEquipment()
         {
-            if (equipmentPerSlot.ContainsKey(slot))
+            List<Equipment> allEquipment = new();
+            foreach (var slot in equipmentPerSlot)
             {
-                return equipmentPerSlot[slot];
+                allEquipment.AddRange(slot.Value);
             }
-            return null;
+            return allEquipment;
         }
+
 
         public void RemoveEquipment(Equipment equipment)
         {

@@ -23,7 +23,7 @@ namespace CoED
 
         [Tooltip("List of item prefabs to spawn in the dungeon.")]
         // 🔴 List of the prefabs in case you need them
-        public List<ConsumableItemWrapper> itemPrefabs;
+        public List<ConsumableItem> itemPrefabs;
         public MoneyPickup moneyPrefab;
         public int moneyCountPerFloor = 1;
         public int numberOfItemsPerFloor = 30;

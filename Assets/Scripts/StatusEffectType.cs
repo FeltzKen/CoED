@@ -14,17 +14,21 @@ namespace CoED
         Shield,
         PoisonAura,
         Invincible,
-        RandomBuff,
         RandomDebuff,
-        DrainHealth,
-        RandomUnequip,
-        Rebirth,
-        StatDecay,
+        StealHealth,
+        Bleed,
+        Curse,
+        Blindness,
+        Silence,
 
-        ReviveOnce, // Triggers once to revive the player
         DamageReflect, // Reflects a portion of incoming damage
 
         // Add more effects as needed
+    }
+
+    public enum ActiveWhileEquipped
+    {
+        ReviveOnce, // Triggers once to revive the player
     }
 
     public enum Resistances
@@ -35,6 +39,7 @@ namespace CoED
         Poison,
         Shadow,
         Holy,
+        Darkness,
     }
 
     public enum Weaknesses
@@ -45,6 +50,7 @@ namespace CoED
         Poison,
         Shadow,
         Holy,
+        Darkness,
     }
 
     public enum Immunities
@@ -55,5 +61,6 @@ namespace CoED
         Poison,
         Shadow,
         Holy,
+        Darkness,
     }
 }

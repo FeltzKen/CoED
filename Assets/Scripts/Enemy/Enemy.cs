@@ -65,23 +65,14 @@ namespace CoED
         {
             // 1) Randomly generate an item
             float roll = Random.value;
-            Equipment droppedEquipment;
+            Equipment droppedEquipment = null;
             if (roll < 0.33f)
-                droppedEquipment = EquipmentGenerator.GenerateRandomEquipment(
-                    equipmentTier,
-                    "weapon"
-                );
-            else if (roll < 0.66f)
-                droppedEquipment = EquipmentGenerator.GenerateRandomEquipment(
-                    equipmentTier,
-                    "armor"
-                );
-            else
-                droppedEquipment = EquipmentGenerator.GenerateRandomEquipment(
-                    equipmentTier,
-                    "accessory"
-                );
+                droppedEquipment = EquipmentGenerator.GenerateRandomEquipment(equipmentTier);
 
+            if (droppedEquipment == null)
+            {
+                return;
+            }
             // 2) Attempt to modify the item stats based on enemy level/scaleFactor
             ModifyBaseEquipment(droppedEquipment);
             // 3) Create a new GameObject in the scene for the drop

@@ -200,7 +200,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f96c446ab19ac8148a70147fb636cfa9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  equipmentTier: 2
   baseDropRate: 0.3
   dropRateDecreaseFactor: 0.5
   chanceToModifyStats: 0.3
@@ -218,6 +217,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   baseAttack: 7
+  elementalBase: 3
+  elementalDamage: 10
   baseDefense: 9
   baseHealth: 1000
   baseAttackRange: 3
@@ -231,7 +232,7 @@ MonoBehaviour:
   chanceToInflictStatusEffect: 0.1
   activeStatusEffects: 
   PatrolSpeed: 1
-  ChaseSpeed: 0
+  ChaseSpeed: 2
 --- !u!114 &2599319811974787689
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -274,7 +275,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c87369e3b1304e499f0f41793258f33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  availableProjectiles: []
+  availableProjectiles:
+  - {fileID: 11400000, guid: 12cacbc7aa334c2439c0fc323481857f, type: 2}
   CurrentState: 0
   playerTransform: {fileID: 0}
   engageDistance: 0

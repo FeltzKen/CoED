@@ -402,7 +402,10 @@ namespace CoED
                 DamageInfo damageInfo = new DamageInfo(damageDealt, successfulEffects);
 
                 // Apply to player
-                PlayerStats.Instance.TakeDamage(damageInfo);
+                PlayerStats.Instance.TakeDamage(
+                    damageInfo,
+                    GetComponent<EnemyStats>().chanceToInflictStatusEffect
+                );
 
                 Debug.Log($"{name} attacked the player with {damageDealt.Count} damage types.");
                 CanAttackPlayer = false;

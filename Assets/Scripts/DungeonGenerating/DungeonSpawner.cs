@@ -25,7 +25,7 @@ namespace CoED
         private LayerMask validSpawnLayer;
 
         [SerializeField]
-        private ConsumableItemWrapper spawningRoomPotion;
+        private ConsumableItem spawningRoomPotion;
         private static int occupantIDCounter = 0;
         private Dictionary<int, Pathfinder> floorPathfinders = new Dictionary<int, Pathfinder>();
         private Dictionary<int, List<GameObject>> enemiesByFloor;
@@ -262,8 +262,11 @@ namespace CoED
                 Debug.LogError("DungeonManager is not initialized. Cannot spawn items.");
                 return;
             }
-            Instantiate(spawningRoomPotion, new Vector3(-15f, -11f, 0), Quaternion.identity);
+            ConsumableItem item = spawningRoomPotion;
+            GameObject potion = new GameObject("SpawningRoomPotion");
+            potion.transform.position = new Vector3(-15f, -11f, 0);
             List<Equipment> equipmentDrops = new List<Equipment>();
+            List<ConsumableItem> consumableDrops = new List<ConsumableItem>();
             foreach (var kvp in DungeonManager.Instance.floors.OrderBy(e => e.Key))
             {
                 int floorNum = kvp.Key;
@@ -287,22 +290,15 @@ namespace CoED
                 }
 
                 // Spawn consumables
-                SpawnConsumables(
-                    floorNum,
-                    itemParent,
-                    dungeonSettings
-                        .itemPrefabs.Select(wrapper => wrapper.consumableData as Item)
-                        .ToList(),
-                    dungeonSettings.numberOfItemsPerFloor
-                );
+
+                //consumableDrops = GetItemDrops();
+                SpawnConsumables(floorNum, itemParent, dungeonSettings.numberOfItemsPerFloor);
 
                 // Spawm hidden consumables
+                //consumableDrops = GetItemDrops();
                 SpawnConsumables(
                     floorNum,
                     itemParent,
-                    dungeonSettings
-                        .itemPrefabs.Select(wrapper => wrapper.consumableData as Item)
-                        .ToList(),
                     dungeonSettings.numberOfHiddenConsumableItemsPerFloor,
                     hidden: true
                 );
@@ -335,22 +331,21 @@ namespace CoED
 
             for (int i = 0; i < dungeonSettings.numberOfItemsPerFloor; i++)
             {
-                float roll = Random.value;
-                if (roll < 0.33f)
-                    equipmentDrops.Add(
-                        EquipmentGenerator.GenerateRandomEquipment(equipmentTier, "weapon")
-                    );
-                else if (roll < 0.66f)
-                    equipmentDrops.Add(
-                        EquipmentGenerator.GenerateRandomEquipment(equipmentTier, "armor")
-                    );
-                else
-                    equipmentDrops.Add(
-                        EquipmentGenerator.GenerateRandomEquipment(equipmentTier, "accessory")
-                    );
+                equipmentDrops.Add(EquipmentGenerator.GenerateRandomEquipment(equipmentTier));
             }
 
             return equipmentDrops;
+        }
+
+        private List<ConsumableItem> GetItemDrops()
+        {
+            List<ConsumableItem> consumableDrops = new List<ConsumableItem>();
+            for (int i = 0; i < dungeonSettings.numberOfItemsPerFloor; i++)
+            {
+                ConsumableItem consumable = ConsumableItemGenerator.GenerateRandomConsumable();
+                consumableDrops.Add(consumable);
+            }
+            return consumableDrops;
         }
 
         private void ApplyEquipmentModifiers(Equipment equipment, int modifierScale)
@@ -476,7 +471,6 @@ namespace CoED
         private void SpawnConsumables(
             int floorNumber,
             Transform parent,
-            List<Item> consumableItems,
             int itemCount,
             bool hidden = false
         )
@@ -488,7 +482,10 @@ namespace CoED
             List<Vector2Int> tiles;
             if (hidden)
             {
-                tiles = floorData.WallTiles.ToList();
+                // Only choose wall tiles that are near floor tiles
+                tiles = floorData
+                    .WallTiles.Where(tile => IsNearFloorTile(tile, floorData, 1.4f))
+                    .ToList();
             }
             else
             {
@@ -503,6 +500,13 @@ namespace CoED
                 Vector2Int tilePos = tiles[Random.Range(0, tiles.Count)];
                 tiles.Remove(tilePos);
 
+                ConsumableItem coItem = ConsumableItemGenerator.GenerateRandomConsumable();
+                if (coItem == null || string.IsNullOrEmpty(coItem.name))
+                {
+                    Debug.LogWarning("Invalid consumable item generated, skipping spawn");
+                    continue;
+                }
+
                 Vector3 spawnPos =
                     (
                         hidden
@@ -514,48 +518,39 @@ namespace CoED
                             )
                     ) + new Vector3(0.5f, 0.5f, 0);
 
-                Consumable coItem =
-                    consumableItems[Random.Range(0, consumableItems.Count)] as Consumable;
-
-                if (coItem != null)
+                try
                 {
-                    GameObject itemObject = Instantiate(
-                        coItem.itemPrefab,
-                        spawnPos,
-                        Quaternion.identity,
-                        parent
-                    );
-                    var consumableWrapper = itemObject.GetComponent<ConsumableItemWrapper>();
-                    if (consumableWrapper != null)
+                    GameObject itemObject = new GameObject($"Consumable_{coItem.name}");
+                    itemObject.transform.SetParent(parent);
+
+                    itemObject.transform.position = spawnPos;
+                    itemObject.tag = "Item";
+
+                    var renderer = itemObject.AddComponent<SpriteRenderer>();
+                    if (coItem.icon == null)
                     {
-                        consumableWrapper.consumableData = ScriptableObject.Instantiate(coItem);
-                        ApplyConsumableModifiers(consumableWrapper, Random.Range(1.1f, 1.5f));
+                        Debug.LogError($"Consumable {coItem.name} has no icon");
+                        Destroy(itemObject);
+                        continue;
                     }
+                    renderer.sprite = coItem.icon;
+                    renderer.sortingOrder = 3;
+
+                    var collider = itemObject.AddComponent<CapsuleCollider2D>();
+                    collider.isTrigger = true;
+
+                    var pickup = itemObject.AddComponent<ConsumablePickup>();
+                    pickup.SetConsumable(coItem);
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"Failed to spawn consumable: {e.Message}");
+                    continue;
                 }
             }
         }
         #endregion
 
-        #region Utility Methods
-        private void ApplyConsumableModifiers(
-            ConsumableItemWrapper consumableWrapper,
-            float modifierScale
-        )
-        {
-            if (consumableWrapper.consumableData.attackBoost > 0)
-                consumableWrapper.consumableData.attackBoost += modifierScale;
-            if (consumableWrapper.consumableData.defenseBoost > 0)
-                consumableWrapper.consumableData.defenseBoost += modifierScale;
-            if (consumableWrapper.consumableData.speedBoost > 0)
-                consumableWrapper.consumableData.speedBoost += modifierScale;
-            if (consumableWrapper.consumableData.healthBoost > 0)
-                consumableWrapper.consumableData.healthBoost += modifierScale;
-            if (consumableWrapper.consumableData.magicBoost > 0)
-                consumableWrapper.consumableData.magicBoost += modifierScale;
-            if (consumableWrapper.consumableData.staminaBoost > 0)
-                consumableWrapper.consumableData.staminaBoost += modifierScale;
-        }
-        #endregion
 
         #region Money Spawning
         private void SpawnMoney(int floorNumber, Transform parent, int moneyCount)

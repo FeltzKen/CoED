@@ -20,19 +20,13 @@ MonoBehaviour:
   collisionRadius: 0
   speed: 0
   cooldown: 20
-  spellLevel: 1
   levelUpThreshold: 6
-  type: 2
+  damageType: 0
+  criticalChance: 0
   areaOfEffect: 0
+  type: 2
+  gainableStatusEffects: 
   spellEffectPrefab: {fileID: 4996319237994903159, guid: cdbf24be1af1533428f5fcac741c088e, type: 3}
-  hasPoisonEffect: 0
-  hasFreezeEffect: 0
-  hasBurnEffect: 0
-  hasSlowEffect: 0
-  hasStunEffect: 0
-  hasRegenEffect: 0
-  hasShieldEffect: 0
-  hasInvincibleEffect: 0
   selfTargeting: 1
   canChase: 0
   isInstant: 0

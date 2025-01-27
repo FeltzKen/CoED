@@ -15,7 +15,8 @@ MonoBehaviour:
   projectileName: Ice Arrow
   projectilePrefab: {fileID: 4695070808592603662, guid: 9f1cea4b7b9dee84d918d065e53207d8, type: 3}
   icon: {fileID: -1809994472, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
-  damage: 0
+  damage: 20
+  chanceToApplyStatusEffect: 0.1
   lifetime: 3
   collisionRadius: 0
   speed: 2.5

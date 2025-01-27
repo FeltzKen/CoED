@@ -243,10 +243,10 @@ namespace CoED
 
         public void ExecuteSpell(PlayerSpellWrapper spell, Vector3 targetPosition)
         {
-            switch (spell.BaseSpell.type)
+            switch (spell.Type)
             {
                 case SpellType.Projectile:
-                    if (spell.BaseSpell.spellName == "Lightning Bolt")
+                    if (spell.SpellName == "Lightning Bolt")
                     {
                         CastLightningBolt(spell, targetPosition);
                     }
@@ -276,7 +276,7 @@ namespace CoED
         private void CastLightningBolt(PlayerSpellWrapper spell, Vector3 targetPosition)
         {
             GameObject lightning = Instantiate(
-                spell.BaseSpell.spellEffectPrefab,
+                spell.SpellEffectPrefab,
                 spellSpawnPoint.position,
                 Quaternion.identity
             );
@@ -301,7 +301,7 @@ namespace CoED
         private void CastProjectileSpell(PlayerSpellWrapper spell, Vector3 targetPosition)
         {
             GameObject spellObject = Instantiate(
-                spell.BaseSpell.spellEffectPrefab,
+                spell.SpellEffectPrefab,
                 spellSpawnPoint.position,
                 Quaternion.identity
             );
@@ -328,9 +328,9 @@ namespace CoED
 
         private void CastAoESpell(PlayerSpellWrapper spell, Vector3 targetPosition)
         {
-            if (spell.BaseSpell.spellEffectPrefab != null)
+            if (spell.SpellEffectPrefab != null)
             {
-                Instantiate(spell.BaseSpell.spellEffectPrefab, targetPosition, Quaternion.identity);
+                Instantiate(spell.SpellEffectPrefab, targetPosition, Quaternion.identity);
             }
 
             Collider2D[] hitEnemies = Physics2D.OverlapCircleAll(
@@ -356,14 +356,10 @@ namespace CoED
 
         private void CastHealSpell(PlayerSpellWrapper spell)
         {
-            playerStats.Heal(spell.BaseSpell.damage);
-            if (spell.BaseSpell.spellEffectPrefab != null)
+            playerStats.Heal(spell.DamageTypes[DamageType.Physical]);
+            if (spell.SpellEffectPrefab != null)
             {
-                Instantiate(
-                    spell.BaseSpell.spellEffectPrefab,
-                    transform.position,
-                    Quaternion.identity
-                );
+                Instantiate(spell.SpellEffectPrefab, transform.position, Quaternion.identity);
             }
         }
 
