@@ -73,7 +73,7 @@ namespace CoED
             else
             {
                 // -- 2) Resistance Check for Enemies
-                EnemyStats enemyStats = entity.GetComponent<EnemyStats>();
+                _EnemyStats enemyStats = entity.GetComponent<_EnemyStats>();
                 if (
                     enemyStats != null
                     && effectToImmunityMap.TryGetValue(effectType, out Immunities neededImmunity)

@@ -11,42 +11,125 @@ namespace CoED
         public static TheElusiveShopGoblin Instance { get; private set; }
 
         [Header("Shop Settings")]
-        [SerializeField] private int maxItemsForSale = 10;
-        [SerializeField] private float curseRemovalPriceMultiplier = 2.5f;
-        [SerializeField] private float negativeEffectRemovalPrice = 50f;
+        [SerializeField]
+        private int maxItemsForSale = 10;
+
+        [SerializeField]
+        private float curseRemovalPriceMultiplier = 2.5f;
+
+        [SerializeField]
+        private float negativeEffectRemovalPrice = 50f;
 
         [Header("Fair Sell Multiplier")]
-        [SerializeField] private float sellPriceMultiplier = 0.75f;
+        [SerializeField]
+        private float sellPriceMultiplier = 0.75f;
 
         [Header("UI Panels")]
-        [SerializeField] private GameObject panel; // Main shop panel
-        [SerializeField] private Transform equipmentPanel;
-        [SerializeField] private Transform consumablesPanel;
+        [SerializeField]
+        private GameObject panel; // Main shop panel
+
+        [SerializeField]
+        private Transform equipmentPanel;
+
+        [SerializeField]
+        private Transform consumablesPanel;
 
         [Header("Shop Buttons")]
-        [SerializeField] private Button buyButton;
-        [SerializeField] private Button sellButton;
-        [SerializeField] private Button removeCurseButton;
-        [SerializeField] private Button removeEffectsButton;
-        [SerializeField] private Button exitButton;
+        [SerializeField]
+        private Button buyButton;
+
+        [SerializeField]
+        private Button sellButton;
+
+        [SerializeField]
+        private Button removeCurseButton;
+
+        [SerializeField]
+        private Button removeEffectsButton;
+
+        [SerializeField]
+        private Button exitButton;
 
         [Header("Tabs & Money")]
-        [SerializeField] private Button playerTabButton;
-        [SerializeField] private Button shopTabButton;
-        [SerializeField] private TextMeshProUGUI moneyValueText;
+        [SerializeField]
+        private Button playerTabButton;
+
+        [SerializeField]
+        private Button shopTabButton;
+
+        [SerializeField]
+        private TextMeshProUGUI moneyValueText;
 
         [Header("Remove-Curse/Effect Window")]
-        [SerializeField] private GameObject removeCurseOrEffectWindow;
-        [SerializeField] private Button closeRemoveWindowButton;
+        [SerializeField]
+        private GameObject removeCurseOrEffectWindow;
+
+        [SerializeField]
+        private Button closeRemoveWindowButton;
 
         [Header("Dialogue & Labels")]
-        [SerializeField] private TMP_Text goblinDialogueText;
-        [SerializeField] private TextMeshProUGUI priceDisplayText;
+        [SerializeField]
+        private TMP_Text goblinDialogueText;
+
+        [Header("Item Stats Panel")]
+        [SerializeField]
+        private TextMeshProUGUI itemAttackValue;
+
+        [SerializeField]
+        private TextMeshProUGUI itemDefenseValue;
+
+        [SerializeField]
+        private TextMeshProUGUI itemMagicValue;
+
+        [SerializeField]
+        private TextMeshProUGUI itemHealthValue;
+
+        [SerializeField]
+        private TextMeshProUGUI itemStaminaValue;
+
+        [SerializeField]
+        private TextMeshProUGUI itemIntelligenceValue;
+
+        [SerializeField]
+        private TextMeshProUGUI itemDexterityValue;
+
+        [SerializeField]
+        private TextMeshProUGUI itemSpeedValue;
+
+        [SerializeField]
+        private TextMeshProUGUI itemCritChanceValue;
+
+        [SerializeField]
+        private TextMeshProUGUI StatusEffectsValue;
+
+        [SerializeField]
+        private TextMeshProUGUI StatusEffectsValueParent;
+
+        [SerializeField]
+        private TextMeshProUGUI resistancesValue;
+
+        [SerializeField]
+        private TextMeshProUGUI resistancesValueParent;
+
+        [SerializeField]
+        private TextMeshProUGUI weaknessesValue;
+
+        [SerializeField]
+        private TextMeshProUGUI weaknessesValueParent;
+
+        [SerializeField]
+        private TextMeshProUGUI itemStatsText;
+
+        [SerializeField]
+        private TextMeshProUGUI priceDisplayText;
 
         // --- Shop Data ---
-        private Dictionary<int, Equipment> shopEquipmentInventory = new Dictionary<int, Equipment>();
-        private Dictionary<int, ConsumableItem> shopConsumableInventory = new Dictionary<int, ConsumableItem>();
-        private Dictionary<IShopItem, GameObject> shopItemButtons = new Dictionary<IShopItem, GameObject>();
+        private Dictionary<int, Equipment> shopEquipmentInventory =
+            new Dictionary<int, Equipment>();
+        private Dictionary<int, ConsumableItem> shopConsumableInventory =
+            new Dictionary<int, ConsumableItem>();
+        private Dictionary<IShopItem, GameObject> shopItemButtons =
+            new Dictionary<IShopItem, GameObject>();
 
         // --- Player References ---
         private EquipmentInventory playerEquipmentInventory;
@@ -57,10 +140,11 @@ namespace CoED
         private ConsumableItem selectedConsumable;
         private Equipment selectedEquipment;
         private GameObject selectedButton;
+        private Dictionary<IShopItem, int> itemPrices = new Dictionary<IShopItem, int>();
 
         // --- Floor & Tab State ---
         private int currentFloorNumber;
-        private bool isShopTabActive = true;  // true => Shop Tab, false => Player Tab
+        private bool isShopTabActive = true; // true => Shop Tab, false => Player Tab
 
         // *** For tracking whether we opened the remove window for "Curse" or "Effects"
         private bool removingCurse = false;
@@ -101,6 +185,11 @@ namespace CoED
         #region Shop Initialization
         public void InitializeShop(int floorNumber)
         {
+            if (!isNearPlayer)
+            {
+                goblinDialogueText.text = "You must be near the shop goblin to shop!";
+                return;
+            }
             currentFloorNumber = floorNumber;
             GenerateShopInventory();
             PopulateShopUIPanels();
@@ -109,6 +198,16 @@ namespace CoED
             UIPanelToggleManager.Instance.TogglePanel(panel);
 
             OnShopTabButtonClicked(); // default to the shop tab
+        }
+
+        private bool isNearPlayer
+        {
+            get
+            {
+                var player = PlayerStats.Instance.transform;
+                var goblin = GameObject.Find("ShopGoblin").transform;
+                return Vector2.Distance(player.position, goblin.position) < 2f;
+            }
         }
 
         private void GenerateShopInventory()
@@ -121,11 +220,14 @@ namespace CoED
             for (int i = 0; i < maxItemsForSale; i++)
             {
                 Equipment eq = EquipmentGenerator.GenerateShopEquipment(tier);
+                itemPrices[eq] = PricingLibrary.CalculateEquipmentPrice(eq);
+
                 shopEquipmentInventory.Add(i, eq);
             }
             for (int i = 0; i < maxItemsForSale; i++)
             {
                 ConsumableItem c = ConsumableItemGenerator.GenerateRandomConsumable();
+                itemPrices[c] = PricingLibrary.CalculateConsumablePrice(c);
                 shopConsumableInventory.Add(i, c);
             }
         }
@@ -165,7 +267,8 @@ namespace CoED
 
         private void ClearUIPanels()
         {
-            if (equipmentPanel == null || consumablesPanel == null) return;
+            if (equipmentPanel == null || consumablesPanel == null)
+                return;
 
             foreach (Transform child in equipmentPanel)
                 Destroy(child.gameObject);
@@ -184,7 +287,7 @@ namespace CoED
             buyButton.interactable = false;
             sellButton.interactable = false;
 
-            goblinDialogueText.text = "Which curse shall I lift from you?";
+            goblinDialogueText.text = "Which item shall I remove curse for from?";
             removeCurseOrEffectWindow.SetActive(true);
 
             // Show the list of cursed items
@@ -281,13 +384,14 @@ namespace CoED
         #region Creating Buttons for Items/Effects in the Remove Window
         private void CreateRemoveButtonForItem(Equipment item)
         {
-            if (item == null) return;
+            if (item == null)
+                return;
 
             GameObject buttonObj = new GameObject($"Remove_{item.itemName}");
             buttonObj.transform.SetParent(removeCurseOrEffectWindow.transform, false);
 
             RectTransform buttonRect = buttonObj.AddComponent<RectTransform>();
-            buttonRect.sizeDelta = new Vector2(150f, 30f);
+            buttonRect.sizeDelta = new Vector2(8f, 1f);
 
             // Add a background + text
             Image bg = buttonObj.AddComponent<Image>();
@@ -297,11 +401,11 @@ namespace CoED
             var textGO = new GameObject("Text");
             textGO.transform.SetParent(buttonObj.transform, false);
             var textRect = textGO.AddComponent<RectTransform>();
-            textRect.sizeDelta = new Vector2(150f, 30f);
+            textRect.sizeDelta = new Vector2(8f, 1f);
             var tmpText = textGO.AddComponent<TextMeshProUGUI>();
+            tmpText.fontSize = .4f;
             tmpText.text = $"Remove curse from: {item.itemName}";
             tmpText.alignment = TMPro.TextAlignmentOptions.Center;
-            tmpText.enableAutoSizing = true;
 
             // Add a Button
             Button btn = buttonObj.AddComponent<Button>();
@@ -314,7 +418,7 @@ namespace CoED
             buttonObj.transform.SetParent(removeCurseOrEffectWindow.transform, false);
 
             RectTransform buttonRect = buttonObj.AddComponent<RectTransform>();
-            buttonRect.sizeDelta = new Vector2(150f, 30f);
+            buttonRect.sizeDelta = new Vector2(8f, 1f);
 
             // Add a background + text
             Image bg = buttonObj.AddComponent<Image>();
@@ -324,11 +428,11 @@ namespace CoED
             var textGO = new GameObject("Text");
             textGO.transform.SetParent(buttonObj.transform, false);
             var textRect = textGO.AddComponent<RectTransform>();
-            textRect.sizeDelta = new Vector2(150f, 30f);
+            textRect.sizeDelta = new Vector2(8f, 1f);
             var tmpText = textGO.AddComponent<TextMeshProUGUI>();
+            tmpText.fontSize = .4f;
             tmpText.text = $"Remove: {effect}";
             tmpText.alignment = TMPro.TextAlignmentOptions.Center;
-            tmpText.enableAutoSizing = true;
 
             // Add a Button
             Button btn = buttonObj.AddComponent<Button>();
@@ -366,7 +470,7 @@ namespace CoED
         private void OnRemoveEffectClicked(StatusEffectType effect)
         {
             // Check if player can afford
-            int cost = Mathf.RoundToInt(negativeEffectRemovalPrice); 
+            int cost = Mathf.RoundToInt(negativeEffectRemovalPrice);
             if (playerStats.GetCurrency() < cost)
             {
                 goblinDialogueText.text = "You can't afford to remove that effect!";
@@ -381,7 +485,7 @@ namespace CoED
             playerStats.activeStatusEffects.Remove(effect);
 
             goblinDialogueText.text = $"Effect {effect} removed!";
-            
+
             // Refresh the list so effect disappears
             if (removingEffects)
             {
@@ -419,7 +523,8 @@ namespace CoED
         #region UI Button Creation for Shop/Player Items
         private void AddItemToPanel(IShopItem item)
         {
-            if (item == null) return;
+            if (item == null)
+                return;
 
             Transform parentPanel = (item is Equipment) ? equipmentPanel : consumablesPanel;
 
@@ -458,6 +563,47 @@ namespace CoED
 
             shopItemButtons[item] = buttonObj;
         }
+
+        private void BuildItemStats(ConsumableItem item)
+        {
+            itemAttackValue.text = item.attackBoost.ToString();
+            itemDefenseValue.text = item.defenseBoost.ToString();
+            itemMagicValue.text = item.magicBoost.ToString();
+            itemHealthValue.text = item.healthBoost.ToString();
+            itemStaminaValue.text = item.staminaBoost.ToString();
+            itemIntelligenceValue.text = item.intelligenceBoost.ToString();
+            itemDexterityValue.text = item.dexterityBoost.ToString();
+            itemSpeedValue.text = item.speedBoost.ToString();
+            itemCritChanceValue.text = item.critChanceBoost.ToString();
+
+            resistancesValueParent.text = "Removed Effects";
+            resistancesValue.text = string.Join(", ", item.removedEffects);
+            weaknessesValueParent.text = "Added Effects";
+            weaknessesValue.text = string.Join(", ", item.addedEffects);
+            StatusEffectsValueParent.text = "Duration";
+            StatusEffectsValue.text = item.hasDuration ? item.duration.ToString() : "";
+        }
+
+        private void BuildEquipmentStats(Equipment eq)
+        {
+            itemAttackValue.text = eq.attack.ToString();
+            itemDefenseValue.text = eq.defense.ToString();
+            itemMagicValue.text = eq.magic.ToString();
+            itemHealthValue.text = eq.health.ToString();
+            itemStaminaValue.text = eq.stamina.ToString();
+            itemIntelligenceValue.text = eq.intelligence.ToString();
+            itemDexterityValue.text = eq.dexterity.ToString();
+            itemSpeedValue.text = eq.speed.ToString();
+            itemCritChanceValue.text = eq.critChance.ToString();
+
+            StatusEffectsValueParent.text = "Inflicted Effects";
+            resistancesValueParent.text = "Resistances";
+            weaknessesValueParent.text = "Weaknesses";
+            StatusEffectsValue.text = string.Join(", ", eq.inflictedStatusEffects);
+            resistancesValue.text = string.Join(", ", eq.resistanceEffects);
+            weaknessesValue.text = string.Join(", ", eq.weaknessEffects);
+        }
+
         #endregion
 
         #region Selection & Highlight
@@ -470,17 +616,19 @@ namespace CoED
             {
                 selectedEquipment = eq;
                 selectedConsumable = null;
+                priceDisplayText.text = $"Price: {itemPrices[eq]} gold";
+                BuildEquipmentStats(eq);
             }
             else if (item is ConsumableItem c)
             {
                 selectedConsumable = c;
                 selectedEquipment = null;
+                priceDisplayText.text = $"Price: {itemPrices[c]} gold";
+                BuildItemStats(c);
             }
+            goblinDialogueText.text = $"Ah, a fine choice!\n {item.GetName()}";
 
             ShowButtonHighlight(buttonObj, true);
-
-            priceDisplayText.text = $"Price: {item.GetPrice()} gold";
-            goblinDialogueText.text = $"Ah, a fine choice! {item.GetDescription()}";
         }
 
         private void DeselectCurrentlySelectedItem()
@@ -492,100 +640,118 @@ namespace CoED
             }
             selectedEquipment = null;
             selectedConsumable = null;
+
+            // Clear the stats panel
+            if (itemStatsText != null)
+                itemStatsText.text = "";
         }
 
         private void ShowButtonHighlight(GameObject buttonObj, bool show)
         {
-            if (!buttonObj) return;
+            if (!buttonObj)
+                return;
 
             var border = buttonObj.transform.Find("Border");
-            if (border != null) border.gameObject.SetActive(show);
+            if (border != null)
+                border.gameObject.SetActive(show);
 
             var mask = buttonObj.transform.Find("Mask");
-            if (mask != null) mask.gameObject.SetActive(show);
+            if (mask != null)
+                mask.gameObject.SetActive(show);
         }
         #endregion
 
         #region Buy / Sell
-        private void HandleBuy()
+        public void HandleBuy()
         {
-            IShopItem selectedItem =
-                (selectedEquipment != null) ? (IShopItem)selectedEquipment :
-                (selectedConsumable != null) ? (IShopItem)selectedConsumable : null;
-
+            IShopItem selectedItem = selectedEquipment ?? (IShopItem)selectedConsumable;
             if (selectedItem == null)
             {
                 goblinDialogueText.text = "Please select an item first!";
                 return;
             }
 
-            int price = selectedItem.GetPrice();
+            int price =
+                (selectedItem is Equipment eq)
+                    ? PricingLibrary.CalculateEquipmentPrice(eq)
+                    : PricingLibrary.CalculateConsumablePrice((ConsumableItem)selectedItem);
+
             if (playerStats.GetCurrency() < price)
             {
                 goblinDialogueText.text = "You don't have enough gold for that!";
                 return;
             }
 
-            playerStats.SpendCurrency(price);
-            UpdateMoneyUI();
+            // Remove from shop inventory
+            if (selectedItem is Equipment)
+                shopEquipmentInventory = shopEquipmentInventory
+                    .Where(pair => pair.Value != selectedItem)
+                    .ToDictionary(pair => pair.Key, pair => pair.Value);
+            else if (selectedItem is ConsumableItem)
+                shopConsumableInventory = shopConsumableInventory
+                    .Where(pair => pair.Value != selectedItem)
+                    .ToDictionary(pair => pair.Key, pair => pair.Value);
 
-            if (selectedItem is Equipment eqItem)
+            // Remove UI button
+            if (shopItemButtons.TryGetValue(selectedItem, out GameObject button))
             {
-                playerEquipmentInventory.AddEquipment(eqItem);
-                int foundKey = shopEquipmentInventory.FirstOrDefault(kv => kv.Value == eqItem).Key;
-                shopEquipmentInventory.Remove(foundKey);
-            }
-            else if (selectedItem is ConsumableItem cItem)
-            {
-                playerConsumableInventory.AddItem(cItem);
-                int foundKey = shopConsumableInventory.FirstOrDefault(kv => kv.Value == cItem).Key;
-                shopConsumableInventory.Remove(foundKey);
-            }
-
-            if (shopItemButtons.ContainsKey(selectedItem))
-            {
-                Destroy(shopItemButtons[selectedItem]);
+                Destroy(button);
                 shopItemButtons.Remove(selectedItem);
             }
 
+            // Add to player inventory
+            if (selectedItem is Equipment eqItem)
+                playerEquipmentInventory.AddEquipment(eqItem);
+            else if (selectedItem is ConsumableItem conItem)
+                playerConsumableInventory.AddItem(conItem);
+
+            playerStats.SpendCurrency(price);
+            UpdateMoneyUI();
             goblinDialogueText.text = "Pleasure doing business with you!";
-            DeselectCurrentlySelectedItem();
+
+            // Refresh UI
+            PopulateShopUIPanels();
         }
 
-        private void HandleSell()
+        public void HandleSell()
         {
-            IShopItem selectedItem =
-                (selectedEquipment != null) ? (IShopItem)selectedEquipment :
-                (selectedConsumable != null) ? (IShopItem)selectedConsumable : null;
-
+            IShopItem selectedItem = selectedEquipment ?? (IShopItem)selectedConsumable;
             if (selectedItem == null)
             {
                 goblinDialogueText.text = "Select something from your inventory to sell!";
                 return;
             }
 
-            int value = Mathf.RoundToInt(selectedItem.GetPrice() * sellPriceMultiplier);
-            playerStats.GainCurrency(value);
-            UpdateMoneyUI();
+            int value = Mathf.RoundToInt(
+                (selectedItem is Equipment eq)
+                    ? PricingLibrary.CalculateEquipmentPrice(eq) * sellPriceMultiplier
+                    : PricingLibrary.CalculateConsumablePrice((ConsumableItem)selectedItem)
+                        * sellPriceMultiplier
+            );
 
+            // Remove from player inventory
             if (selectedItem is Equipment eqItem)
             {
                 playerEquipmentInventory.RemoveEquipment(eqItem);
+                shopEquipmentInventory.Add(shopEquipmentInventory.Count, eqItem);
             }
-            else if (selectedItem is ConsumableItem cItem)
+            else if (selectedItem is ConsumableItem conItem)
             {
-                playerConsumableInventory.RemoveItem(cItem);
+                playerConsumableInventory.RemoveItem(conItem);
+                shopConsumableInventory.Add(shopConsumableInventory.Count, conItem);
             }
 
-            if (shopItemButtons.ContainsKey(selectedItem))
-            {
-                Destroy(shopItemButtons[selectedItem]);
-                shopItemButtons.Remove(selectedItem);
-            }
+            // Add item to shop UI
+            AddItemToPanel(selectedItem);
 
+            playerStats.GainCurrency(value);
+            UpdateMoneyUI();
             goblinDialogueText.text = $"Sold for {value} gold!";
-            DeselectCurrentlySelectedItem();
+
+            // Refresh UI
+            PopulatePlayerPanels();
         }
+
         #endregion
 
         #region Money UI
@@ -607,6 +773,8 @@ namespace CoED
 
         public void TeleportToNextFloor()
         {
+            var goblin = GameObject.Find("ShopGoblin").transform;
+
             if (currentFloorNumber >= 7)
             {
                 goblinDialogueText.text = "This is the final floor, my friend.";
@@ -620,16 +788,59 @@ namespace CoED
                 Debug.LogError($"Floor {currentFloorNumber} not found!");
                 return;
             }
-            var nextPositionList = nextFloor.GetRandomFloorTiles(1);
-            var nextPosition = nextPositionList[0];
-            transform.position = new Vector3(nextPosition.x, nextPosition.y, 0f);
 
+            // Get tile position for goblin where no walls are present
+            // for a 1 square radius
+            var nextPositionList = nextFloor
+                .GetRandomFloorTiles(currentFloorNumber)
+                .Where(tile => !IsNearWall(tile, nextFloor, 1))
+                .ToList();
+
+            var nextPosition = nextPositionList[0];
+            goblin.position = new Vector3(nextPosition.x, nextPosition.y, 0f);
+            goblin.parent = DungeonManager.Instance.GetFloorTransform(currentFloorNumber).transform;
+
+            // Reserve the tiles occupied by the goblin in the TileOccupationManager
+            TileOccupancyManager.Instance.TryReserveTile(
+                new Vector2Int((int)goblin.position.x, (int)goblin.position.y),
+                -1002 // Goblin ID
+            );
+            TileOccupancyManager.Instance.TryReserveTile(
+                new Vector2Int((int)goblin.position.x + 1, (int)goblin.position.y),
+                -1002 // Goblin ID
+            );
+            TileOccupancyManager.Instance.TryReserveTile(
+                new Vector2Int((int)goblin.position.x, (int)goblin.position.y + 1),
+                -1002 // Goblin ID
+            );
+            TileOccupancyManager.Instance.TryReserveTile(
+                new Vector2Int((int)goblin.position.x + 1, (int)goblin.position.y + 1),
+                -1002 // Goblin ID
+            );
             goblinDialogueText.text = "I've moved to the next floor. Come find me!";
-            gameObject.SetActive(false);
+            FloatingTextManager.Instance.ShowFloatingText(
+                "Shop Goblin has moved to the next floor!",
+                PlayerStats.Instance.transform,
+                Color.yellow
+            );
         }
         #endregion
+        private bool IsNearWall(Vector2Int tile, FloorData floorData, int radius)
+        {
+            // A simple approach: check each wall tile, and if
+            // distance <= radius, return true
+            foreach (var wallTile in floorData.WallTiles)
+            {
+                if (Vector2Int.Distance(tile, wallTile) <= radius)
+                {
+                    return true; // It's near a wall
+                }
+            }
+            return false; // No walls within radius => safe
+        }
     }
 }
+
 public interface IShopItem
 {
     string GetName();

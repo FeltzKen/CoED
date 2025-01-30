@@ -40,6 +40,7 @@ namespace CoED
         public List<StatusEffectType> inflictedStatusEffects = new List<StatusEffectType>();
         public List<Resistances> resistanceEffects = new List<Resistances>();
         public List<Weaknesses> weaknessEffects = new List<Weaknesses>();
+        public List<Immunities> immunityEffects = new List<Immunities>();
         public bool isOneTimeEffect;
         public bool effectUsed;
         public bool hasBeenRevealed;
@@ -96,7 +97,7 @@ namespace CoED
             this.effectUsed = effectUsed;
         }
 
-        public void RevealHiddenAttributes()
+        public void RevealHiddenAttributes(bool shopRequest = false)
         {
             if (hasBeenRevealed || prePrefix == null)
                 return;
@@ -123,11 +124,12 @@ namespace CoED
                     activeStatusEffects.Add(effect);
                 }
             }
-            FloatingTextManager.Instance.ShowFloatingText(
-                $"The equipped item is {hiddenNameData}!",
-                PlayerStats.Instance.transform,
-                hiddenNameData == "Cursed" ? Color.red : Color.green
-            );
+            if (!shopRequest)
+                FloatingTextManager.Instance.ShowFloatingText(
+                    $"The equipped item is {hiddenNameData}!",
+                    PlayerStats.Instance.transform,
+                    hiddenNameData == "Cursed" ? Color.red : Color.green
+                );
             hasBeenRevealed = true;
         }
 

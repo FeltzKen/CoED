@@ -54,6 +54,7 @@ namespace CoED
                 baseConsumable.name,
                 baseConsumable.description,
                 baseConsumable.icon,
+                baseConsumable.duration,
                 baseConsumable.attackBoost,
                 baseConsumable.defenseBoost,
                 baseConsumable.speedBoost,
@@ -66,7 +67,8 @@ namespace CoED
                 baseConsumable.addedEffects,
                 baseConsumable.removedEffects,
                 baseConsumable.canHaveAffixes,
-                baseConsumable.amountPerInterval
+                baseConsumable.amountPerInterval,
+                baseConsumable.price
             );
         }
 

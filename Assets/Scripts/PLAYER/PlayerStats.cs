@@ -448,13 +448,6 @@ namespace CoED
                 UpdateStaminaUI();
 
                 CalculateStats(refillResources: true);
-
-                // Possibly spawn a boss every 2 levels
-                if (level % 2 == 0)
-                {
-                    var dungeonSpawner = FindAnyObjectByType<DungeonSpawner>();
-                    dungeonSpawner?.SpawnBossOnFloor(currentFloor);
-                }
             }
 
             Debug.Log(

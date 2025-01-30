@@ -14,14 +14,18 @@ namespace CoED
                 name = "Health Potion",
                 description = "Restores health",
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/HealthPotion"),
+                hasDuration = false,
                 healthBoost = 50,
+                price = 20,
             },
             new ConsumableItem
             {
                 name = "Mana Potion",
                 description = "Restores mana",
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/ManaPotion"),
+                hasDuration = false,
                 magicBoost = 50,
+                price = 20,
             },
             new ConsumableItem
             {
@@ -29,6 +33,7 @@ namespace CoED
                 description = "Restores stamina",
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/StaminaPotion"),
                 staminaBoost = 50,
+                price = 30,
             },
             new ConsumableItem
             {
@@ -36,8 +41,8 @@ namespace CoED
                 description = "Increases strength temporarily",
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/StrengthPotion"),
                 attackBoost = 20,
-                hasDuration = true,
                 duration = 20,
+                price = 30,
             },
             new ConsumableItem
             {
@@ -45,8 +50,8 @@ namespace CoED
                 description = "Increases dexterity temporarily",
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/DexterityPotion"),
                 dexterityBoost = 20,
-                hasDuration = true,
                 duration = 20,
+                price = 30,
             },
             new ConsumableItem
             {
@@ -54,6 +59,8 @@ namespace CoED
                 description = "Increases intelligence temporarily",
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/IntelligencePotion"),
                 intelligenceBoost = 20,
+                duration = 20,
+                price = 30,
             },
             new ConsumableItem
             {
@@ -61,17 +68,17 @@ namespace CoED
                 description = "Increases speed temporarily",
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/SpeedPotion"),
                 speedBoost = 20,
-                hasDuration = true,
                 duration = 20,
+                price = 30,
             },
             new ConsumableItem
             {
                 name = "Critical Hit Potion",
                 description = "Increases critical hit chance temporarily",
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/CriticalHitPotion"),
-                critChanceBoost = 20,
-                hasDuration = true,
+                critChanceBoost = 0.2f,
                 duration = 60,
+                price = 50,
             },
             new ConsumableItem
             {
@@ -79,8 +86,8 @@ namespace CoED
                 description = "Increases defense temporarily",
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/DefensePotion"),
                 defenseBoost = 20,
-                hasDuration = true,
                 duration = 90,
+                price = 40,
             },
             new ConsumableItem
             {
@@ -89,8 +96,8 @@ namespace CoED
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/HealthRegenerationPotion"),
                 addedEffects = new List<StatusEffectType> { StatusEffectType.Regen },
                 amountPerInterval = 20,
-                hasDuration = true,
                 duration = 120,
+                price = 60,
             },
             new ConsumableItem
             {
@@ -99,6 +106,8 @@ namespace CoED
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/RemovePoison"),
                 removedEffects = new List<StatusEffectType> { StatusEffectType.Poison },
                 canHaveAffixes = false,
+                hasDuration = false,
+                price = 30,
             },
             new ConsumableItem
             {
@@ -107,6 +116,8 @@ namespace CoED
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/RemoveCurse"),
                 removedEffects = new List<StatusEffectType> { StatusEffectType.Curse },
                 canHaveAffixes = false,
+                hasDuration = false,
+                price = 30,
             },
             new ConsumableItem
             {
@@ -115,6 +126,8 @@ namespace CoED
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/RemoveSilence"),
                 removedEffects = new List<StatusEffectType> { StatusEffectType.Silence },
                 canHaveAffixes = false,
+                hasDuration = false,
+                price = 30,
             },
             new ConsumableItem
             {
@@ -123,14 +136,8 @@ namespace CoED
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/RemoveSlow"),
                 removedEffects = new List<StatusEffectType> { StatusEffectType.Slow },
                 canHaveAffixes = false,
-            },
-            new ConsumableItem
-            {
-                name = "Remove Freeze Potion",
-                description = "Removes freeze status effect",
-                icon = Resources.Load<Sprite>("Sprites/Items/Consumables/RemoveFreeze"),
-                removedEffects = new List<StatusEffectType> { StatusEffectType.Freeze },
-                canHaveAffixes = false,
+                hasDuration = false,
+                price = 30,
             },
             new ConsumableItem
             {
@@ -139,6 +146,8 @@ namespace CoED
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/RemoveBurn"),
                 removedEffects = new List<StatusEffectType> { StatusEffectType.Burn },
                 canHaveAffixes = false,
+                hasDuration = false,
+                price = 30,
             },
             new ConsumableItem
             {
@@ -147,6 +156,8 @@ namespace CoED
                 icon = Resources.Load<Sprite>("Sprites/Items/Consumables/HealBleedingWounds"),
                 removedEffects = new List<StatusEffectType> { StatusEffectType.Bleed },
                 canHaveAffixes = false,
+                hasDuration = false,
+                price = 50,
             },
         };
     }

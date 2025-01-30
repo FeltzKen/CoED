@@ -12,7 +12,7 @@ namespace CoED
 
         private float lastAttackTime = 0f;
         private PlayerStats playerStats;
-        private Enemy enemy;
+        private _Enemy enemy;
 
         private void Awake()
         {
@@ -40,7 +40,7 @@ namespace CoED
                 );
                 enabled = false;
             }
-            enemy = FindAnyObjectByType<Enemy>();
+            enemy = FindAnyObjectByType<_Enemy>();
         }
 
         private void Update()
@@ -71,7 +71,7 @@ namespace CoED
 
             if (hitCollider != null && hitCollider.CompareTag("Enemy"))
             {
-                EnemyStats enemyStats = hitCollider.GetComponent<EnemyStats>();
+                _EnemyStats enemyStats = hitCollider.GetComponent<_EnemyStats>();
                 if (enemyStats != null)
                 {
                     // ✅ Combine physical and elemental damage

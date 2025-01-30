@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace CoED
 {
@@ -12,6 +11,7 @@ namespace CoED
                 prefixName = "Lesser",
                 imageSize = 0.5f,
                 modifierAmount = 0.5f,
+                priceMultiplier = 0.7f,
             },
             new ConsumablePrefixData { prefixName = "Moderate", imageSize = 1.0f },
             new ConsumablePrefixData
@@ -20,6 +20,8 @@ namespace CoED
                 imageSize = 1.5f,
                 modifierAmount = 2f,
                 glow = true,
+                duration = 1.3f,
+                priceMultiplier = 1.5f,
             },
         };
 
@@ -29,12 +31,38 @@ namespace CoED
             {
                 suffixName = "of Healing",
                 addedEffects = new List<StatusEffectType> { StatusEffectType.Regen },
+                priceIncrease = 20,
             },
-            new ConsumableSuffixData { suffixName = "of Power", attackBoost = 7 },
-            new ConsumableSuffixData { suffixName = "of Speed", speedBoost = 7 },
-            new ConsumableSuffixData { suffixName = "of the Bear", defenseBoost = 7 },
-            new ConsumableSuffixData { suffixName = "of the Owl", intelligenceBoost = 7 },
-            new ConsumableSuffixData { suffixName = "of the Fox", dexterityBoost = 7 },
+            new ConsumableSuffixData
+            {
+                suffixName = "of Power",
+                attackBoost = 7,
+                priceIncrease = 20,
+            },
+            new ConsumableSuffixData
+            {
+                suffixName = "of Speed",
+                speedBoost = 7,
+                priceIncrease = 20,
+            },
+            new ConsumableSuffixData
+            {
+                suffixName = "of the Bear",
+                defenseBoost = 7,
+                priceIncrease = 20,
+            },
+            new ConsumableSuffixData
+            {
+                suffixName = "of the Owl",
+                intelligenceBoost = 7,
+                priceIncrease = 20,
+            },
+            new ConsumableSuffixData
+            {
+                suffixName = "of the Fox",
+                dexterityBoost = 7,
+                priceIncrease = 20,
+            },
         };
     }
 }

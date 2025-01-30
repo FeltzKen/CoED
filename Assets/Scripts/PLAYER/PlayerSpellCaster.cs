@@ -131,7 +131,7 @@ namespace CoED
         {
             if (currentTarget != null)
             {
-                Enemy enemyComponent = currentTarget.GetComponent<Enemy>();
+                _Enemy enemyComponent = currentTarget.GetComponent<_Enemy>();
                 if (enemyComponent != null)
                 {
                     enemyComponent.SetHighlighted(false);
@@ -139,7 +139,7 @@ namespace CoED
             }
 
             currentTarget = target;
-            Enemy newTargetComponent = currentTarget.GetComponent<Enemy>();
+            _Enemy newTargetComponent = currentTarget.GetComponent<_Enemy>();
             if (newTargetComponent != null)
             {
                 newTargetComponent.SetHighlighted(true);
@@ -341,7 +341,7 @@ namespace CoED
 
             foreach (var enemyCollider in hitEnemies)
             {
-                EnemyStats enemyStats = enemyCollider.GetComponent<EnemyStats>();
+                _EnemyStats enemyStats = enemyCollider.GetComponent<_EnemyStats>();
                 if (enemyStats != null)
                 {
                     // ✅ Package dynamic damage and effects

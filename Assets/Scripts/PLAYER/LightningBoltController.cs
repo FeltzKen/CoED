@@ -137,7 +137,7 @@ namespace CoED
 
             if (hit.CompareTag("Enemy"))
             {
-                EnemyStats enemy = hit.GetComponent<EnemyStats>();
+                _EnemyStats enemy = hit.GetComponent<_EnemyStats>();
                 if (enemy != null)
                 {
                     enemy.TakeDamage(damageInfo);

@@ -241,7 +241,7 @@ MonoBehaviour:
   obstacleLayer:
     serializedVersion: 2
     m_Bits: 16768
-  staminaBar: {fileID: 8034618581357456614, guid: 4e03e51d2d01fab4aa3632a729ecb472, type: 3}
+  staminaBar: {fileID: 0}
   enemyLayer:
     serializedVersion: 2
     m_Bits: 256
@@ -278,11 +278,11 @@ MonoBehaviour:
   expToNextLevel: 100
   maxLevel: 50
   restInterval: 3
-  baseHealth: 1000
+  baseHealth: 500
   baseStamina: 100
   baseMagic: 50
-  baseAttack: 40
-  AttackRange: 3
+  baseAttack: 10
+  AttackRange: 1.4
   baseDefense: 5
   baseProjectileRange: 5
   targetingRange: 7
@@ -292,9 +292,10 @@ MonoBehaviour:
   baseSpeed: 5
   baseFireRate: 1
   baseProjectileLifespan: 2
-  currency: 0
+  currency: 200
   currentFloor: 0
   activeStatusEffects: 
+  EquippedmentEffects: 
   inflictableStatusEffects: 
   activeWeaknesses: 
   activeResistances: 

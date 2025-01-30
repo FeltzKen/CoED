@@ -27,7 +27,7 @@ namespace CoED
 
         [SerializeField]
         private LayerMask enemyLayer;
-        private Enemy enemy;
+        private _Enemy enemy;
         private PlayerStats playerStats;
         public Vector2Int currentTilePosition;
         private Rigidbody2D rb;
@@ -46,7 +46,7 @@ namespace CoED
                 enabled = false;
                 return;
             }
-            enemy = FindAnyObjectByType<Enemy>();
+            enemy = FindAnyObjectByType<_Enemy>();
         }
 
         private void Start()

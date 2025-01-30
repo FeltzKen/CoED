@@ -5,14 +5,15 @@ using Random = UnityEngine.Random;
 
 namespace CoED
 {
-    public class Enemy : MonoBehaviour
+    [RequireComponent(typeof(_EnemyStats))]
+    [RequireComponent(typeof(SpriteRenderer))]
+    public class _Enemy : MonoBehaviour
     {
-        private EnemyStats enemyStats;
+        private _EnemyStats enemyStats;
         private SpriteRenderer spriteRenderer;
+
         private Color normalColor = Color.white;
         private Color highlightedColor = Color.red;
-
-        private int equipmentTier; // Default tier for equipment drops
 
         [Header("Loot Settings")]
         [SerializeField]
@@ -34,72 +35,77 @@ namespace CoED
 
         private void Start()
         {
-            enemyStats = GetComponent<EnemyStats>();
             spriteRenderer = GetComponent<SpriteRenderer>();
+            enemyStats = GetComponent<_EnemyStats>();
 
             if (enemyStats == null)
             {
-                Debug.LogError("Enemy: Missing EnemyStats component.");
+                Debug.LogError("Enemy: Missing _EnemyStats component.");
             }
-            equipmentTier = Mathf.Clamp(Mathf.FloorToInt(enemyStats.spawnFloor / 3) + 1, 1, 3);
         }
 
+        /// <summary>
+        /// Public method to drop loot from this enemy if it dies.
+        /// (Same signature as old version.)
+        /// </summary>
         public void DropLoot()
         {
             float currentDropRate = baseDropRate;
-            int maxDrops = 3; // Maximum number of items to drop
+            int maxDrops = 3;
             int itemsDropped = 0;
 
             while (itemsDropped < maxDrops && Random.value <= currentDropRate)
             {
-                DropEquipment(); // Attempt to drop equipment
-                currentDropRate *= dropRateDecreaseFactor; // Reduce the drop rate
+                DropEquipment();
+                currentDropRate *= dropRateDecreaseFactor;
                 itemsDropped++;
 
                 if (currentDropRate <= 0.01f)
-                    break; // Exit if the drop chance becomes negligible
+                    break;
             }
         }
 
+        /// <summary>
+        /// Attempts to generate and drop equipment from EquipmentGenerator (if still used).
+        /// </summary>
         private void DropEquipment()
         {
-            // 1) Randomly generate an item
+            // e.g. 33% chance to actually drop an item
             float roll = Random.value;
             Equipment droppedEquipment = null;
             if (roll < 0.33f)
-                droppedEquipment = EquipmentGenerator.GenerateRandomEquipment(equipmentTier);
+            {
+                int eqTier = enemyStats.EquipmentTier;
+                droppedEquipment = EquipmentGenerator.GenerateRandomEquipment(eqTier);
+            }
 
             if (droppedEquipment == null)
             {
                 return;
             }
-            // 2) Attempt to modify the item stats based on enemy level/scaleFactor
+
             ModifyBaseEquipment(droppedEquipment);
-            // 3) Create a new GameObject in the scene for the drop
+
+            // Create a new drop object in the scene
             GameObject dropObject = new GameObject($"Dropped_{droppedEquipment.itemName}");
             dropObject.transform.position = transform.position;
             dropObject.tag = "Item";
             dropObject.transform.localScale = new Vector3(2f, 2f, 0f);
 
-            // 4) Add components: a SpriteRenderer to see it, plus EquipmentPickup to store the data
             SpriteRenderer rend = dropObject.AddComponent<SpriteRenderer>();
             rend.sprite = droppedEquipment.baseSprite;
             rend.sortingLayerName = "items";
             rend.sortingOrder = 3;
 
-            // Ensure correct Z in 2D
             dropObject.transform.position = new Vector3(
                 dropObject.transform.position.x,
                 dropObject.transform.position.y,
                 0f
             );
 
-            // Optionally add a collider so the item can be detected
             var col = dropObject.AddComponent<CircleCollider2D>();
             col.isTrigger = true;
-            // dropObject.tag = "Item"; // If you want a tag
 
-            // 5) Add the EquipmentPickup script and assign the data
             EquipmentPickup pickup = dropObject.AddComponent<EquipmentPickup>();
             pickup.SetEquipment(droppedEquipment);
 
@@ -107,50 +113,48 @@ namespace CoED
         }
 
         /// <summary>
-        /// (NEW) Attempts to modify the generated equipment's stats based on this enemy's ScaledFactor.
-        /// There's a random chance to apply some scaling or bonus.
+        /// Chance-based stat buff for the dropped equipment, scaled by enemyStats.
         /// </summary>
         private void ModifyBaseEquipment(Equipment equipment)
         {
-            // If there's no enemyStats or scale factor is trivial, skip
             if (enemyStats == null || enemyStats.ScaledFactor <= 1f)
                 return;
 
-            // Check if we should modify stats
             if (Random.value >= chanceToModifyStats)
                 return;
 
             float factor = enemyStats.ScaledFactor;
+            int addedValue = Mathf.RoundToInt(factor * modificationMultiplier);
 
-            // Define a mapping of stats to modify
             Dictionary<Func<int>, Action<int>> statModifiers = new Dictionary<
                 Func<int>,
                 Action<int>
             >
             {
-                { () => equipment.attack, value => equipment.attack = value },
-                { () => equipment.defense, value => equipment.defense = value },
-                { () => equipment.magic, value => equipment.magic = value },
-                { () => equipment.health, value => equipment.health = value },
-                { () => equipment.stamina, value => equipment.stamina = value },
-                { () => equipment.intelligence, value => equipment.intelligence = value },
-                { () => equipment.dexterity, value => equipment.dexterity = value },
-                { () => equipment.speed, value => equipment.speed = value },
-                { () => equipment.critChance, value => equipment.critChance = value },
+                { () => equipment.attack, v => equipment.attack = v },
+                { () => equipment.defense, v => equipment.defense = v },
+                { () => equipment.magic, v => equipment.magic = v },
+                { () => equipment.health, v => equipment.health = v },
+                { () => equipment.stamina, v => equipment.stamina = v },
+                { () => equipment.intelligence, v => equipment.intelligence = v },
+                { () => equipment.dexterity, v => equipment.dexterity = v },
+                { () => equipment.speed, v => equipment.speed = v },
+                { () => equipment.critChance, v => equipment.critChance = v },
             };
 
-            // Iterate through all stats and apply the modifier
             foreach (var stat in statModifiers)
             {
                 int currentValue = stat.Key();
                 if (currentValue > 0)
                 {
-                    int addedValue = Mathf.RoundToInt(factor * modificationMultiplier);
                     stat.Value(currentValue + addedValue);
                 }
             }
         }
 
+        /// <summary>
+        /// Toggles highlighting on this enemy.
+        /// </summary>
         public void SetHighlighted(bool isHighlighted)
         {
             if (spriteRenderer != null)

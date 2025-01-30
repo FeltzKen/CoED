@@ -21,7 +21,7 @@ namespace CoED
         public ConsumableInventory consumableInventory;
         public EquipmentInventory equipmentInventory;
         private GameObject goblinPrefab;
-        private Enemy enemy;
+        private _Enemy enemy;
 
         [SerializeField]
         private int magicRefillRateWhenResting = 5;
@@ -57,7 +57,7 @@ namespace CoED
                 Debug.LogWarning("PlayerActions instance already exists. Destroying duplicate.");
                 return;
             }
-            enemy = FindAnyObjectByType<Enemy>();
+            enemy = FindAnyObjectByType<_Enemy>();
         }
 
         private void Start()

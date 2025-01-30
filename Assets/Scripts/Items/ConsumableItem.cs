@@ -9,8 +9,10 @@ namespace CoED
         public string name;
         public string description;
         public Sprite icon;
-        public bool hasDuration = false;
+        public bool hasDuration = true;
         public float duration;
+        public float prefixDuration;
+        public float suffixDuration;
         public float attackBoost = 0;
         public float defenseBoost = 0;
         public float speedBoost = 0;
@@ -22,6 +24,9 @@ namespace CoED
         public float critChanceBoost = 0;
         public bool canHaveAffixes = true;
         public int amountPerInterval = 0;
+        public int price;
+        public int suffixPriceIncrease;
+        public float prefixPriceMultiplier = 1;
 
         [Header("Affixes")]
         public ConsumablePrefixData prefix;
@@ -30,13 +35,16 @@ namespace CoED
         [Header("Effects")]
         public List<StatusEffectType> addedEffects = new();
         public List<StatusEffectType> removedEffects = new();
+
         public string GetName() => name;
+
         public Sprite GetSprite() => icon;
 
         public void Initialize(
             string name,
             string description,
             Sprite icon,
+            float duration,
             float attackBoost,
             float defenseBoost,
             float speedBoost,
@@ -49,13 +57,15 @@ namespace CoED
             List<StatusEffectType> addedEffects,
             List<StatusEffectType> removedEffects,
             bool canHaveAffixes,
-            int amountPerInterval
+            int amountPerInterval,
+            int price
         )
         {
             // apply prefix and suffix if not null.
             this.name = name;
             this.description = description;
             this.icon = icon;
+            this.duration = duration;
             this.attackBoost = attackBoost;
             this.defenseBoost = defenseBoost;
             this.speedBoost = speedBoost;
@@ -69,6 +79,7 @@ namespace CoED
             this.removedEffects = removedEffects;
             this.canHaveAffixes = canHaveAffixes;
             this.amountPerInterval = amountPerInterval;
+            this.price = price;
         }
 
         public string GetDescription()
@@ -120,18 +131,7 @@ namespace CoED
 
         public int GetPrice()
         {
-            float basePrice =
-                healthBoost
-                + magicBoost
-                + staminaBoost
-                + attackBoost
-                + defenseBoost
-                + dexterityBoost
-                + intelligenceBoost
-                + speedBoost
-                + critChanceBoost;
-            int affixMultiplier = canHaveAffixes ? (prefix != null || suffix != null ? 2 : 1) : 1;
-            return (int)basePrice * affixMultiplier;
+            return (int)((price + suffixPriceIncrease) * prefixPriceMultiplier);
         }
 
         public void ApplyPrefix(ConsumablePrefixData prefix)
@@ -154,13 +154,11 @@ namespace CoED
             if (intelligenceBoost < 0)
                 intelligenceBoost *= prefix.modifierAmount;
             if (critChanceBoost < 0)
-                critChanceBoost += prefix.modifierAmount / 100;
-
-            foreach (var effect in prefix.activeStatusEffects)
-                addedEffects.Add(effect);
-
-            foreach (var effect in prefix.inflictedStatusEffects)
-                removedEffects.Add(effect);
+                critChanceBoost += prefix.modifierAmount;
+            if (prefix.duration > 0)
+                duration += prefix.duration;
+            if (prefixPriceMultiplier > 0)
+                prefixPriceMultiplier = prefix.priceMultiplier;
         }
 
         public void ApplySuffix(ConsumableSuffixData suffix)
@@ -175,9 +173,14 @@ namespace CoED
             dexterityBoost += suffix.dexterityBoost;
             intelligenceBoost += suffix.intelligenceBoost;
             critChanceBoost += suffix.critChanceBoost;
+            suffixPriceIncrease = suffix.priceIncrease;
+            duration += suffix.duration;
 
             foreach (var effect in suffix.addedEffects)
                 addedEffects.Add(effect);
+
+            foreach (var effect in suffix.removedEffects)
+                removedEffects.Add(effect);
         }
     }
 }

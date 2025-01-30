@@ -2,12 +2,13 @@ namespace CoED
 {
     public enum StatusEffectType
     {
-        // None,
+        None,
         Burn,
         Slow,
         Stun,
         Regen,
         Freeze,
+        Paralyze,
         Poison,
         Shadow,
         Holy,
@@ -33,6 +34,8 @@ namespace CoED
 
     public enum Resistances
     {
+        None,
+        Physical,
         Fire,
         Ice,
         Lightning,
@@ -44,6 +47,8 @@ namespace CoED
 
     public enum Weaknesses
     {
+        None,
+        Physical,
         Fire,
         Ice,
         Lightning,
@@ -55,6 +60,8 @@ namespace CoED
 
     public enum Immunities
     {
+        None,
+        Physical,
         Fire,
         Ice,
         Lightning,

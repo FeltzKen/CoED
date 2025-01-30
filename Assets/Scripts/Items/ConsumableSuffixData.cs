@@ -15,6 +15,8 @@ public class ConsumableSuffixData
     public float dexterityBoost;
     public float intelligenceBoost;
     public float critChanceBoost;
+    public int priceIncrease;
+    public int duration;
 
     // Status Effect
     public List<StatusEffectType> addedEffects = new List<StatusEffectType>();

@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace CoED
 {
-    [RequireComponent(typeof(EnemyNavigator))]
-    [RequireComponent(typeof(EnemyStats))]
     public class EnemyBrain : MonoBehaviour
     {
         public enum EnemyState
@@ -20,14 +18,14 @@ namespace CoED
         public EnemyState CurrentState = EnemyState.Patrol;
 
         private EnemyNavigator navigator;
-        private EnemyStats enemyStats;
+        private _EnemyStats enemyStats;
 
         // Patrol
         private HashSet<Vector2Int> patrolPoints = new HashSet<Vector2Int>();
         private Vector2Int patrolDestination;
 
         // Player detection
-        public Transform playerTransform;
+        private Transform playerTransform;
 
         [SerializeField, Min(0.1f)]
         private float engageDistance; // The distance at which enemy tries to start the attack
@@ -38,7 +36,7 @@ namespace CoED
         private bool hadLOSLastFrame = false;
 
         [SerializeField]
-        private LayerMask visualObstructionLayer;
+        public LayerMask visualObstructionLayer;
 
         // Timers & state
         private float thinkCooldown = 0.5f;
@@ -61,18 +59,18 @@ namespace CoED
         private float projectileCooldownDuration = 15f;
         private float launchProjectileCooldown;
 
-        private FloorData floorData;
-
-        public void Initialize(FloorData floorData, IEnumerable<Vector2Int> patrolPoints)
+        public void Initialize(IEnumerable<Vector2Int> patrolPoints)
         {
-            this.floorData = floorData;
+            if (transform.GetComponent<EnemyNavigator>().occupantID == 1)
+            {
+                Debug.Log("Initializing enemy brain");
+            }
             this.patrolPoints = new HashSet<Vector2Int>(patrolPoints);
         }
 
         private void Awake()
         {
-            navigator = GetComponent<EnemyNavigator>();
-            enemyStats = GetComponent<EnemyStats>();
+            enemyStats = GetComponent<_EnemyStats>();
         }
 
         private void Start()
@@ -81,6 +79,15 @@ namespace CoED
             if (playerObj != null)
             {
                 playerTransform = playerObj.transform;
+            }
+            if (navigator == null)
+            {
+                navigator = GetComponent<EnemyNavigator>();
+            }
+            if (navigator == null)
+            {
+                Debug.LogError("EnemyNavigator is missing from this enemy!", this);
+                return;
             }
 
             // Basic patrol setup
@@ -97,6 +104,7 @@ namespace CoED
             // Default engage distances based on CurrentAttackRange
             engageDistance = enemyStats.CurrentAttackRange + 0.2f; // CHANGED: Slightly bigger
             disengageDistance = enemyStats.CurrentAttackRange + 0.8f; // CHANGED: bigger gap
+            playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
         }
 
         private void Update()
@@ -404,7 +412,7 @@ namespace CoED
                 // Apply to player
                 PlayerStats.Instance.TakeDamage(
                     damageInfo,
-                    GetComponent<EnemyStats>().chanceToInflictStatusEffect
+                    GetComponent<_EnemyStats>().chanceToInflictStatusEffect
                 );
 
                 Debug.Log($"{name} attacked the player with {damageDealt.Count} damage types.");
@@ -484,7 +492,7 @@ namespace CoED
         {
             return Vector2Int.RoundToInt(
                 transform.position
-                    - DungeonManager.Instance.GetFloorTransform(enemyStats.spawnFloor).position
+                    - DungeonManager.Instance.GetFloorTransform(enemyStats.spawnFloorLevel).position
             );
         }
 
@@ -492,7 +500,7 @@ namespace CoED
         {
             return Vector2Int.RoundToInt(
                 playerTransform.position
-                    - DungeonManager.Instance.GetFloorTransform(enemyStats.spawnFloor).position
+                    - DungeonManager.Instance.GetFloorTransform(enemyStats.spawnFloorLevel).position
             );
         }
 

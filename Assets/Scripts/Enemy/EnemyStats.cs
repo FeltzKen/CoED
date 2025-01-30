@@ -1,23 +1,27 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace CoED
 {
-    public class EnemyStats : MonoBehaviour
+    public class _EnemyStats : MonoBehaviour
     {
+        [Header("Assigned Monster Data")]
+        [Tooltip("This enemy's monster data record.")]
+        public Monster monsterData; // from the new system
+
         [Header("Base Stats")]
         [SerializeField, Min(1)]
         private int baseAttack = 10;
 
         [SerializeField]
-        private DamageType elementalBase;
+        private DamageType elementalBase = DamageType.Physical;
 
         [SerializeField, Min(0)]
         private int elementalDamage;
 
         [SerializeField, Min(1)]
         private int baseDefense = 5;
+
         private int currentShieldValue = 0;
 
         [SerializeField, Min(100)]
@@ -38,14 +42,9 @@ namespace CoED
         private bool invincible = false;
         public bool Invincible => invincible;
 
-        [Header("Resistances")]
-        [Header("Elemental Attributes")]
+        [Header("Resistances/Weaknesses/Immunities")]
         public List<Immunities> immunities = new List<Immunities>();
-
-        [Header("Resistances")]
         public List<Resistances> resistances = new List<Resistances>();
-
-        [Header("Weaknesses")]
         public List<Weaknesses> weaknesses = new List<Weaknesses>();
 
         [Header("Dynamic Damage Types")]
@@ -54,11 +53,11 @@ namespace CoED
 
         [Header("Inflicted Status Effects")]
         public List<StatusEffectType> inflictedStatusEffects = new List<StatusEffectType>();
-
         public float chanceToInflictStatusEffect = 0.1f;
 
         [SerializeField]
         public List<StatusEffectType> activeStatusEffects = new List<StatusEffectType>();
+        public Sprite sprite;
 
         // Current Stats
         public float PatrolSpeed;
@@ -70,42 +69,103 @@ namespace CoED
         public float CurrentAttackRange { get; set; }
         public float CurrentFireRate { get; set; }
         public float CurrentProjectileLifespan { get; set; }
-        public float ScaledFactor { get; private set; }
         public float ProjectileCurrentAttackRange { get; set; }
         public float CurrentSpeed { get; set; } = 1f;
-        private EnemyUI enemyUI { get; set; }
-        private Enemy enemy { get; set; }
-        public int spawnFloor { get; set; }
+
+        [SerializeField]
+        private int spawnFloor;
+        public int spawnFloorLevel
+        {
+            get => spawnFloor;
+            set => spawnFloor = value;
+        }
+
+        // If you want an "equipment tier" from floor
+        public int EquipmentTier { get; private set; } = 1;
+
+        // Factor for scaling stats
+        public float ScaledFactor { get; private set; }
+
+        private EnemyUI enemyUI;
+        private _Enemy enemy;
 
         private void Start()
         {
-            if (elementalBase != DamageType.Physical)
-            {
-                dynamicDamageTypes.Add(elementalBase, elementalDamage);
-            }
-            dynamicDamageTypes.Add(DamageType.Physical, baseAttack);
+            enemy = GetComponent<_Enemy>();
+            enemyUI = GetComponentInChildren<EnemyUI>();
+
+            ApplyMonsterData(monsterData);
+
+            // 3) floor-based logic:
+            if (spawnFloor <= 0)
+                spawnFloor = 1;
+            EquipmentTier = Mathf.Clamp(Mathf.FloorToInt(spawnFloor / 3) + 1, 1, 3);
+
+            // 4) calculate final stats (the hybrid approach: monster base + floor scaling)
             CalculateStats();
+            InitializeUI();
         }
 
         private void InitializeUI()
         {
-            enemy = GetComponent<Enemy>();
-            enemyUI = GetComponent<EnemyUI>();
             if (enemyUI != null)
             {
                 enemyUI.SetHealthBarMax(MaxHealth);
             }
         }
 
+        /// <summary>
+        /// Copies the monster's base stats into local fields.
+        /// </summary>
+        private void ApplyMonsterData(Monster monster)
+        {
+            if (monster == null)
+            {
+                Debug.LogWarning("No monsterData assigned; using fallback stats.");
+                return;
+            }
+            sprite = monster.monsterSprite;
+
+            baseHealth = monster.maxHP;
+            baseAttack = monster.attack;
+            baseDefense = monster.defense;
+            elementalBase = monster.damageType;
+            elementalDamage = 0;
+
+            chanceToInflictStatusEffect = monster.statusInflictionChance;
+            inflictedStatusEffects.Clear();
+            if (monster.inflictedStatusEffect != StatusEffectType.None)
+            {
+                inflictedStatusEffects.Add(monster.inflictedStatusEffect);
+            }
+            if (monster.resistance != Resistances.None)
+            {
+                resistances.Add(monster.resistance);
+            }
+            {
+                resistances.Add(monster.resistance);
+            }
+            if (monster.weakness != Weaknesses.None)
+            {
+                weaknesses.Add(monster.weakness);
+            }
+        }
+
+        /// <summary>
+        /// Applies floor-based scaling so that monsters can appear on deeper floors
+        /// while still retaining their base identity from monsterData.
+        /// </summary>
         private void CalculateStats()
         {
             var dungeonSettings = FindAnyObjectByType<DungeonGenerator>().dungeonSettings;
+
             float floorMultiplier =
                 1
                 + (spawnFloor * dungeonSettings.difficultyLevel * 0.1f)
                 + dungeonSettings.playerLevelFactor
                 + dungeonSettings.floorDifficultyFactor;
 
+            // random factor for variety
             ScaledFactor = floorMultiplier * Random.Range(0.9f, 1.5f);
 
             PatrolSpeed = Mathf.Lerp(1f, 3f, spawnFloor / 6f) + Random.Range(0f, 0.5f);
@@ -114,20 +174,30 @@ namespace CoED
             MaxHealth = Mathf.RoundToInt(baseHealth * ScaledFactor);
             CurrentAttack = Mathf.RoundToInt(baseAttack * ScaledFactor);
             CurrentDefense = Mathf.RoundToInt(baseDefense * ScaledFactor);
+
             ProjectileCurrentAttackRange = projectileBaseAttackRange * ScaledFactor;
             CurrentAttackRange = baseAttackRange;
             CurrentFireRate = Mathf.Max(baseFireRate * ScaledFactor, 0.1f);
             CurrentProjectileLifespan = baseProjectileLifespan * ScaledFactor;
+
             CurrentHealth = MaxHealth;
 
-            InitializeUI();
+            // Setup dynamicDamageTypes
+            dynamicDamageTypes.Clear();
+            dynamicDamageTypes.Add(DamageType.Physical, CurrentAttack);
+
+            if (elementalBase != DamageType.Physical)
+            {
+                // e.g. half the scaled attack as elemental or something else
+                float extraElemental =
+                    (elementalDamage > 0)
+                        ? (elementalDamage * ScaledFactor)
+                        : (CurrentAttack * 0.5f);
+
+                dynamicDamageTypes.Add(elementalBase, extraElemental);
+            }
         }
 
-        /// <summary>
-        /// Handles complex damage and applies status effects to enemies.
-        /// </summary>
-        /// <param name="damageInfo">Damage information, including damage types and status effects.</param>
-        /// <param name="bypassInvincible">Whether to bypass invincibility.</param>
         public void TakeDamage(DamageInfo damageInfo, bool bypassInvincible = false)
         {
             if (!bypassInvincible && invincible)
@@ -137,13 +207,11 @@ namespace CoED
             }
 
             float totalDamage = 0f;
-
             foreach (var damageEntry in damageInfo.DamageAmounts)
             {
                 DamageType type = damageEntry.Key;
-                float damageAmount = damageEntry.Value;
+                float amount = damageEntry.Value;
 
-                // ✅ Check for Immunity
                 if (immunities.Contains((Immunities)type))
                 {
                     Debug.Log($"{gameObject.name} is immune to {type} damage.");
@@ -155,35 +223,31 @@ namespace CoED
                     continue;
                 }
 
-                // ✅ Apply Resistance
                 if (resistances.Contains((Resistances)type))
                 {
-                    damageAmount *= 0.5f;
+                    amount *= 0.5f;
                 }
-
-                // ❌ Apply Weakness
                 if (weaknesses.Contains((Weaknesses)type))
                 {
-                    damageAmount *= 1.5f;
+                    amount *= 1.5f;
                 }
-
-                totalDamage += damageAmount;
+                totalDamage += amount;
             }
 
-            // ✅ Apply defense
             float effectiveDamage = Mathf.Max(totalDamage - CurrentDefense, 1);
             CurrentHealth = Mathf.Max(CurrentHealth - Mathf.RoundToInt(effectiveDamage), 0);
 
-            // ✅ Apply all status effects dynamically
+            // Status effects
             foreach (var effect in damageInfo.InflictedStatusEffects)
             {
+                // If attacker has a certain chance to inflict
+                // e.g. from playerStats or the skill used
                 if (Random.value < PlayerStats.Instance.chanceToInflictStatusEffect)
                 {
                     StatusEffectManager.Instance.AddStatusEffect(gameObject, effect);
                 }
             }
 
-            // ✅ UI Updates
             UpdateHealthUI();
             FloatingTextManager.Instance.ShowFloatingText(
                 effectiveDamage.ToString(),
@@ -207,21 +271,29 @@ namespace CoED
 
             CurrentHealth = Mathf.Min(CurrentHealth + amount, MaxHealth);
             UpdateHealthUI();
-
-            Debug.Log(
-                $"EnemyStats: Healed {amount} health. Current health: {CurrentHealth}/{MaxHealth}"
-            );
+            Debug.Log($"Healed {amount} => {CurrentHealth}/{MaxHealth}");
         }
 
         private void HandleDeath()
         {
             AwardExperienceToPlayer();
-            Debug.Log("Enemy has died.");
+            Debug.Log($"Enemy {gameObject.name} has died.");
+
+            // If there's an _Enemy script, call DropLoot()
+            var enemyScript = GetComponent<_Enemy>();
+            if (enemyScript != null)
+            {
+                enemyScript.DropLoot();
+            }
+
+            // Release the tile
+            var nav = GetComponent<EnemyNavigator>();
+            if (nav != null)
+            {
+                TileOccupancyManager.Instance.ReleaseAllTiles(nav.occupantID);
+            }
+
             Destroy(gameObject);
-            enemy.DropLoot();
-            TileOccupancyManager.Instance.ReleaseAllTiles(
-                GetComponent<EnemyNavigator>().occupantID
-            );
         }
 
         public void SetInvincible(bool invincible)
@@ -233,39 +305,29 @@ namespace CoED
         {
             if (shieldValue <= 0)
             {
-                Debug.LogWarning("EnemyStats: Shield value must be positive.");
+                Debug.LogWarning("Shield value must be positive.");
                 return;
             }
-
             currentShieldValue += shieldValue;
             CurrentDefense += shieldValue;
-            Debug.Log($"Shield added: {shieldValue}. Current defense: {CurrentDefense}");
         }
 
         public void RemoveShield(int shieldValue)
         {
             if (shieldValue <= 0)
             {
-                Debug.LogWarning("EnemyStats: Shield value must be positive.");
+                Debug.LogWarning("Shield value must be positive.");
                 return;
             }
 
-            int effectiveShieldRemoval = Mathf.Min(currentShieldValue, shieldValue);
-            currentShieldValue -= effectiveShieldRemoval;
-            CurrentDefense -= effectiveShieldRemoval;
-
-            Debug.Log(
-                $"Shield removed: {effectiveShieldRemoval}. Current defense: {CurrentDefense}"
-            );
+            int effective = Mathf.Min(currentShieldValue, shieldValue);
+            currentShieldValue -= effective;
+            CurrentDefense -= effective;
         }
 
         private void UpdateHealthUI()
         {
-            EnemyUI enemyUI = GetComponentInChildren<EnemyUI>();
-            if (enemyUI == null)
-            {
-                Debug.LogError("EnemyStats: EnemyUI component not found.");
-            }
+            var enemyUI = GetComponentInChildren<EnemyUI>();
             if (enemyUI != null)
             {
                 enemyUI.UpdateHealthBar(CurrentHealth, MaxHealth);
@@ -280,9 +342,9 @@ namespace CoED
 
         private void AwardExperienceToPlayer()
         {
-            int experiencePoints = CalculateExperiencePoints();
-            PlayerStats.Instance?.GainExperience(experiencePoints);
-            Debug.Log($"EnemyStats: Awarded {experiencePoints} experience points to the player.");
+            int xp = CalculateExperiencePoints();
+            PlayerStats.Instance?.GainExperience(xp);
+            Debug.Log($"Awarded {xp} XP to player.");
         }
     }
 }

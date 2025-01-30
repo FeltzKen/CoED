@@ -16,6 +16,8 @@ namespace CoED
         public List<GameObject> StairsUp { get; private set; } = new List<GameObject>();
         public List<GameObject> StairsDown { get; private set; } = new List<GameObject>();
         public Transform itemParent;
+        public bool hasSpawnedMiniBoss = false;
+        public bool hasSpawnedBoss = false;
 
         public FloorData(int floorNumber)
         {

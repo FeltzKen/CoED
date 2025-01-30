@@ -9,13 +9,11 @@ public class ConsumablePrefixData
     public string description;
     public float imageSize;
     public bool glow;
+    public float duration;
+    public float priceMultiplier;
 
     // Multi-stat modification support
     public float modifierAmount;
-
-    // Status Effect
-    public List<StatusEffectType> activeStatusEffects = new List<StatusEffectType>();
-    public List<StatusEffectType> inflictedStatusEffects = new List<StatusEffectType>();
 
     // One-time effect flag
     public bool isOneTimeEffect;

@@ -7,7 +7,7 @@ namespace CoED
     public class EnemyUI : MonoBehaviour
     {
         public static EnemyUI enemyAI;
-        public static EnemyStats enemyStats;
+        public static _EnemyStats enemyStats;
 
         [Header("Health UI")]
         private Slider healthBar;

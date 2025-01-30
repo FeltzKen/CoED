@@ -104,18 +104,22 @@ public class EquipmentGenerator
             Equipment candidate = GenerateRandomEquipment(tier);
 
             // 3) Check if it's cursed by looking at candidate.prePrefix
-            //    (assuming pre_prefixes[1] = "Cursed" in EquipmentAffixesDatabase)
-            if (candidate.itemName.Contains("Cursed"))
+
+            candidate.RevealHiddenAttributes();
+            Debug.Log(candidate.itemName.Contains("Cursed"));
+            if (
+                candidate.itemName.IndexOf("cursed", System.StringComparison.OrdinalIgnoreCase) >= 0
+            )
             {
-                // Skip cursed items entirely; try again
+                // Now "cursed", "Cursed", "CURSED", etc. all match
+                Debug.Log(candidate.itemName);
                 continue;
             }
 
             // 4) If it's enchanted (prePrefix == "Enchanted"), reveal it so the shop sells it fully identified
-            //    (assuming pre_prefixes[0] = "Enchanted")
             if (candidate.itemName.Contains("Enchanted"))
             {
-                candidate.RevealHiddenAttributes();
+                //candidate.RevealHiddenAttributes();
             }
 
             // 5) Use this item

@@ -1532,7 +1532,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8495418548794293491, guid: e2f0308c96fcf7742aeeda564ade46de, type: 3}
       propertyPath: m_Name
-      value: TheShopGoblin(1024x1024)_0
+      value: ShopGoblin
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -26,7 +26,7 @@ namespace CoED
 
         private GameObject targetEntity;
         private PlayerStats playerStats;
-        private EnemyStats enemyStats;
+        private _EnemyStats enemyStats;
 
         // Any immediate flags we set
         private bool wasInvincible = false;
@@ -42,7 +42,7 @@ namespace CoED
             }
             else
             {
-                enemyStats = entity.GetComponent<EnemyStats>();
+                enemyStats = entity.GetComponent<_EnemyStats>();
             }
 
             // Immediate effect application:
