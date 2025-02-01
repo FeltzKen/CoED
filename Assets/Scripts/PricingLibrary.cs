@@ -5,17 +5,27 @@ namespace CoED
 {
     public static class PricingLibrary
     {
-        private static Dictionary<string, int> statValues = new Dictionary<string, int>
+        private static Dictionary<string, int> ValuePerStat = new Dictionary<string, int>
         {
-            { "Attack", 5 },
+            { "Attack", 2 },
             { "Defense", 3 },
-            { "Magic", 6 },
-            { "Health", 2 },
-            { "Stamina", 1 },
-            { "Intelligence", 8 },
+            { "MaxMagic", 2 },
+            { "MaxHP", 3 },
+            { "MaxStamina", 1 },
+            { "Intelligence", 2 },
             { "Dexterity", 3 },
-            { "Speed", 4 },
-            { "CritChance", 10 },
+            { "Speed", 2 },
+            { "CritChance", 3 },
+            { "CritDamage", 2 },
+            { "ProjectileRange", 2 },
+            { "AttackRange", 3 },
+            { "ElementalDamage", 2 },
+            { "ChanceToInflictStatusEffect", 3 },
+            { "StatusEffectDuration", 2 },
+            { "FireRate", 2 },
+            { "Shield", 2 },
+            { "Accuracy", 3 },
+            { "Evasion", 3 },
         };
 
         private static Dictionary<StatusEffectType, int> statusEffectValues = new Dictionary<
@@ -23,13 +33,13 @@ namespace CoED
             int
         >
         {
-            { StatusEffectType.Burn, 30 },
-            { StatusEffectType.Freeze, 35 },
-            { StatusEffectType.Poison, 25 },
-            { StatusEffectType.Paralyze, 40 },
-            { StatusEffectType.Stun, 50 },
+            { StatusEffectType.Burn, 10 },
+            { StatusEffectType.Freeze, 12 },
+            { StatusEffectType.Poison, 15 },
+            { StatusEffectType.Paralyze, 20 },
+            { StatusEffectType.Stun, 15 },
             { StatusEffectType.Bleed, 20 },
-            { StatusEffectType.Curse, 45 },
+            { StatusEffectType.Curse, 50 },
         };
 
         private static Dictionary<Resistances, int> resistanceValues = new Dictionary<
@@ -37,24 +47,24 @@ namespace CoED
             int
         >
         {
-            { Resistances.Physical, 50 },
-            { Resistances.Fire, 50 },
+            { Resistances.Physical, 30 },
+            { Resistances.Fire, 40 },
             { Resistances.Ice, 50 },
-            { Resistances.Poison, 45 },
-            { Resistances.Lightning, 60 },
-            { Resistances.Shadow, 55 },
-            { Resistances.Holy, 65 },
+            { Resistances.Poison, 50 },
+            { Resistances.Lightning, 40 },
+            { Resistances.Shadow, 50 },
+            { Resistances.Holy, 55 },
         };
 
         private static Dictionary<Immunities, int> immunityValues = new Dictionary<Immunities, int>
         {
-            { Immunities.Physical, 100 },
-            { Immunities.Fire, 100 },
+            { Immunities.Physical, 60 },
+            { Immunities.Fire, 80 },
             { Immunities.Ice, 100 },
-            { Immunities.Poison, 90 },
-            { Immunities.Lightning, 120 },
-            { Immunities.Shadow, 110 },
-            { Immunities.Holy, 130 },
+            { Immunities.Poison, 100 },
+            { Immunities.Lightning, 80 },
+            { Immunities.Shadow, 100 },
+            { Immunities.Holy, 110 },
         };
 
         private static Dictionary<StatusEffectType, int> removeStatusEffectValues = new Dictionary<
@@ -62,28 +72,44 @@ namespace CoED
             int
         >
         {
-            { StatusEffectType.Burn, 10 },
-            { StatusEffectType.Freeze, 15 },
-            { StatusEffectType.Poison, 5 },
-            { StatusEffectType.Paralyze, 20 },
-            { StatusEffectType.Stun, 30 },
-            { StatusEffectType.Bleed, 0 },
-            { StatusEffectType.Curse, 25 },
+            { StatusEffectType.Burn, 20 },
+            { StatusEffectType.Freeze, 20 },
+            { StatusEffectType.Poison, 25 },
+            { StatusEffectType.Paralyze, 15 },
+            { StatusEffectType.Stun, 20 },
+            { StatusEffectType.Bleed, 25 },
+            { StatusEffectType.Curse, 50 },
         };
 
-        public static int CalculateEquipmentPrice(Equipment equipment)
+        public static float CalculateEquipmentPrice(Equipment equipment)
         {
-            int totalPrice = 0;
+            float totalPrice = 0;
 
-            totalPrice += equipment.attack * statValues["Attack"];
-            totalPrice += equipment.defense * statValues["Defense"];
-            totalPrice += equipment.magic * statValues["Magic"];
-            totalPrice += equipment.health * statValues["Health"];
-            totalPrice += equipment.stamina * statValues["Stamina"];
-            totalPrice += equipment.intelligence * statValues["Intelligence"];
-            totalPrice += equipment.dexterity * statValues["Dexterity"];
-            totalPrice += equipment.speed * statValues["Speed"];
-            totalPrice += equipment.critChance * statValues["CritChance"];
+            totalPrice += equipment.equipmentStats[Stat.Attack] * ValuePerStat["Attack"];
+            totalPrice += equipment.equipmentStats[Stat.Defense] * ValuePerStat["Defense"];
+            totalPrice += equipment.equipmentStats[Stat.MaxMagic] * ValuePerStat["MaxMagic"];
+            totalPrice += equipment.equipmentStats[Stat.MaxHP] * ValuePerStat["MaxHP"];
+            totalPrice += equipment.equipmentStats[Stat.MaxStamina] * ValuePerStat["MaxStamina"];
+            totalPrice += equipment.equipmentStats[Stat.Intelligence] * ValuePerStat["Intelligence"];
+            totalPrice += equipment.equipmentStats[Stat.Dexterity] * ValuePerStat["Dexterity"];
+            totalPrice += equipment.equipmentStats[Stat.Speed] * ValuePerStat["Speed"];
+            totalPrice += equipment.equipmentStats[Stat.CritChance] * ValuePerStat["CritChance"];
+            totalPrice += equipment.equipmentStats[Stat.CritDamage] * ValuePerStat["CritDamage"];
+            totalPrice +=
+                equipment.equipmentStats[Stat.ProjectileRange] * ValuePerStat["ProjectileRange"];
+            totalPrice += equipment.equipmentStats[Stat.AttackRange] * ValuePerStat["AttackRange"];
+            totalPrice +=
+                equipment.equipmentStats[Stat.ElementalDamage] * ValuePerStat["ElementalDamage"];
+            totalPrice +=
+                equipment.equipmentStats[Stat.ChanceToInflictStatusEffect]
+                * ValuePerStat["ChanceToInflictStatusEffect"];
+            totalPrice +=
+                equipment.equipmentStats[Stat.StatusEffectDuration]
+                * ValuePerStat["StatusEffectDuration"];
+            totalPrice += equipment.equipmentStats[Stat.FireRate] * ValuePerStat["FireRate"];
+            totalPrice += equipment.equipmentStats[Stat.Shield] * ValuePerStat["Shield"];
+            totalPrice += equipment.equipmentStats[Stat.Accuracy] * ValuePerStat["Accuracy"];
+            totalPrice += equipment.equipmentStats[Stat.Evasion] * ValuePerStat["Evasion"];
 
             foreach (var status in equipment.inflictedStatusEffects)
             {
@@ -110,15 +136,15 @@ namespace CoED
         {
             int totalPrice = 0;
 
-            totalPrice += (int)consumable.attackBoost * statValues["Attack"];
-            totalPrice += (int)consumable.defenseBoost * statValues["Defense"];
-            totalPrice += (int)consumable.magicBoost * statValues["Magic"];
-            totalPrice += (int)consumable.healthBoost * statValues["Health"];
-            totalPrice += (int)consumable.staminaBoost * statValues["Stamina"];
-            totalPrice += (int)consumable.intelligenceBoost * statValues["Intelligence"];
-            totalPrice += (int)consumable.dexterityBoost * statValues["Dexterity"];
-            totalPrice += (int)consumable.speedBoost * statValues["Speed"];
-            totalPrice += (int)consumable.critChanceBoost * statValues["CritChance"];
+            totalPrice += (int)consumable.attackBoost * ValuePerStat["Attack"];
+            totalPrice += (int)consumable.defenseBoost * ValuePerStat["Defense"];
+            totalPrice += (int)consumable.magicBoost * ValuePerStat["MaxMagic"];
+            totalPrice += (int)consumable.healthBoost * ValuePerStat["MaxHP"];
+            totalPrice += (int)consumable.staminaBoost * ValuePerStat["MaxStamina"];
+            totalPrice += (int)consumable.intelligenceBoost * ValuePerStat["Intelligence"];
+            totalPrice += (int)consumable.dexterityBoost * ValuePerStat["Dexterity"];
+            totalPrice += (int)consumable.speedBoost * ValuePerStat["Speed"];
+            totalPrice += (int)consumable.critChanceBoost * ValuePerStat["CritChance"];
             totalPrice += (int)consumable.duration;
             foreach (var effect in consumable.addedEffects)
             {

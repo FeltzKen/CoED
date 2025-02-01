@@ -126,25 +126,92 @@ namespace CoED
             float factor = enemyStats.ScaledFactor;
             int addedValue = Mathf.RoundToInt(factor * modificationMultiplier);
 
-            Dictionary<Func<int>, Action<int>> statModifiers = new Dictionary<
-                Func<int>,
-                Action<int>
+            Dictionary<Func<float>, Action<float>> statModifiers = new Dictionary<
+                Func<float>,
+                Action<float>
             >
             {
-                { () => equipment.attack, v => equipment.attack = v },
-                { () => equipment.defense, v => equipment.defense = v },
-                { () => equipment.magic, v => equipment.magic = v },
-                { () => equipment.health, v => equipment.health = v },
-                { () => equipment.stamina, v => equipment.stamina = v },
-                { () => equipment.intelligence, v => equipment.intelligence = v },
-                { () => equipment.dexterity, v => equipment.dexterity = v },
-                { () => equipment.speed, v => equipment.speed = v },
-                { () => equipment.critChance, v => equipment.critChance = v },
+                {
+                    () => equipment.equipmentStats[Stat.Attack],
+                    v => equipment.equipmentStats[Stat.Attack] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.Defense],
+                    v => equipment.equipmentStats[Stat.Defense] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.Magic],
+                    v => equipment.equipmentStats[Stat.Magic] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.MaxHP],
+                    v => equipment.equipmentStats[Stat.MaxHP] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.Stamina],
+                    v => equipment.equipmentStats[Stat.Stamina] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.Intelligence],
+                    v => equipment.equipmentStats[Stat.Intelligence] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.Dexterity],
+                    v => equipment.equipmentStats[Stat.Dexterity] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.Speed],
+                    v => equipment.equipmentStats[Stat.Speed] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.CritChance],
+                    v => equipment.equipmentStats[Stat.CritChance] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.CritDamage],
+                    v => equipment.equipmentStats[Stat.CritDamage] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.ProjectileRange],
+                    v => equipment.equipmentStats[Stat.ProjectileRange] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.AttackRange],
+                    v => equipment.equipmentStats[Stat.AttackRange] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.ElementalDamage],
+                    v => equipment.equipmentStats[Stat.ElementalDamage] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.ChanceToInflictStatusEffect],
+                    v => equipment.equipmentStats[Stat.ChanceToInflictStatusEffect] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.StatusEffectDuration],
+                    v => equipment.equipmentStats[Stat.StatusEffectDuration] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.FireRate],
+                    v => equipment.equipmentStats[Stat.FireRate] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.Shield],
+                    v => equipment.equipmentStats[Stat.Shield] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.Accuracy],
+                    v => equipment.equipmentStats[Stat.Accuracy] = v
+                },
+                {
+                    () => equipment.equipmentStats[Stat.Evasion],
+                    v => equipment.equipmentStats[Stat.Evasion] = v
+                },
             };
 
             foreach (var stat in statModifiers)
             {
-                int currentValue = stat.Key();
+                float currentValue = stat.Key();
                 if (currentValue > 0)
                 {
                     stat.Value(currentValue + addedValue);

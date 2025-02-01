@@ -71,7 +71,6 @@ namespace CoED
             return allEquipment;
         }
 
-
         public void RemoveEquipment(Equipment equipment)
         {
             if (equipmentPerSlot.ContainsKey(equipment.slot))

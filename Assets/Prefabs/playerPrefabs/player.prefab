@@ -278,21 +278,21 @@ MonoBehaviour:
   expToNextLevel: 100
   maxLevel: 50
   restInterval: 3
-  baseHealth: 500
+  baseHealth: 250
   baseStamina: 100
   baseMagic: 50
-  baseAttack: 10
+  baseAttack: 5
   AttackRange: 1.4
-  baseDefense: 5
+  baseDefense: 3
   baseProjectileRange: 5
   targetingRange: 7
-  baseDexterity: 5
-  baseIntelligence: 5
-  baseCritChance: 5
-  baseSpeed: 5
+  baseDexterity: 2
+  baseIntelligence: 3
+  baseCritChance: 3
+  baseSpeed: 2
   baseFireRate: 1
   baseProjectileLifespan: 2
-  currency: 200
+  currency: 525
   currentFloor: 0
   activeStatusEffects: 
   EquippedmentEffects: 

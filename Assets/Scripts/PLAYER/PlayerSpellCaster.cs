@@ -88,7 +88,7 @@ namespace CoED
         {
             Collider2D[] hitColliders = Physics2D.OverlapCircleAll(
                 transform.position,
-                playerStats.targetingRange,
+                playerStats.GetCurrentAttackRange(),
                 enemyLayer
             );
             enemiesInRange.Clear();
@@ -168,7 +168,7 @@ namespace CoED
 
         public void CastSelfTargetingSpell(PlayerSpellWrapper spell)
         {
-            if (playerStats.CurrentMagic < spell.MagicCost)
+            if (playerStats.GetCurrentMagic() < spell.MagicCost)
             {
                 FloatingTextManager.Instance.ShowFloatingText(
                     "Not enough magic",
@@ -187,7 +187,7 @@ namespace CoED
                 );
                 return;
             }
-            if (playerStats.CurrentHealth == playerStats.MaxHealth)
+            if (playerStats.GetCurrentHealth() == playerStats.GetCurrentMaxHealth())
             {
                 FloatingTextManager.Instance.ShowFloatingText(
                     "Already at full health",
@@ -214,7 +214,7 @@ namespace CoED
                 return;
             }
 
-            if (playerStats.CurrentMagic < selectedSpell.MagicCost)
+            if (playerStats.GetCurrentMagic() < selectedSpell.MagicCost)
             {
                 FloatingTextManager.Instance.ShowFloatingText(
                     "Not enough magic",

@@ -12,7 +12,6 @@ namespace CoED
 
         private float lastAttackTime = 0f;
         private PlayerStats playerStats;
-        private _Enemy enemy;
 
         private void Awake()
         {
@@ -40,7 +39,6 @@ namespace CoED
                 );
                 enabled = false;
             }
-            enemy = FindAnyObjectByType<_Enemy>();
         }
 
         private void Update()
@@ -50,7 +48,7 @@ namespace CoED
 
         private void HandleCombatInput()
         {
-            if (playerStats.CurrentHealth > 0 && Time.time >= lastAttackTime + attackCooldown)
+            if (playerStats.GetCurrentHealth() > 0 && Time.time >= lastAttackTime + attackCooldown)
             {
                 if (Input.GetMouseButtonDown(0))
                 {
@@ -74,10 +72,35 @@ namespace CoED
                 _EnemyStats enemyStats = hitCollider.GetComponent<_EnemyStats>();
                 if (enemyStats != null)
                 {
-                    // ✅ Combine physical and elemental damage
+                    // ✅ Calculate hit success
+                    bool hitSuccess = BattleCalculations.IsAttackSuccessful(
+                        playerStats.GetCurrentAccuracy(),
+                        enemyStats.GetEnemyEvasion()
+                    );
+
+                    if (!hitSuccess)
+                    {
+                        Debug.Log("Player's attack missed!");
+                        return;
+                    }
+
+                    // ✅ Determine if attack is critical
+                    bool isCritical = BattleCalculations.IsCriticalHit(
+                        playerStats.GetCurrentDexterity()
+                    );
+
+                    // ✅ Calculate physical damage
+                    float physicalDamage = BattleCalculations.CalculateDamage(
+                        playerStats.GetCurrentAttack(),
+                        0, // No additional weapon power here (could be modified later)
+                        enemyStats.GetEnemyDefense(),
+                        isCritical
+                    );
+
+                    // ✅ Calculate elemental damage separately
                     Dictionary<DamageType, float> damageDealt = new Dictionary<DamageType, float>
                     {
-                        { DamageType.Physical, playerStats.GetCurrentAttack() },
+                        { DamageType.Physical, physicalDamage },
                         { DamageType.Fire, playerStats.GetCurrentBurnDamage() },
                         { DamageType.Poison, playerStats.GetCurrentPoisonDamage() },
                         { DamageType.Ice, playerStats.GetCurrentIceDamage() },
@@ -88,21 +111,32 @@ namespace CoED
                         { DamageType.Bleed, playerStats.GetCurrentBleedDamage() },
                     };
 
-                    // ✅ Combine status effects from equipment
+                    // ✅ Apply status effects based on chance
                     List<StatusEffectType> successfulEffects = new List<StatusEffectType>();
-
                     foreach (var statusEffect in playerStats.inflictableStatusEffects)
                     {
-                        if (Random.value <= PlayerStats.Instance.CurrentChanceToInflictStatusEffect)
+                        if (
+                            BattleCalculations.ApplyStatusEffect(
+                                PlayerStats.Instance.GetCurrentChanceToInflictStatusEffect(),
+                                playerStats.GetCurrentIntelligence()
+                            )
+                        )
                         {
                             successfulEffects.Add(statusEffect);
                         }
                     }
 
+                    // ✅ Send damage and effects to enemy
                     DamageInfo damageInfo = new DamageInfo(damageDealt, successfulEffects);
                     enemyStats.TakeDamage(damageInfo);
+
+                    // ✅ Reset enemy attack flags after being hit
                     ResetEnemyAttackFlags();
                     lastAttackTime = Time.time;
+
+                    Debug.Log(
+                        $"Player dealt {physicalDamage} damage to {enemyStats.name} {(isCritical ? "(Critical Hit!)" : "")}."
+                    );
                 }
             }
         }

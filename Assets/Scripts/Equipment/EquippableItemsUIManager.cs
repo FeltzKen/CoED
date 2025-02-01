@@ -546,7 +546,8 @@ namespace CoED
 
         private void DropEquipment(Equipment equipment)
         {
-            if (equipment == null) return;
+            if (equipment == null)
+                return;
 
             Vector3 dropPosition = PlayerStats.Instance.transform.position;
             GameObject dropObj = new GameObject($"DroppedItem_{equipment.itemName}");
@@ -626,15 +627,15 @@ namespace CoED
             }
 
             equipmentNameText.text = equipment.itemName;
-            attackModifierText.text = $"+ {equipment.attack}";
-            defenseModifierText.text = $"+ {equipment.defense}";
-            magicModifierText.text = $"+ {equipment.magic}";
-            healthModifierText.text = $"+ {equipment.health}";
-            speedModifierText.text = $"+ {equipment.speed}";
-            intelligenceModifierText.text = $"+ {equipment.intelligence}";
-            dexterityModifierText.text = $"+ {equipment.dexterity}";
-            staminaModifierText.text = $"+ {equipment.stamina}";
-            critChanceModifierText.text = $"+ {equipment.critChance}";
+            attackModifierText.text = $"+ {equipment.equipmentStats[Stat.Attack]}";
+            defenseModifierText.text = $"+ {equipment.equipmentStats[Stat.Defense]}";
+            magicModifierText.text = $"+ {equipment.equipmentStats[Stat.MaxMagic]}";
+            healthModifierText.text = $"+ {equipment.equipmentStats[Stat.MaxHP]}";
+            speedModifierText.text = $"+ {equipment.equipmentStats[Stat.Speed]}";
+            intelligenceModifierText.text = $"+ {equipment.equipmentStats[Stat.Intelligence]}";
+            dexterityModifierText.text = $"+ {equipment.equipmentStats[Stat.Dexterity]}";
+            staminaModifierText.text = $"+ {equipment.equipmentStats[Stat.MaxStamina]}";
+            critChanceModifierText.text = $"+ {equipment.equipmentStats[Stat.CritChance]}";
             burnDamageModifierText.text =
                 $"+ {equipment.damageModifiers.GetValueOrDefault(DamageType.Fire, 0)}";
             iceDamageModifierText.text =

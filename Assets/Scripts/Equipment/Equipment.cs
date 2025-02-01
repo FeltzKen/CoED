@@ -1,152 +1,214 @@
+using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using UnityEngine;
 
 namespace CoED
 {
-    [System.Serializable]
+    /// <summary>
+    /// Example "Equipment" class that shows how to
+    /// 1) Provide default stats.
+    /// 2) Override them in a constructor.
+    /// 3) Keep the affix logic (prefix/suffix) intact.
+    /// </summary>
+    [Serializable]
     public class Equipment : IShopItem
     {
+        // ------------------------------
+        // Fields
+        // ------------------------------
         public string itemID;
-        public EquipmentPrefixData prePrefix = null;
-        public EquipmentPrefixData prefix = null;
-        public EquipmentSuffixData suffix = null;
         public string itemName;
-        public string hiddenNameData;
         public EquipmentSlot slot;
-        public int attack;
-        public int defense;
-        public int magic;
-        public int health;
-        public int stamina;
-        public int intelligence;
-        public int dexterity;
-        public int speed;
-        public int critChance;
+        public Rarity rarity;
+        public Sprite baseSprite;
+
+        // If you want them optional:
+        public EquipmentPrefixData prePrefix;
+        public EquipmentPrefixData prefix;
+        public EquipmentSuffixData suffix;
+
+        // Example: used to store "Enchanted" or "Cursed" from prePrefix
+        public string hiddenNameData;
         public bool isEnchantedOrCursed;
+        public bool isOneTimeEffect;
+        public bool effectUsed;
+        public bool hasBeenRevealed;
 
-        public string GetName() => itemName;
+        // For consistency, still keep a dictionary with default 0f for every Stat you care about.
+        // This ensures every new Equipment object starts with a "full set" of stats at zero.
+        public Dictionary<Stat, float> equipmentStats = new Dictionary<Stat, float>
+        {
+            { Stat.Attack, 0f },
+            { Stat.Defense, 0f },
+            { Stat.Intelligence, 0f },
+            { Stat.Dexterity, 0f },
+            { Stat.Speed, 0f },
+            { Stat.CritChance, 0f },
+            { Stat.CritDamage, 0f },
+            { Stat.ProjectileRange, 0f },
+            { Stat.AttackRange, 0f },
+            { Stat.ElementalDamage, 0f },
+            { Stat.ChanceToInflictStatusEffect, 0f },
+            { Stat.StatusEffectDuration, 0f },
+            { Stat.FireRate, 0f },
+            { Stat.Shield, 0f },
+            { Stat.Accuracy, 0f },
+            { Stat.MaxHP, 0f },
+            { Stat.MaxMagic, 0f },
+            { Stat.MaxStamina, 0f },
+            { Stat.Evasion, 0f },
+        };
 
-        // Elemental Damage
-        public Dictionary<DamageType, int> damageModifiers = new Dictionary<DamageType, int>();
-        public Dictionary<DamageType, int> enchantedOrCursedModifiers =
-            new Dictionary<DamageType, int>();
+        // Elemental damage
+        public Dictionary<DamageType, float> damageModifiers = new Dictionary<DamageType, float>();
+        public Dictionary<DamageType, float> enchantedOrCursedModifiers =
+            new Dictionary<DamageType, float>();
 
-        // Player's active effects
+        // Status effects
         public List<StatusEffectType> activeStatusEffects = new List<StatusEffectType>();
         public List<StatusEffectType> hiddenStatusEffects = new List<StatusEffectType>();
-
-        // Effects this equipment inflicts on others
         public List<StatusEffectType> inflictedStatusEffects = new List<StatusEffectType>();
         public List<Resistances> resistanceEffects = new List<Resistances>();
         public List<Weaknesses> weaknessEffects = new List<Weaknesses>();
         public List<Immunities> immunityEffects = new List<Immunities>();
-        public bool isOneTimeEffect;
-        public bool effectUsed;
-        public bool hasBeenRevealed;
-        public Sprite baseSprite;
-        public Rarity rarity;
 
-        public Sprite GetSprite() => baseSprite;
+        // ------------------------------
+        // Constructors
+        // ------------------------------
 
-        // Initialize default stats to prevent unintentional nulls
-        public void InitializeEquipment(
-            string id,
-            string name,
+        /// <summary>
+        /// Default constructor (required for serialization).
+        /// </summary>
+        public Equipment()
+        {
+            // If you want special logic whenever you create a new Equipment,
+            // you can put it here.
+        }
+
+        /// <summary>
+        /// Constructor that lets you override any stats you want in a dictionary.
+        /// This is often more flexible than a 15-argument constructor.
+        /// </summary>
+        public Equipment(
+            string itemID,
+            string itemName,
             EquipmentSlot slot,
             Rarity rarity,
-            Sprite baseSprite,
-            int attack,
-            int defense,
-            int magic,
-            int health,
-            int stamina,
-            int intelligence,
-            int dexterity,
-            int speed,
-            int critChance,
-            Dictionary<DamageType, int> damageModifiers,
-            List<Resistances> resistanceEffects,
-            List<Weaknesses> weaknessEffects,
-            bool isOneTimeEffect,
-            bool effectUsed,
-            List<StatusEffectType> activeEffects,
-            List<StatusEffectType> inflictedEffects
+            Sprite baseSprite = null,
+            bool isOneTimeEffect = false,
+            Dictionary<Stat, float> statOverrides = null
         )
         {
-            itemID = id;
-            itemName = name;
+            this.itemID = itemID;
+            this.itemName = itemName;
             this.slot = slot;
             this.rarity = rarity;
             this.baseSprite = baseSprite;
-            this.attack = attack;
-            this.defense = defense;
-            this.magic = magic;
-            this.health = health;
-            this.stamina = stamina;
-            this.intelligence = intelligence;
-            this.dexterity = dexterity;
-            this.speed = speed;
-            this.critChance = critChance;
-            this.damageModifiers = damageModifiers;
-            this.activeStatusEffects = activeEffects;
-            this.inflictedStatusEffects = inflictedEffects;
-            this.resistanceEffects = resistanceEffects;
-            this.weaknessEffects = weaknessEffects;
-            this.isOneTimeEffect = isOneTimeEffect;
-            this.effectUsed = effectUsed;
+
+            // We already have default 0.0f for each Stat in equipmentStats.
+            // But if the caller wants to override certain stats:
+            if (statOverrides != null)
+            {
+                foreach (var pair in statOverrides)
+                {
+                    // Make sure the key exists (it does, but just in case):
+                    if (!equipmentStats.ContainsKey(pair.Key))
+                        equipmentStats[pair.Key] = 0f;
+
+                    // Override with the new value
+                    equipmentStats[pair.Key] = pair.Value;
+                }
+            }
         }
 
-        public void RevealHiddenAttributes(bool shopRequest = false)
+        public Equipment(Equipment other)
         {
-            if (hasBeenRevealed || prePrefix == null)
-                return;
+            // Basic fields
+            this.itemID = other.itemID;
+            this.itemName = other.itemName;
+            this.slot = other.slot;
+            this.rarity = other.rarity;
+            this.baseSprite = other.baseSprite;
 
-            // Apply Enchanted/Cursed Modifiers
-            if (enchantedOrCursedModifiers.Count > 0)
-            {
-                foreach (var modifier in enchantedOrCursedModifiers)
-                {
-                    damageModifiers[modifier.Key] = modifier.Value;
-                }
-            }
-            // Apply hidden stats
-            ApplyStats(prePrefix, null, null);
+            // Dictionaries: clone them so we don't share references
+            this.equipmentStats = new Dictionary<Stat, float>(other.equipmentStats);
+            this.damageModifiers = new Dictionary<DamageType, float>(other.damageModifiers);
+            this.enchantedOrCursedModifiers = new Dictionary<DamageType, float>(
+                other.enchantedOrCursedModifiers
+            );
 
-            // Apply hidden name data
-            itemName = prePrefix.prefixName + " " + itemName;
+            // Copy status effect lists
+            this.activeStatusEffects = new List<StatusEffectType>(other.activeStatusEffects);
+            this.hiddenStatusEffects = new List<StatusEffectType>(other.hiddenStatusEffects);
+            this.inflictedStatusEffects = new List<StatusEffectType>(other.inflictedStatusEffects);
+            this.resistanceEffects = new List<Resistances>(other.resistanceEffects);
+            this.weaknessEffects = new List<Weaknesses>(other.weaknessEffects);
+            this.immunityEffects = new List<Immunities>(other.immunityEffects);
 
-            // Apply hidden status effects
-            if (hiddenStatusEffects.Count > 0)
-            {
-                foreach (var effect in hiddenStatusEffects)
-                {
-                    activeStatusEffects.Add(effect);
-                }
-            }
-            if (!shopRequest)
-                FloatingTextManager.Instance.ShowFloatingText(
-                    $"The equipped item is {hiddenNameData}!",
-                    PlayerStats.Instance.transform,
-                    hiddenNameData == "Cursed" ? Color.red : Color.green
-                );
-            hasBeenRevealed = true;
+            // Other booleans
+            this.isOneTimeEffect = other.isOneTimeEffect;
+            this.effectUsed = other.effectUsed;
+            this.hasBeenRevealed = other.hasBeenRevealed;
+            this.isEnchantedOrCursed = other.isEnchantedOrCursed;
+            this.hiddenNameData = other.hiddenNameData;
+
+            // Affix references
+            this.prePrefix = other.prePrefix; // We can just copy the references if they are scriptable objects / data classes
+            this.prefix = other.prefix;
+            this.suffix = other.suffix;
         }
 
+        // ------------------------------
+        // Interface & Utility Methods
+        // ------------------------------
+
+        public string GetName() => itemName;
+
+        public Sprite GetSprite() => baseSprite;
+
+        /// <summary>
+        /// Example "describe" function: you could expand or customize as needed.
+        /// </summary>
+        public string GetDescription()
+        {
+            string desc = itemName;
+
+            if (prePrefix != null)
+                desc = prePrefix.prefixName + " " + desc;
+            if (suffix != null)
+                desc += " " + suffix.suffixName;
+
+            // Add linebreak to show final "itemName" again, or whatever you prefer
+            desc += "\n" + itemName;
+            return desc;
+        }
+
+        // ------------------------------
+        // Example Affix Logic
+        // ------------------------------
+
+        /// <summary>
+        /// Called after you set up "prefix"/"suffix"/"prePrefix"
+        /// to finalize stats and naming.
+        /// </summary>
         public void ApplyAffixes()
         {
-            // Apply Pre-Prefix Modifiers (Enchanted/Cursed)
+            // 1) Pre-prefix logic (Enchanted or Cursed)
             if (prePrefix != null)
             {
+                // Stash the "Enchanted"/"Cursed" for reveal
                 hiddenNameData = prePrefix.prefixName;
+
+                // Copy damage modifiers from prePrefix into "enchantedOrCursedModifiers"
                 foreach (var modifier in prePrefix.damageModifiers)
                 {
-                    if (damageModifiers.ContainsKey(modifier.Key))
+                    if (enchantedOrCursedModifiers.ContainsKey(modifier.Key))
                         enchantedOrCursedModifiers[modifier.Key] += modifier.Value;
                     else
-                        enchantedOrCursedModifiers.Add(modifier.Key, modifier.Value);
+                        enchantedOrCursedModifiers[modifier.Key] = modifier.Value;
                 }
-                // Apply status effects from pre-prefix
+
+                // Add any hidden status effects
                 if (prePrefix.activeStatusEffects != null)
                 {
                     foreach (var effect in prePrefix.activeStatusEffects)
@@ -157,20 +219,16 @@ namespace CoED
                 }
             }
 
-            // Apply Prefix Modifiers
+            // 2) Prefix
             if (prefix != null)
             {
-                ApplyStats(null, prefix, null);
+                // Add stats from prefix
+                ApplyStats(prefix.statModifiers);
 
-                foreach (var modifier in prefix.damageModifiers)
-                {
-                    if (damageModifiers.ContainsKey(modifier.Key))
-                        damageModifiers[modifier.Key] += modifier.Value;
-                    else
-                        damageModifiers.Add(modifier.Key, modifier.Value);
-                }
+                // Merge damage modifiers from prefix
+                MergeDamageModifiers(prefix.damageModifiers, damageModifiers);
 
-                // Apply status effects from prefix
+                // Add active status effects from prefix
                 if (prefix.activeStatusEffects != null)
                 {
                     foreach (var effect in prefix.activeStatusEffects)
@@ -181,20 +239,12 @@ namespace CoED
                 }
             }
 
-            // Apply Suffix Modifiers
+            // 3) Suffix
             if (suffix != null)
             {
-                ApplyStats(null, null, suffix);
+                ApplyStats(suffix.statModifiers);
+                MergeDamageModifiers(suffix.damageModifiers, damageModifiers);
 
-                foreach (var modifier in suffix.damageModifiers)
-                {
-                    if (damageModifiers.ContainsKey(modifier.Key))
-                        damageModifiers[modifier.Key] += modifier.Value;
-                    else
-                        damageModifiers.Add(modifier.Key, modifier.Value);
-                }
-
-                // Apply status effects from suffix
                 if (suffix.activeStatusEffects != null)
                 {
                     foreach (var effect in suffix.activeStatusEffects)
@@ -205,83 +255,104 @@ namespace CoED
                 }
             }
 
-            // Format Item Name: [Prefix] [BaseName] [Suffix]
+            // 4) Rename the item based on prefix / suffix
+            //    e.g. "Fiery Iron Sword of the Bear"
+            string baseName = itemName;
             itemName =
-                $"{(prefix != null ? prefix.prefixName + " " : "")}"
-                + $"{itemName}"
-                + $"{(suffix != null ? " " + suffix.suffixName : "")}";
+                (prefix != null ? prefix.prefixName + " " : "")
+                + baseName
+                + (suffix != null ? " " + suffix.suffixName : "");
         }
 
-        public string GetDescription()
+        /// <summary>
+        /// Reveals "Enchanted" or "Cursed" if the item had a prePrefix.
+        /// Typically called when you actually equip or identify the item.
+        /// </summary>
+        public void RevealHiddenAttributes(bool shopRequest = false)
         {
-            string desc = "";
-            if (prePrefix != null)
-                desc = prePrefix.prefixName + " " + itemName;
-            if (suffix != null)
-                desc = desc + " " + suffix.suffixName;
-            desc = desc + "\n" + itemName;
-            return desc;
+            if (hasBeenRevealed || prePrefix == null)
+                return;
+
+            // Move the prePrefix damage modifiers into the real dictionary
+            if (enchantedOrCursedModifiers.Count > 0)
+            {
+                foreach (var kvp in enchantedOrCursedModifiers)
+                {
+                    damageModifiers[kvp.Key] = kvp.Value;
+                }
+            }
+
+            // Apply the prePrefix stats onto the final equipmentStats
+            ApplyStats(prePrefix.statModifiers);
+
+            // Add the prePrefix name to the front: "Cursed Iron Sword"
+            itemName = prePrefix.prefixName + " " + itemName;
+
+            // Transfer hidden status effects
+            if (hiddenStatusEffects.Count > 0)
+            {
+                foreach (var effect in hiddenStatusEffects)
+                {
+                    if (!activeStatusEffects.Contains(effect))
+                        activeStatusEffects.Add(effect);
+                }
+            }
+
+            // Optionally show floating text (depends on your game’s UI code)
+            if (!shopRequest)
+            {
+                FloatingTextManager.Instance.ShowFloatingText(
+                    $"The equipped item is {hiddenNameData}!",
+                    // Where to show it
+                    PlayerStats.Instance.transform,
+                    // Color based on curse or enchant
+                    hiddenNameData == "Cursed"
+                        ? Color.red
+                        : Color.green
+                );
+            }
+
+            hasBeenRevealed = true;
         }
 
-        public int GetPrice()
+        // ------------------------------
+        // Private Helpers
+        // ------------------------------
+
+        /// <summary>
+        /// Applies the given dictionary of stat modifiers to equipmentStats.
+        /// </summary>
+        private void ApplyStats(Dictionary<Stat, float> modifiers)
         {
-            int basePrice =
-                attack
-                + defense
-                + magic
-                + health
-                + stamina
-                + intelligence
-                + dexterity
-                + speed
-                + critChance;
-            int affixMultiplier = prePrefix != null || suffix != null ? 2 : 1;
-            return basePrice * affixMultiplier;
+            if (modifiers == null)
+                return;
+
+            foreach (var kvp in modifiers)
+            {
+                if (!equipmentStats.ContainsKey(kvp.Key))
+                    equipmentStats[kvp.Key] = 0f;
+
+                equipmentStats[kvp.Key] += kvp.Value;
+            }
         }
 
-        private void ApplyStats(
-            EquipmentPrefixData prePrefix = null,
-            EquipmentPrefixData prefix = null,
-            EquipmentSuffixData suffix = null
+        /// <summary>
+        /// Merges the 'source' damage modifiers into 'target' dictionary.
+        /// </summary>
+        private void MergeDamageModifiers(
+            Dictionary<DamageType, float> source,
+            Dictionary<DamageType, float> target
         )
         {
-            if (prePrefix != null)
-            {
-                attack += prePrefix.attackModifier;
-                defense += prePrefix.defenseModifier;
-                magic += prePrefix.magicModifier;
-                health += prePrefix.healthModifier;
-                stamina += prePrefix.staminaModifier;
-                intelligence += prePrefix.intelligenceModifier;
-                dexterity += prePrefix.dexterityModifier;
-                speed += prePrefix.speedModifier;
-                critChance += prePrefix.critChanceModifier;
-            }
+            if (source == null)
+                return;
 
-            if (prefix != null)
+            foreach (var kvp in source)
             {
-                attack += prefix.attackModifier;
-                defense += prefix.defenseModifier;
-                magic += prefix.magicModifier;
-                health += prefix.healthModifier;
-                stamina += prefix.staminaModifier;
-                intelligence += prefix.intelligenceModifier;
-                dexterity += prefix.dexterityModifier;
-                speed += prefix.speedModifier;
-                critChance += prefix.critChanceModifier;
-            }
-
-            if (suffix != null)
-            {
-                attack += suffix.attackBonus;
-                defense += suffix.defenseBonus;
-                magic += suffix.magicBonus;
-                health += suffix.healthBonus;
-                stamina += suffix.staminaBonus;
-                intelligence += suffix.intelligenceBonus;
-                dexterity += suffix.dexterityBonus;
-                speed += suffix.speedBonus;
-                critChance += suffix.critChanceBonus;
+                if (target.ContainsKey(kvp.Key))
+                    target[kvp.Key] += kvp.Value;
+                else
+                    target[kvp.Key] = kvp.Value;
             }
         }
     }

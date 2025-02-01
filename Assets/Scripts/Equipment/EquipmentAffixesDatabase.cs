@@ -10,29 +10,55 @@ public static class EquipmentAffixesDatabase
         {
             prefixName = "Enchanted",
             description = "Adds random positive effects",
-            attackModifier = 5,
-            defenseModifier = 5,
-            magicModifier = 5,
-            healthModifier = 10,
-            staminaModifier = 10,
-            intelligenceModifier = 5,
-            dexterityModifier = 5,
-            speedModifier = 5,
-            critChanceModifier = 5,
+            statModifiers = new Dictionary<Stat, float>
+            {
+                { Stat.Attack, 5 },
+                { Stat.Defense, 5 },
+                { Stat.MaxMagic, 5 },
+                { Stat.MaxHP, 10 },
+                { Stat.MaxStamina, 10 },
+                { Stat.Intelligence, 5 },
+                { Stat.Dexterity, 5 },
+                { Stat.Speed, 5 },
+                { Stat.CritChance, 5 },
+                { Stat.CritDamage, 5 },
+                { Stat.ProjectileRange, 5 },
+                { Stat.AttackRange, 5 },
+                { Stat.ElementalDamage, 5 },
+                { Stat.ChanceToInflictStatusEffect, 5 },
+                { Stat.StatusEffectDuration, 5 },
+                { Stat.FireRate, 5 },
+                { Stat.Shield, 5 },
+                { Stat.Accuracy, 5 },
+                { Stat.Evasion, 5 },
+            },
         },
         new EquipmentPrefixData
         {
             prefixName = "Cursed",
             description = "Adds random negative effects",
-            attackModifier = -5,
-            defenseModifier = -5,
-            magicModifier = -5,
-            healthModifier = -10,
-            staminaModifier = -10,
-            intelligenceModifier = -5,
-            dexterityModifier = -5,
-            speedModifier = -5,
-            critChanceModifier = -5,
+            statModifiers = new Dictionary<Stat, float>
+            {
+                { Stat.Attack, -5 },
+                { Stat.Defense, -5 },
+                { Stat.MaxMagic, -5 },
+                { Stat.MaxHP, -10 },
+                { Stat.MaxStamina, -10 },
+                { Stat.Intelligence, -5 },
+                { Stat.Dexterity, -5 },
+                { Stat.Speed, -5 },
+                { Stat.CritChance, -5 },
+                { Stat.CritDamage, -5 },
+                { Stat.ProjectileRange, -5 },
+                { Stat.AttackRange, -5 },
+                { Stat.ElementalDamage, -5 },
+                { Stat.ChanceToInflictStatusEffect, -5 },
+                { Stat.StatusEffectDuration, -5 },
+                { Stat.FireRate, -5 },
+                { Stat.Shield, -5 },
+                { Stat.Accuracy, -5 },
+                { Stat.Evasion, -5 },
+            },
             activeStatusEffects = new List<StatusEffectType> { StatusEffectType.RandomDebuff },
         },
     };
@@ -44,65 +70,65 @@ public static class EquipmentAffixesDatabase
         {
             prefixName = "Fiery",
             description = "Adds fire damage",
-            attackModifier = 5,
-            damageModifiers = new Dictionary<DamageType, int> { { DamageType.Fire, 5 } },
+            statModifiers = new Dictionary<Stat, float> { { Stat.Attack, 5 } },
+            damageModifiers = new Dictionary<DamageType, float> { { DamageType.Fire, 5 } },
         },
         new EquipmentPrefixData
         {
             prefixName = "Freezing",
             description = "Adds ice damage",
-            attackModifier = 5,
-            damageModifiers = new Dictionary<DamageType, int> { { DamageType.Ice, 5 } },
+            statModifiers = new Dictionary<Stat, float> { { Stat.Attack, 5 } },
+            damageModifiers = new Dictionary<DamageType, float> { { DamageType.Ice, 5 } },
         },
         new EquipmentPrefixData
         {
             prefixName = "Shocking",
             description = "Adds lightning damage",
-            attackModifier = 5,
-            damageModifiers = new Dictionary<DamageType, int> { { DamageType.Lightning, 5 } },
+            statModifiers = new Dictionary<Stat, float> { { Stat.Attack, 5 } },
+            damageModifiers = new Dictionary<DamageType, float> { { DamageType.Lightning, 5 } },
         },
         new EquipmentPrefixData
         {
             prefixName = "Venomous",
             description = "Adds poison damage",
-            attackModifier = 5,
-            damageModifiers = new Dictionary<DamageType, int> { { DamageType.Poison, 5 } },
+            statModifiers = new Dictionary<Stat, float> { { Stat.Attack, 5 } },
+            damageModifiers = new Dictionary<DamageType, float> { { DamageType.Poison, 5 } },
         },
         new EquipmentPrefixData
         {
             prefixName = "Swift",
             description = "Increases attack speed",
-            speedModifier = 10,
+            statModifiers = new Dictionary<Stat, float> { { Stat.Speed, 5 } },
         },
         new EquipmentPrefixData
         {
             prefixName = "Mighty",
             description = "Increases attack power",
-            attackModifier = 10,
+            statModifiers = new Dictionary<Stat, float> { { Stat.Attack, 5 } },
         },
         new EquipmentPrefixData
         {
             prefixName = "Stalwart",
             description = "Increases defense",
-            defenseModifier = 10,
+            statModifiers = new Dictionary<Stat, float> { { Stat.Defense, 5 } },
         },
         new EquipmentPrefixData
         {
             prefixName = "Mystic",
-            description = "Increases magic power",
-            magicModifier = 10,
+            description = "Increases MaxMagic power",
+            statModifiers = new Dictionary<Stat, float> { { Stat.MaxMagic, 5 } },
         },
         new EquipmentPrefixData
         {
             prefixName = "Vigilant",
             description = "Increases critical hit chance",
-            critChanceModifier = 5,
+            statModifiers = new Dictionary<Stat, float> { { Stat.CritChance, 5 } },
         },
         new EquipmentPrefixData
         {
             prefixName = "Fortified",
             description = "Increases maximum health",
-            healthModifier = 50,
+            statModifiers = new Dictionary<Stat, float> { { Stat.MaxHP, 50 } },
             activeStatusEffects = new List<StatusEffectType> { StatusEffectType.Regen },
         },
     };
@@ -114,45 +140,51 @@ public static class EquipmentAffixesDatabase
         {
             prefixName = "Blazing",
             description = "Adds stronger fire damage and burn effect",
-            attackModifier = 20,
-            damageModifiers = new Dictionary<DamageType, int> { { DamageType.Fire, 20 } },
+            statModifiers = new Dictionary<Stat, float> { { Stat.Attack, 10 } },
+            damageModifiers = new Dictionary<DamageType, float> { { DamageType.Fire, 20 } },
             inflictedStatusEffects = new List<StatusEffectType> { StatusEffectType.Burn },
         },
         new EquipmentPrefixData
         {
             prefixName = "Frostforged",
             description = "Adds freezing ice damage and freeze effect",
-            attackModifier = 20,
-            damageModifiers = new Dictionary<DamageType, int> { { DamageType.Ice, 20 } },
+            statModifiers = new Dictionary<Stat, float> { { Stat.Attack, 10 } },
+            damageModifiers = new Dictionary<DamageType, float> { { DamageType.Ice, 20 } },
             inflictedStatusEffects = new List<StatusEffectType> { StatusEffectType.Freeze },
         },
         new EquipmentPrefixData
         {
             prefixName = "Storming",
             description = "Enhances lightning damage and stuns",
-            attackModifier = 20,
-            damageModifiers = new Dictionary<DamageType, int> { { DamageType.Lightning, 20 } },
+            statModifiers = new Dictionary<Stat, float> { { Stat.Attack, 10 } },
+            damageModifiers = new Dictionary<DamageType, float> { { DamageType.Lightning, 20 } },
             inflictedStatusEffects = new List<StatusEffectType> { StatusEffectType.Stun },
         },
         new EquipmentPrefixData
         {
             prefixName = "Titanic",
             description = "Massive strength boost",
-            attackModifier = 25,
-            staminaModifier = 25,
+            statModifiers = new Dictionary<Stat, float>
+            {
+                { Stat.Attack, 20 },
+                { Stat.MaxStamina, 20 },
+            },
         },
         new EquipmentPrefixData
         {
             prefixName = "Arcane",
-            description = "Boosts intelligence",
-            magicModifier = 25,
-            intelligenceModifier = 25,
+            description = "Boosts floatelligence",
+            statModifiers = new Dictionary<Stat, float>
+            {
+                { Stat.MaxMagic, 20 },
+                { Stat.Intelligence, 9 },
+            },
         },
         new EquipmentPrefixData
         {
             prefixName = "Guardian's",
             description = "Provides a shield",
-            defenseModifier = 20,
+            statModifiers = new Dictionary<Stat, float> { { Stat.Shield, 50 } },
             activeStatusEffects = new List<StatusEffectType> { StatusEffectType.Shield },
         },
     };
@@ -164,25 +196,25 @@ public static class EquipmentAffixesDatabase
         {
             suffixName = "of the Bear",
             description = "Boosts strength",
-            staminaBonus = 20,
+            statModifiers = new Dictionary<Stat, float> { { Stat.Attack, 10 } },
         },
         new EquipmentSuffixData
         {
             suffixName = "of the Wolf",
             description = "Boosts agility",
-            dexterityBonus = 20,
+            statModifiers = new Dictionary<Stat, float> { { Stat.Dexterity, 10 } },
         },
         new EquipmentSuffixData
         {
             suffixName = "of the Eagle",
             description = "Boosts crit chance",
-            critChanceBonus = 5,
+            statModifiers = new Dictionary<Stat, float> { { Stat.CritChance, 0.1f } },
         },
         new EquipmentSuffixData
         {
             suffixName = "of Vitality",
             description = "Increases health regen",
-            healthBonus = 20,
+            statModifiers = new Dictionary<Stat, float> { { Stat.MaxHP, 10 } },
 
             activeStatusEffects = new List<StatusEffectType> { StatusEffectType.Regen },
         },
@@ -190,7 +222,7 @@ public static class EquipmentAffixesDatabase
         {
             suffixName = "of the Wind",
             description = "Increases movement speed",
-            speedBonus = 10,
+            statModifiers = new Dictionary<Stat, float> { { Stat.Speed, 10 } },
         },
     };
 
@@ -201,18 +233,18 @@ public static class EquipmentAffixesDatabase
         {
             suffixName = "of the Colossus",
             description = "Massive health boost",
-            healthBonus = 400,
+            statModifiers = new Dictionary<Stat, float> { { Stat.MaxHP, 100 } },
         },
         new EquipmentSuffixData
         {
             suffixName = "of Fury",
             description = "Increases attack speed",
-            speedBonus = 25,
+            statModifiers = new Dictionary<Stat, float> { { Stat.Speed, 20 } },
         },
         new EquipmentSuffixData
         {
             suffixName = "of the Phoenix",
-            description = "Revives once upon death",
+            description = "Revives once, if equipped, upon death",
             equipmentEffects = new List<ActiveWhileEquipped> { ActiveWhileEquipped.ReviveOnce },
             isOneTimeEffect = true,
         },
@@ -220,7 +252,7 @@ public static class EquipmentAffixesDatabase
         {
             suffixName = "of Shadows",
             description = "Increases stealth movement speed",
-            speedBonus = 30,
+            statModifiers = new Dictionary<Stat, float> { { Stat.Speed, 20 } },
         },
         new EquipmentSuffixData
         {

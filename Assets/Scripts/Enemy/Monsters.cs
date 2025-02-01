@@ -5,14 +5,37 @@ namespace CoED
 {
     public class Monster
     {
+        public Dictionary<Stat, float> monsterStats = new Dictionary<Stat, float>()
+        {
+            { Stat.HP, 0 },
+            { Stat.MaxHP, 0 },
+            { Stat.Attack, 0 },
+            { Stat.Intelligence, 0 },
+            { Stat.Evasion, 0 },
+            { Stat.Defense, 0 },
+            { Stat.Dexterity, 0 },
+            { Stat.Accuracy, 0 },
+            { Stat.Magic, 0 },
+            { Stat.MaxMagic, 0 },
+            { Stat.Stamina, 0 },
+            { Stat.MaxStamina, 0 },
+            { Stat.Shield, 0 },
+            { Stat.FireRate, 0 },
+            { Stat.CritChance, 0 },
+            { Stat.CritDamage, 0 },
+            { Stat.ProjectileRange, 0 },
+            { Stat.AttackRange, 0 },
+            { Stat.Speed, 0 },
+            { Stat.ElementalDamage, 0 },
+            { Stat.ChanceToInflictStatusEffect, 0 },
+            { Stat.StatusEffectDuration, 0 },
+            { Stat.PatrolSpeed, 0 },
+        };
+
         public string name;
         public string description;
         public int level;
-        public int maxHP;
-        public int attack;
-        public int defense;
-        public int speed;
-        public int intelligence;
+
         public DamageType damageType;
         public float statusInflictionChance;
         public StatusEffectType inflictedStatusEffect = StatusEffectType.None;

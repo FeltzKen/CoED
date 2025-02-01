@@ -61,10 +61,6 @@ namespace CoED
 
         public void Initialize(IEnumerable<Vector2Int> patrolPoints)
         {
-            if (transform.GetComponent<EnemyNavigator>().occupantID == 1)
-            {
-                Debug.Log("Initializing enemy brain");
-            }
             this.patrolPoints = new HashSet<Vector2Int>(patrolPoints);
         }
 
@@ -92,7 +88,7 @@ namespace CoED
 
             // Basic patrol setup
             ChooseRandomPatrolDestination();
-            navigator.SetMoveSpeed(1f / enemyStats.PatrolSpeed);
+            navigator.SetMoveSpeed(1f / enemyStats.GetEnemyPatrolSpeed());
 
             // Initialize projectile timers
             foreach (var projectile in availableProjectiles)
@@ -102,8 +98,8 @@ namespace CoED
             launchProjectileCooldown = projectileCooldownDuration;
 
             // Default engage distances based on CurrentAttackRange
-            engageDistance = enemyStats.CurrentAttackRange + 0.2f; // CHANGED: Slightly bigger
-            disengageDistance = enemyStats.CurrentAttackRange + 0.8f; // CHANGED: bigger gap
+            engageDistance = enemyStats.GetEnemyAttackRange() + 0.2f; // CHANGED: Slightly bigger
+            disengageDistance = enemyStats.GetEnemyAttackRange() + 0.8f; // CHANGED: bigger gap
             playerTransform = GameObject.FindGameObjectWithTag("Player").transform;
         }
 
@@ -171,7 +167,7 @@ namespace CoED
                 distanceToPlayer,
                 visualObstructionLayer
             );
-            return (hit.collider == null || hit.collider.CompareTag("Player"));
+            return hit.collider == null || hit.collider.CompareTag("Player");
         }
 
         // ===============================
@@ -186,13 +182,13 @@ namespace CoED
             switch (newState)
             {
                 case EnemyState.Patrol:
-                    navigator.SetMoveSpeed(1f / enemyStats.PatrolSpeed);
+                    navigator.SetMoveSpeed(1f / enemyStats.GetEnemyPatrolSpeed());
                     ChooseRandomPatrolDestination();
                     navigator.SetDestination(patrolDestination);
                     break;
 
                 case EnemyState.Chase:
-                    navigator.SetMoveSpeed(1f / enemyStats.ChaseSpeed);
+                    navigator.SetMoveSpeed(1f / enemyStats.GetEnemyChaseSpeed());
                     navigator.ClearPath();
                     break;
 
@@ -281,17 +277,18 @@ namespace CoED
             }
 
             // Also consider projectile logic
-            if (
-                distanceToPlayer <= enemyStats.ProjectileCurrentAttackRange
-                && launchProjectileCooldown <= 0
-            )
+            if (distanceToPlayer <= enemyStats.GetEnemyProjectileRange())
             {
-                TryFireProjectile();
-                launchProjectileCooldown = projectileCooldownDuration;
+                if (CanAttackPlayer)
+                {
+                    TryFireProjectile();
+                    launchProjectileCooldown = projectileCooldownDuration;
+                }
             }
 
             // Actually handle the "melee approach + attack"
-            HandleAttack();
+            if (CanAttackPlayer)
+                HandleAttack();
         }
 
         private void DecideWanderNearPlayerState(float distanceToPlayer, bool seesPlayer)
@@ -348,19 +345,15 @@ namespace CoED
             navigator.SetDestination(playerTile);
         }
 
-        /// <summary>
-        /// The big "swarm" logic: The enemy tries to move closer if not in range.
-        /// Once in range, it attempts an attack (with a cooldown).
-        /// </summary>
         private void HandleAttack()
         {
             float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
 
             // If still outside actual melee range, keep "inching" forward
-            if (distanceToPlayer > (enemyStats.CurrentAttackRange - 0.1f))
+            if (distanceToPlayer > (enemyStats.GetEnemyAttackRange() - 0.1f))
             {
                 // "Push into the crowd" at half chase speed
-                navigator.SetMoveSpeed(1f / (enemyStats.ChaseSpeed * 2f));
+                navigator.SetMoveSpeed(1f / (enemyStats.GetEnemyChaseSpeed() * 2f));
 
                 // Instead of going exactly to player's tile, we find a free adjacent tile if possible
                 Vector2Int bestTile = FindFreeAdjacentTileNearPlayer();
@@ -380,44 +373,125 @@ namespace CoED
             }
         }
 
-        /// <summary>
-        /// Actually performs the melee attack damage logic.
-        /// Previously you had if(CanAttackPlayer) { ... }
-        /// but now we do a time-based approach.
-        /// You could re-enable CanAttackPlayer if you want a one-and-done approach.
-        /// </summary>
-        private void PerformMeleeAttack()
+        public void PerformMeleeAttack()
         {
+            if (playerTransform == null)
+                return;
+
             float distance = Vector2.Distance(transform.position, playerTransform.position);
-            if (distance <= enemyStats.CurrentAttackRange)
+            if (distance > enemyStats.GetEnemyAttackRange())
+                return;
+
+            PlayerStats playerStats = playerTransform.GetComponent<PlayerStats>();
+            if (playerStats == null)
+                return;
+
+            // ✅ Calculate hit success
+            bool hitSuccess = BattleCalculations.IsAttackSuccessful(
+                enemyStats.GetEnemyAccuracy(),
+                playerStats.GetCurrentEvasion()
+            );
+
+            if (!hitSuccess)
             {
-                // Build damage
-                Dictionary<DamageType, float> damageDealt = new Dictionary<DamageType, float>();
-                foreach (var kvp in enemyStats.dynamicDamageTypes)
-                {
-                    damageDealt[kvp.Key] = kvp.Value;
-                }
-
-                // Build status
-                List<StatusEffectType> successfulEffects = new List<StatusEffectType>();
-
-                foreach (var effect in enemyStats.inflictedStatusEffects)
-                {
-                    if (Random.value < enemyStats.chanceToInflictStatusEffect)
-                        successfulEffects.Add(effect);
-                }
-
-                DamageInfo damageInfo = new DamageInfo(damageDealt, successfulEffects);
-
-                // Apply to player
-                PlayerStats.Instance.TakeDamage(
-                    damageInfo,
-                    GetComponent<_EnemyStats>().chanceToInflictStatusEffect
-                );
-
-                Debug.Log($"{name} attacked the player with {damageDealt.Count} damage types.");
-                CanAttackPlayer = false;
+                Debug.Log($"{gameObject.name} missed the attack on {playerStats.name}!");
+                return;
             }
+
+            // ✅ Determine if attack is critical
+            bool isCritical = BattleCalculations.IsCriticalHit(enemyStats.GetEnemyDexterity());
+
+            // ✅ Calculate physical damage
+            float physicalDamage = BattleCalculations.CalculateDamage(
+                enemyStats.GetEnemyAttack(),
+                0, // No additional weapon power here (could be modified later)
+                playerStats.GetCurrentDefense(),
+                isCritical
+            );
+
+            // ✅ Calculate elemental damage separately
+            Dictionary<DamageType, float> damageDealt = new Dictionary<DamageType, float>
+            {
+                {
+                    DamageType.Physical,
+                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Physical)
+                        ? enemyStats.dynamicDamageTypes[DamageType.Physical]
+                        : 0
+                },
+                {
+                    DamageType.Fire,
+                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Fire)
+                        ? enemyStats.dynamicDamageTypes[DamageType.Fire]
+                        : 0
+                },
+                {
+                    DamageType.Poison,
+                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Poison)
+                        ? enemyStats.dynamicDamageTypes[DamageType.Poison]
+                        : 0
+                },
+                {
+                    DamageType.Ice,
+                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Ice)
+                        ? enemyStats.dynamicDamageTypes[DamageType.Ice]
+                        : 0
+                },
+                {
+                    DamageType.Lightning,
+                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Lightning)
+                        ? enemyStats.dynamicDamageTypes[DamageType.Lightning]
+                        : 0
+                },
+                {
+                    DamageType.Shadow,
+                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Shadow)
+                        ? enemyStats.dynamicDamageTypes[DamageType.Shadow]
+                        : 0
+                },
+                {
+                    DamageType.Arcane,
+                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Arcane)
+                        ? enemyStats.dynamicDamageTypes[DamageType.Arcane]
+                        : 0
+                },
+                {
+                    DamageType.Holy,
+                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Holy)
+                        ? enemyStats.dynamicDamageTypes[DamageType.Holy]
+                        : 0
+                },
+                {
+                    DamageType.Bleed,
+                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Bleed)
+                        ? enemyStats.dynamicDamageTypes[DamageType.Bleed]
+                        : 0
+                },
+            };
+
+            // ✅ Apply status effects based on enemy's chance
+            List<StatusEffectType> successfulEffects = new List<StatusEffectType>();
+            foreach (var statusEffect in enemyStats.inflictedStatusEffects)
+            {
+                if (
+                    BattleCalculations.ApplyStatusEffect(
+                        enemyStats.GetEnemyChanceToInflictStatusEffect(),
+                        enemyStats.GetEnemyIntelligence()
+                    )
+                )
+                {
+                    successfulEffects.Add(statusEffect);
+                }
+            }
+
+            // ✅ Send damage and effects to player
+            DamageInfo damageInfo = new DamageInfo(damageDealt, successfulEffects);
+            playerStats.TakeDamage(damageInfo);
+
+            lastAttackTime = Time.time;
+
+            Debug.Log(
+                $"{gameObject.name} attacked {playerStats.name} for {physicalDamage} damage {(isCritical ? "(Critical Hit!)" : "")}."
+            );
         }
 
         /// <summary>

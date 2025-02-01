@@ -228,24 +228,25 @@ namespace CoED
                     {
                         name = templateMonster.name,
                         description = templateMonster.description,
+                        monsterStats = new Dictionary<Stat, float>(templateMonster.monsterStats),
                         damageType = templateMonster.damageType,
                         monsterSprite = templateMonster.monsterSprite,
                         statusInflictionChance = templateMonster.statusInflictionChance,
                         inflictedStatusEffect = templateMonster.inflictedStatusEffect,
                         resistance = templateMonster.resistance,
                         weakness = templateMonster.weakness,
-                        // etc. But do NOT copy templateMonster.level / stats
                     };
 
                     // 3) Decide the monster's new level from floor + random variation
-                    int randomLevel = Mathf.RoundToInt(floorNumber * Random.Range(0.8f, 1.2f));
+                    int randomLevel = Mathf.RoundToInt(floorNumber * Random.Range(0.8f, 1.6f));
                     randomLevel = Mathf.Clamp(randomLevel, 1, 30);
                     monsterData.level = randomLevel;
 
                     // 4) Recompute stats from that level
-                    monsterData.maxHP = CalculateHPFromLevel(monsterData.level);
-                    monsterData.attack = CalculateAttackFromLevel(monsterData.level);
-                    monsterData.defense = CalculateDefenseFromLevel(monsterData.level);
+                    MonsterInitializer.CalculateMonsterBaseStatsFromLevel(
+                        monsterData,
+                        monsterData.level
+                    );
                     // etc.
                 }
 
@@ -266,23 +267,15 @@ namespace CoED
                 statsComp.monsterData = monsterData;
                 statsComp.spawnFloorLevel = floorNumber;
 
-                InitializeEnemy(enemyGO, pathfinder, floorData);
+                MonsterInitializer.InitializeEnemy(
+                    enemyGO,
+                    pathfinder,
+                    floorData,
+                    occupantIDCounter,
+                    dungeonSettings,
+                    obstacleLayer
+                );
             }
-        }
-
-        private int CalculateHPFromLevel(int level)
-        {
-            return Mathf.RoundToInt(20 + (level * 15));
-        }
-
-        private int CalculateAttackFromLevel(int level)
-        {
-            return Mathf.RoundToInt(3 + (level * 2.5f));
-        }
-
-        private int CalculateDefenseFromLevel(int level)
-        {
-            return Mathf.RoundToInt(1 + (level * 1.5f));
         }
 
         /// <summary>
@@ -295,13 +288,30 @@ namespace CoED
                 name = mb.name,
                 description = mb.description,
                 level = mb.level,
-                maxHP = mb.maxHP,
-                attack = mb.attack,
-                defense = mb.defense,
-                speed = mb.speed,
-                intelligence = mb.intelligence,
+                monsterStats = new Dictionary<Stat, float>()
+                {
+                    { Stat.MaxHP, mb.MiniBossStats[Stat.MaxHP] },
+                    { Stat.Attack, mb.MiniBossStats[Stat.Attack] },
+                    { Stat.Defense, mb.MiniBossStats[Stat.Defense] },
+                    { Stat.Speed, mb.MiniBossStats[Stat.Speed] },
+                    { Stat.Intelligence, mb.MiniBossStats[Stat.Intelligence] },
+                    { Stat.Dexterity, mb.MiniBossStats[Stat.Dexterity] },
+                    { Stat.CritChance, mb.MiniBossStats[Stat.CritChance] },
+                    { Stat.CritDamage, mb.MiniBossStats[Stat.CritDamage] },
+                    { Stat.FireRate, mb.MiniBossStats[Stat.FireRate] },
+                    { Stat.Shield, mb.MiniBossStats[Stat.Shield] },
+                    { Stat.Accuracy, mb.MiniBossStats[Stat.Accuracy] },
+                    { Stat.ElementalDamage, mb.MiniBossStats[Stat.ElementalDamage] },
+                    {
+                        Stat.ChanceToInflictStatusEffect,
+                        mb.MiniBossStats[Stat.ChanceToInflictStatusEffect]
+                    },
+                    { Stat.StatusEffectDuration, mb.MiniBossStats[Stat.StatusEffectDuration] },
+                    { Stat.PatrolSpeed, mb.MiniBossStats[Stat.PatrolSpeed] },
+                    { Stat.ChaseSpeed, mb.MiniBossStats[Stat.ChaseSpeed] },
+                },
                 damageType = mb.damageType,
-                statusInflictionChance = mb.statusInflictionChance,
+                statusInflictionChance = mb.MiniBossStats[Stat.ChanceToInflictStatusEffect],
                 inflictedStatusEffect = mb.inflictedStatusEffect,
                 monsterSprite = mb.miniBossSprite,
             };
@@ -317,13 +327,30 @@ namespace CoED
                 name = fb.name,
                 description = fb.description,
                 level = fb.level,
-                maxHP = fb.maxHP,
-                attack = fb.attack,
-                defense = fb.defense,
-                speed = fb.speed,
-                intelligence = fb.intelligence,
+                monsterStats = new Dictionary<Stat, float>()
+                {
+                    { Stat.MaxHP, fb.finalBossStats[Stat.MaxHP] },
+                    { Stat.Attack, fb.finalBossStats[Stat.Attack] },
+                    { Stat.Defense, fb.finalBossStats[Stat.Defense] },
+                    { Stat.Speed, fb.finalBossStats[Stat.Speed] },
+                    { Stat.Intelligence, fb.finalBossStats[Stat.Intelligence] },
+                    { Stat.Dexterity, fb.finalBossStats[Stat.Dexterity] },
+                    { Stat.CritChance, fb.finalBossStats[Stat.CritChance] },
+                    { Stat.CritDamage, fb.finalBossStats[Stat.CritDamage] },
+                    { Stat.FireRate, fb.finalBossStats[Stat.FireRate] },
+                    { Stat.Shield, fb.finalBossStats[Stat.Shield] },
+                    { Stat.Accuracy, fb.finalBossStats[Stat.Accuracy] },
+                    { Stat.ElementalDamage, fb.finalBossStats[Stat.ElementalDamage] },
+                    {
+                        Stat.ChanceToInflictStatusEffect,
+                        fb.finalBossStats[Stat.ChanceToInflictStatusEffect]
+                    },
+                    { Stat.StatusEffectDuration, fb.finalBossStats[Stat.StatusEffectDuration] },
+                    { Stat.PatrolSpeed, fb.finalBossStats[Stat.PatrolSpeed] },
+                    { Stat.ChaseSpeed, fb.finalBossStats[Stat.ChaseSpeed] },
+                },
                 damageType = fb.damageType,
-                statusInflictionChance = fb.statusInflictionChance,
+                statusInflictionChance = fb.finalBossStats[Stat.ChanceToInflictStatusEffect],
                 inflictedStatusEffect = fb.inflictedStatusEffect,
                 monsterSprite = fb.bossSprite,
             };
@@ -479,24 +506,41 @@ namespace CoED
 
         private void ApplyEquipmentModifiers(Equipment equipment, int modifierScale)
         {
-            if (equipment.attack > 0)
-                equipment.attack += modifierScale;
-            if (equipment.defense > 0)
-                equipment.defense += modifierScale;
-            if (equipment.speed > 0)
-                equipment.speed += modifierScale;
-            if (equipment.health > 0)
-                equipment.health += modifierScale;
-            if (equipment.magic > 0)
-                equipment.magic += modifierScale;
-            if (equipment.stamina > 0)
-                equipment.stamina += modifierScale;
-            if (equipment.intelligence > 0)
-                equipment.intelligence += modifierScale;
-            if (equipment.dexterity > 0)
-                equipment.dexterity += modifierScale;
-            if (equipment.critChance > 0)
-                equipment.critChance += modifierScale;
+            if (equipment.equipmentStats[Stat.Attack] > 0)
+                equipment.equipmentStats[Stat.Attack] += modifierScale;
+            if (equipment.equipmentStats[Stat.Defense] > 0)
+                equipment.equipmentStats[Stat.Defense] += modifierScale;
+            if (equipment.equipmentStats[Stat.MaxMagic] > 0)
+                equipment.equipmentStats[Stat.MaxMagic] += modifierScale;
+            if (equipment.equipmentStats[Stat.MaxHP] > 0)
+                equipment.equipmentStats[Stat.MaxHP] += modifierScale;
+            if (equipment.equipmentStats[Stat.MaxStamina] > 0)
+                equipment.equipmentStats[Stat.MaxStamina] += modifierScale;
+            if (equipment.equipmentStats[Stat.Intelligence] > 0)
+                equipment.equipmentStats[Stat.Intelligence] += modifierScale;
+            if (equipment.equipmentStats[Stat.Dexterity] > 0)
+                equipment.equipmentStats[Stat.Dexterity] += modifierScale;
+            if (equipment.equipmentStats[Stat.Speed] > 0)
+                equipment.equipmentStats[Stat.Speed] += modifierScale;
+            if (equipment.equipmentStats[Stat.CritChance] > 0)
+                equipment.equipmentStats[Stat.CritChance] += modifierScale;
+            if (equipment.equipmentStats[Stat.CritDamage] > 0)
+                equipment.equipmentStats[Stat.CritDamage] += modifierScale;
+            if (equipment.equipmentStats[Stat.ElementalDamage] > 0)
+                equipment.equipmentStats[Stat.ElementalDamage] += modifierScale;
+            if (equipment.equipmentStats[Stat.ChanceToInflictStatusEffect] > 0)
+                equipment.equipmentStats[Stat.ChanceToInflictStatusEffect] += modifierScale;
+            if (equipment.equipmentStats[Stat.StatusEffectDuration] > 0)
+                equipment.equipmentStats[Stat.StatusEffectDuration] += modifierScale;
+            if (equipment.equipmentStats[Stat.FireRate] > 0)
+                equipment.equipmentStats[Stat.FireRate] += modifierScale;
+            if (equipment.equipmentStats[Stat.Shield] > 0)
+                equipment.equipmentStats[Stat.Shield] += modifierScale;
+            if (equipment.equipmentStats[Stat.Accuracy] > 0)
+                equipment.equipmentStats[Stat.Accuracy] += modifierScale;
+            if (equipment.equipmentStats[Stat.Evasion] > 0)
+                equipment.equipmentStats[Stat.Evasion] += modifierScale;
+
 
             var keys = new List<DamageType>(equipment.damageModifiers.Keys);
             foreach (var key in keys)
@@ -741,30 +785,50 @@ namespace CoED
         #region Ambush/Boss Spawning (optional partial refactor)
         public void SpawnAmbush(Vector3 center, FloorData floorData, Transform enemyParent)
         {
-            List<Vector2Int> validTiles = GetValidSpawnPositions(
+            List<Vector2Int> spawnPositions = GetValidSpawnPositions(
                 dungeonSettings.ambushEnemyCount,
-                dungeonSettings.ambushRadius,
+                5f,
                 floorData.FloorTilemap.WorldToCell(center),
                 floorData
             );
 
-            if (validTiles.Count == 0)
+            if (spawnPositions.Count == 0)
             {
                 Debug.LogWarning("No valid ambush spawn positions found.");
                 return;
             }
 
-            Pathfinder pathfinder = GetOrCreateFloorPathfinder(floorData);
-
-            for (int i = 0; i < dungeonSettings.ambushEnemyCount; i++)
+            var pathfinder = GetOrCreateFloorPathfinder(floorData);
+            if (pathfinder == null)
             {
-                Vector2Int tilePos = validTiles[Random.Range(0, validTiles.Count)];
-                validTiles.Remove(tilePos);
-                Vector3 worldPos = floorData.FloorTilemap.CellToWorld((Vector3Int)tilePos);
+                Debug.LogError("No pathfinder found for ambush spawn.");
+                return;
+            }
+
+            for (int i = 0; i < spawnPositions.Count; i++)
+            {
+                Vector2Int spawnPos = spawnPositions[i];
+                Vector3 worldPos =
+                    floorData.FloorTilemap.CellToWorld(new Vector3Int(spawnPos.x, spawnPos.y, 0))
+                    + new Vector3(0.5f, 0.5f, 0);
 
                 Monster monsterData = MonsterGenerator.GetRandomMonster();
+                if (monsterData == null)
+                {
+                    Debug.LogWarning("No monster found for ambush spawn.");
+                    continue;
+                }
+                MonsterInitializer.CalculateMonsterBaseStatsFromLevel(
+                    monsterData,
+                    floorData.FloorNumber
+                );
 
-                GameObject enemyGO = new GameObject("AmbushEnemy");
+                GameObject enemyGO = new GameObject($"Enemy_{monsterData.name}");
+                enemyGO.AddComponent<Rigidbody2D>();
+
+                RectTransform enemyRect = enemyGO.AddComponent<RectTransform>();
+                enemyRect.sizeDelta = new Vector2(1, 1);
+
                 enemyGO.transform.position = worldPos;
                 enemyGO.transform.SetParent(enemyParent);
 
@@ -775,46 +839,17 @@ namespace CoED
                 statsComp.monsterData = monsterData;
                 statsComp.spawnFloorLevel = floorData.FloorNumber;
 
-                InitializeEnemy(enemyGO, pathfinder, floorData);
+                MonsterInitializer.InitializeEnemy(
+                    enemyGO,
+                    pathfinder,
+                    floorData,
+                    occupantIDCounter,
+                    dungeonSettings,
+                    obstacleLayer
+                );
             }
         }
 
-        private void InitializeEnemy(GameObject enemy, Pathfinder pathfinder, FloorData floorData)
-        {
-            int occupantID = ++occupantIDCounter;
-
-            Debug.Log($"Floor {floorData.FloorTilemap.name} - Spawning enemy {occupantID}");
-            enemy.layer = LayerMask.NameToLayer("enemies");
-            enemy.tag = "Enemy";
-
-            EnemyNavigator navigator = enemy.AddComponent<EnemyNavigator>();
-            navigator.Initialize(pathfinder, floorData.FloorTilemap, occupantID);
-
-            EnemyBrain brain = enemy.AddComponent<EnemyBrain>();
-            brain.Initialize(
-                floorData.GetRandomFloorTiles(dungeonSettings.numberOfPatrolPoints).ToHashSet()
-            );
-            brain.visualObstructionLayer = obstacleLayer;
-
-            SpriteRenderer sr = enemy.AddComponent<SpriteRenderer>();
-            if (enemy.GetComponent<_EnemyStats>().monsterData.monsterSprite != null)
-            {
-                sr.sprite = enemy.GetComponent<_EnemyStats>().monsterData.monsterSprite;
-                sr.sortingOrder = 3;
-            }
-            GameObject healthBarPrefab = Resources.Load<GameObject>("Prefabs/enemyHealthBar");
-            if (healthBarPrefab != null)
-            {
-                GameObject healthBar = Instantiate(healthBarPrefab);
-                healthBar.transform.SetParent(enemy.transform, false);
-                healthBar.transform.localPosition = new Vector3(0, 0.5f, 0); // e.g., above the enemy’s head
-
-                // If your health bar has a script or a Slider, link it to enemy
-                EnemyUI barController = enemy.AddComponent<EnemyUI>();
-
-                barController.SetHealthBarMax(enemy.GetComponent<_EnemyStats>().MaxHealth); // e.g., pass the enemy’s data
-            }
-        }
         #endregion
 
         private List<Vector2Int> GetValidSpawnPositions(

@@ -268,7 +268,10 @@ namespace CoED
                 StartCoroutine(CooldownCoroutine(spell, uiElement));
             }
 
-            UpdateMagicBar(PlayerStats.Instance.CurrentMagic, PlayerStats.Instance.MaxMagic);
+            UpdateMagicBar(
+                PlayerStats.Instance.GetCurrentMagic(),
+                PlayerStats.Instance.GetCurrentMaxMagic()
+            );
         }
 
         private IEnumerator CooldownCoroutine(PlayerSpellWrapper spell, SpellUIElement uiElement)
@@ -508,10 +511,18 @@ namespace CoED
 
         public void UpdateUIPanels()
         {
-            UpdateHealthBar(PlayerStats.Instance.CurrentHealth, PlayerStats.Instance.MaxHealth);
-            UpdateStaminaBar(PlayerStats.Instance.CurrentStamina, PlayerStats.Instance.MaxStamina);
-            UpdateMagicBar(PlayerStats.Instance.CurrentMagic, PlayerStats.Instance.MaxMagic);
-
+            UpdateHealthBar(
+                PlayerStats.Instance.GetCurrentHealth(),
+                PlayerStats.Instance.GetCurrentMaxHealth()
+            );
+            UpdateStaminaBar(
+                PlayerStats.Instance.GetCurrentStamina(),
+                PlayerStats.Instance.GetCurrentMaxStamina()
+            );
+            UpdateMagicBar(
+                PlayerStats.Instance.GetCurrentMagic(),
+                PlayerStats.Instance.GetCurrentMaxMagic()
+            );
         }
     }
 }

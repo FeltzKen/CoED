@@ -1,5 +1,8 @@
+using System;
+using System.Linq;
 using CoED;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class EquipmentGenerator
 {
@@ -15,20 +18,6 @@ public class EquipmentGenerator
         string[] possibleTypes = { "Weapon", "Armor", "Accessory" };
         string chosenType = possibleTypes[Random.Range(0, possibleTypes.Length)];
 
-        // Grab a random base equipment using the chosen type
-        Equipment baseEquipment = GetBaseEquipment(tier, chosenType);
-        if (baseEquipment == null)
-        {
-            Debug.LogError(
-                $"Failed to retrieve base equipment for tier={tier}, type={chosenType}."
-            );
-            return null;
-        }
-
-        // Create a new Equipment object and initialize it with the base stats
-        Equipment generatedEquipment = new Equipment();
-        InitializeEquipment(generatedEquipment, baseEquipment);
-
         // Base chances for enchantment and curse
         float baseEnchantmentChance = 0.2f; // 20% at tier 1
         float baseCurseChance = 0.05f; // 5% at tier 1
@@ -37,18 +26,30 @@ public class EquipmentGenerator
         float enchantmentChance = Mathf.Clamp(baseEnchantmentChance - (tier * 0.1f), 0.1f, 0.5f);
         float curseChance = Mathf.Clamp(baseCurseChance + (tier * 0.15f), 0.1f, 0.5f);
 
+        // Create a new Equipment object and initialize it with the base stats
+        Equipment generatedEquipment = new Equipment(GetBaseEquipment(tier, chosenType));
+        Debug.Log(
+            $"generated equipment: {generatedEquipment.itemName} stats: {string.Join(", ", generatedEquipment.equipmentStats.Select(stat => $"{stat.Key}: {stat.Value}"))}"
+        );
+
         // Roll for enchantment or curse
         if (RollChance(enchantmentChance))
         {
             // Apply enchantment
             generatedEquipment.prePrefix = EquipmentAffixesDatabase.pre_prefixes[0]; // "Enchanted"
             generatedEquipment.isEnchantedOrCursed = true;
+            Debug.Log(
+                $"Enchantment: {string.Join(", ", generatedEquipment.prePrefix.statModifiers.Select(stat => $"{stat.Key}: {stat.Value}"))}"
+            );
         }
         else if (RollChance(enchantmentChance + curseChance))
         {
             // Apply curse
             generatedEquipment.prePrefix = EquipmentAffixesDatabase.pre_prefixes[1]; // "Cursed"
             generatedEquipment.isEnchantedOrCursed = true;
+            Debug.Log(
+                $"Curse: {string.Join(", ", generatedEquipment.prePrefix.statModifiers.Select(stat => $"{stat.Key}: {stat.Value}"))}"
+            );
         }
 
         // Apply Prefix
@@ -64,6 +65,9 @@ public class EquipmentGenerator
                 prefix = EquipmentAffixesDatabase.greaterPrefixes[
                     Random.Range(0, EquipmentAffixesDatabase.greaterPrefixes.Count)
                 ];
+                Debug.Log(
+                    $"generated equipment with greater prefix: {prefix.prefixName} stats: {string.Join(", ", prefix.statModifiers.Select(stat => $"{stat.Key}: {stat.Value}"))}"
+                );
             }
 
             generatedEquipment.prefix = prefix;
@@ -82,6 +86,10 @@ public class EquipmentGenerator
                 suffix = EquipmentAffixesDatabase.greaterSuffixes[
                     Random.Range(0, EquipmentAffixesDatabase.greaterSuffixes.Count)
                 ];
+                Debug.Log($"generated equipment with greater suffix: {suffix.suffixName}");
+                Debug.Log(
+                    $"stats: {string.Join(", ", suffix.statModifiers.Select(stat => $"{stat.Key}: {stat.Value}"))}"
+                );
             }
 
             generatedEquipment.suffix = suffix;
@@ -89,7 +97,9 @@ public class EquipmentGenerator
 
         // Apply final stat modifications / naming changes based on affixes
         generatedEquipment.ApplyAffixes();
-
+        Debug.Log(
+            $"Final Equipment: {generatedEquipment.itemName} stats: {string.Join(", ", generatedEquipment.equipmentStats.Select(stat => $"{stat.Key}: {stat.Value}"))}"
+        );
         return generatedEquipment;
     }
 
@@ -105,7 +115,7 @@ public class EquipmentGenerator
 
             // 3) Check if it's cursed by looking at candidate.prePrefix
 
-            candidate.RevealHiddenAttributes();
+            candidate.RevealHiddenAttributes(shopRequest: true);
             Debug.Log(candidate.itemName.Contains("Cursed"));
             if (
                 candidate.itemName.IndexOf("cursed", System.StringComparison.OrdinalIgnoreCase) >= 0
@@ -190,39 +200,6 @@ public class EquipmentGenerator
         }
     }
 
-    /// <summary>
-    /// Initializes a new Equipment instance based on base data.
-    /// </summary>
-    private static void InitializeEquipment(Equipment generatedEquipment, Equipment baseEquipment)
-    {
-        generatedEquipment.InitializeEquipment(
-            baseEquipment.itemID,
-            baseEquipment.itemName,
-            baseEquipment.slot,
-            baseEquipment.rarity,
-            baseEquipment.baseSprite,
-            baseEquipment.attack,
-            baseEquipment.defense,
-            baseEquipment.magic,
-            baseEquipment.health,
-            baseEquipment.stamina,
-            baseEquipment.intelligence,
-            baseEquipment.dexterity,
-            baseEquipment.speed,
-            baseEquipment.critChance,
-            baseEquipment.damageModifiers,
-            baseEquipment.resistanceEffects,
-            baseEquipment.weaknessEffects,
-            baseEquipment.isOneTimeEffect,
-            baseEquipment.effectUsed,
-            baseEquipment.activeStatusEffects,
-            baseEquipment.inflictedStatusEffects
-        );
-    }
-
-    /// <summary>
-    /// Rolls a chance based on the given probability.
-    /// </summary>
     private static bool RollChance(float chance)
     {
         return Random.value < chance;

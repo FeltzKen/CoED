@@ -225,7 +225,7 @@ namespace CoED
             bool isOverEnemy =
                 hitCollider != null
                 && Vector2.Distance(transform.position, roundedMousePosition)
-                    <= playerStats.AttackRange;
+                    <= playerStats.GetCurrentAttackRange();
             return isOverEnemy;
         }
 
@@ -280,7 +280,7 @@ namespace CoED
         {
             if (staminaBar != null)
             {
-                staminaBar.value = playerStats.CurrentStamina;
+                staminaBar.value = playerStats.GetCurrentStamina();
             }
         }
 

@@ -28,13 +28,6 @@ namespace CoED
 
         public void Initialize(Pathfinder pathfinder, Tilemap floorTilemap, int occupantID)
         {
-            if (occupantID.ToString() == "0")
-            {
-                Debug.Log("Initializing enemy navigator");
-                Debug.Log($"Pathfinder: {pathfinder}");
-                Debug.Log($"Floor tilemap: {floorTilemap}");
-                Debug.Log($"Occupant ID: {occupantID}");
-            }
             this.pathfinder = pathfinder;
             this.floorTilemap = floorTilemap;
             this.occupantID = occupantID;
@@ -47,12 +40,6 @@ namespace CoED
 
         public void SetDestination(Vector2Int newDestination)
         {
-            if (occupantID.ToString() == "0")
-            {
-                Debug.Log($"Setting destination to {newDestination}");
-                Debug.Log($"Current grid pos: {currentGridPos}");
-                Debug.Log($"Valid pathfinder: {pathfinder != null}");
-            }
             currentPath = pathfinder.FindPath(currentGridPos, newDestination);
 
             retryCount = 0; // Reset retries whenever a new destination is set
@@ -60,21 +47,11 @@ namespace CoED
 
         public void SetMoveSpeed(float newSpeed)
         {
-            if (occupantID.ToString() == "0")
-            {
-                Debug.Log($"Setting move speed to {newSpeed}");
-            }
             moveDelay = newSpeed;
         }
 
         public bool HasPath()
         {
-            if (occupantID.ToString() == "0")
-            {
-                Debug.Log(
-                    $"Checking if path exists: {currentPath != null && currentPath.Count > 0}"
-                );
-            }
             return currentPath != null && currentPath.Count > 0;
         }
 
@@ -88,17 +65,8 @@ namespace CoED
 
         private void Start()
         {
-            if (occupantID.ToString() == "0")
-            {
-                Debug.Log("Starting enemy navigator");
-                Debug.Log($"floorTilemap: {floorTilemap.name}"); // this is failing!!!
-            }
             Vector3Int cellPos = floorTilemap.WorldToCell(transform.position);
             currentGridPos = new Vector2Int(cellPos.x, cellPos.y);
-            if (occupantID.ToString() == "0")
-            {
-                Debug.Log($"Starting at {currentGridPos}");
-            }
         }
 
         private void Update()
@@ -155,19 +123,10 @@ namespace CoED
                     moveCooldownTimer = 0.2f; // Small delay before retrying
                 }
             }
-            if (occupantID.ToString() == "0")
-            {
-                Debug.Log("Attempting next move");
-                Debug.Log($"Current grid pos: {currentGridPos}");
-                Debug.Log($"Next tile: {nextTile}");
-            }
         }
 
         private Vector2Int FindAlternativeDestination()
         {
-            Debug.Log(
-                $"Finding alternative destination for {currentGridPos} and {destination} for {occupantID}"
-            );
             Vector2Int randomDirection = new Vector2Int(Random.Range(-1, 2), Random.Range(-1, 2));
             return currentGridPos + randomDirection;
         }
@@ -179,12 +138,6 @@ namespace CoED
                 + new Vector3(0.5f, 0.5f, 0);
             rb.position = targetWorldPos;
             transform.position = targetWorldPos;
-            if (occupantID.ToString() == "0")
-            {
-                Debug.Log("Moving to tile");
-                Debug.Log($"Target tile: {targetTile}");
-                Debug.Log($"Target world pos: {targetWorldPos}");
-            }
         }
     }
 }

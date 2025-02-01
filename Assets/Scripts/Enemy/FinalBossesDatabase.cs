@@ -8,13 +8,28 @@ namespace CoED
         public string name;
         public string description;
         public int level;
-        public int maxHP;
-        public int attack;
-        public int defense;
-        public int speed;
-        public int intelligence;
+        public Dictionary<Stat, float> finalBossStats = new Dictionary<Stat, float>()
+        {
+            { Stat.MaxHP, 0 },
+            { Stat.Attack, 0 },
+            { Stat.Defense, 0 },
+            { Stat.Speed, 0 },
+            { Stat.Intelligence, 0 },
+            { Stat.ChanceToInflictStatusEffect, 0 },
+            { Stat.StatusEffectDuration, 0 },
+            { Stat.PatrolSpeed, 0 },
+            { Stat.CritChance, 0 },
+            { Stat.CritDamage, 0 },
+            { Stat.FireRate, 0 },
+            { Stat.Shield, 0 },
+            { Stat.Accuracy, 0 },
+            { Stat.ElementalDamage, 0 },
+            { Stat.Dexterity, 0 },
+            { Stat.ProjectileRange, 0 },
+            { Stat.AttackRange, 0 },
+            { Stat.ChaseSpeed, 0 },
+        };
         public DamageType damageType;
-        public float statusInflictionChance;
         public StatusEffectType inflictedStatusEffect;
         public Sprite bossSprite;
     }
@@ -29,13 +44,28 @@ namespace CoED
                 description =
                     "A colossal dragon whose flames never die, scorching the world in perpetual blaze.",
                 level = 25,
-                maxHP = 1000,
-                attack = 70,
-                defense = 50,
-                speed = 15,
-                intelligence = 25,
+                finalBossStats = new Dictionary<Stat, float>
+                {
+                    { Stat.MaxHP, 1000 },
+                    { Stat.Attack, 70 },
+                    { Stat.Defense, 50 },
+                    { Stat.Speed, 15 },
+                    { Stat.Intelligence, 20 },
+                    { Stat.ChanceToInflictStatusEffect, 0.40f },
+                    { Stat.StatusEffectDuration, 60 },
+                    { Stat.PatrolSpeed, 6 },
+                    { Stat.CritChance, 0 },
+                    { Stat.CritDamage, .40f },
+                    { Stat.FireRate, 6 },
+                    { Stat.Shield, 0 },
+                    { Stat.Accuracy, 20 },
+                    { Stat.ElementalDamage, 30 },
+                    { Stat.Dexterity, 20 },
+                    { Stat.ProjectileRange, 10 },
+                    { Stat.AttackRange, 5 },
+                    { Stat.ChaseSpeed, 10 },
+                },
                 damageType = DamageType.Fire,
-                statusInflictionChance = 0.40f, // 40% chance
                 inflictedStatusEffect = StatusEffectType.Burn,
                 bossSprite = Resources.Load<Sprite>(
                     "Sprites/Monsters/FinalBoss/EternalEmberDragon"
@@ -47,13 +77,29 @@ namespace CoED
                 description =
                     "An ancient horror from the darkest depths, devouring souls to grow stronger.",
                 level = 25,
-                maxHP = 1200,
-                attack = 65,
-                defense = 60,
-                speed = 12,
-                intelligence = 35,
+                finalBossStats = new Dictionary<Stat, float>
+                {
+                    { Stat.MaxHP, 1200 },
+                    { Stat.Attack, 65 },
+                    { Stat.Defense, 60 },
+                    { Stat.Speed, 12 },
+                    { Stat.Intelligence, 35 },
+                    { Stat.ChanceToInflictStatusEffect, 0.45f },
+                    { Stat.StatusEffectDuration, 60 },
+                    { Stat.PatrolSpeed, 6 },
+                    { Stat.CritChance, 0 },
+                    { Stat.CritDamage, .40f },
+                    { Stat.FireRate, 6 },
+                    { Stat.Shield, 0 },
+                    { Stat.Accuracy, 20 },
+                    { Stat.ElementalDamage, 30 },
+                    { Stat.Dexterity, 20 },
+                    { Stat.ProjectileRange, 10 },
+                    { Stat.AttackRange, 5 },
+                    { Stat.ChaseSpeed, 10 },
+                },
+
                 damageType = DamageType.Shadow,
-                statusInflictionChance = 0.45f,
                 inflictedStatusEffect = StatusEffectType.Curse,
                 bossSprite = Resources.Load<Sprite>("Sprites/Monsters/FinalBoss/AbyssalDevourer"),
             },
@@ -63,13 +109,29 @@ namespace CoED
                 description =
                     "A grand being of pure light, commanding holy retribution against all sinners.",
                 level = 25,
-                maxHP = 1100,
-                attack = 68,
-                defense = 55,
-                speed = 14,
-                intelligence = 40,
+                finalBossStats = new Dictionary<Stat, float>
+                {
+                    { Stat.MaxHP, 1100 },
+                    { Stat.Attack, 68 },
+                    { Stat.Defense, 55 },
+                    { Stat.Speed, 14 },
+                    { Stat.Intelligence, 40 },
+                    { Stat.ChanceToInflictStatusEffect, 0.35f },
+                    { Stat.StatusEffectDuration, 60 },
+                    { Stat.PatrolSpeed, 6 },
+                    { Stat.CritChance, 0 },
+                    { Stat.CritDamage, .40f },
+                    { Stat.FireRate, 6 },
+                    { Stat.Shield, 0 },
+                    { Stat.Accuracy, 20 },
+                    { Stat.ElementalDamage, 30 },
+                    { Stat.Dexterity, 20 },
+                    { Stat.ProjectileRange, 10 },
+                    { Stat.AttackRange, 5 },
+                    { Stat.ChaseSpeed, 10 },
+                },
+
                 damageType = DamageType.Holy,
-                statusInflictionChance = 0.35f,
                 inflictedStatusEffect = StatusEffectType.Blindness,
                 bossSprite = Resources.Load<Sprite>("Sprites/Monsters/FinalBoss/CelestialOverlord"),
             },
@@ -79,13 +141,28 @@ namespace CoED
                 description =
                     "A multi-headed monstrosity harnessing chaotic arcane powers to rend reality.",
                 level = 26,
-                maxHP = 1300,
-                attack = 75,
-                defense = 50,
-                speed = 10,
-                intelligence = 45,
+                finalBossStats = new Dictionary<Stat, float>
+                {
+                    { Stat.MaxHP, 1300 },
+                    { Stat.Attack, 75 },
+                    { Stat.Defense, 50 },
+                    { Stat.Speed, 10 },
+                    { Stat.Intelligence, 45 },
+                    { Stat.ChanceToInflictStatusEffect, 0.50f },
+                    { Stat.StatusEffectDuration, 60 },
+                    { Stat.PatrolSpeed, 6 },
+                    { Stat.CritChance, 0 },
+                    { Stat.CritDamage, .40f },
+                    { Stat.FireRate, 6 },
+                    { Stat.Shield, 0 },
+                    { Stat.Accuracy, 20 },
+                    { Stat.ElementalDamage, 30 },
+                    { Stat.Dexterity, 20 },
+                    { Stat.ProjectileRange, 10 },
+                    { Stat.AttackRange, 5 },
+                    { Stat.ChaseSpeed, 10 },
+                },
                 damageType = DamageType.Arcane,
-                statusInflictionChance = 0.50f,
                 inflictedStatusEffect = StatusEffectType.Silence,
                 bossSprite = Resources.Load<Sprite>("Sprites/Monsters/FinalBoss/ArcaneVoidHydra"),
             },
@@ -95,13 +172,29 @@ namespace CoED
                 description =
                     "A towering giant formed from stone and living storms, rumored to be older than time.",
                 level = 26,
-                maxHP = 1500,
-                attack = 80,
-                defense = 60,
-                speed = 8,
-                intelligence = 30,
+                finalBossStats = new Dictionary<Stat, float>
+                {
+                    { Stat.MaxHP, 1500 },
+                    { Stat.Attack, 80 },
+                    { Stat.Defense, 60 },
+                    { Stat.Speed, 8 },
+                    { Stat.Intelligence, 30 },
+                    { Stat.ChanceToInflictStatusEffect, 0.40f },
+                    { Stat.StatusEffectDuration, 60 },
+                    { Stat.PatrolSpeed, 6 },
+                    { Stat.CritChance, 0 },
+                    { Stat.CritDamage, .40f },
+                    { Stat.FireRate, 6 },
+                    { Stat.Shield, 0 },
+                    { Stat.Accuracy, 20 },
+                    { Stat.ElementalDamage, 30 },
+                    { Stat.Dexterity, 20 },
+                    { Stat.ProjectileRange, 10 },
+                    { Stat.AttackRange, 5 },
+                    { Stat.ChaseSpeed, 10 },
+                },
+
                 damageType = DamageType.Lightning,
-                statusInflictionChance = 0.40f,
                 inflictedStatusEffect = StatusEffectType.Paralyze,
                 bossSprite = Resources.Load<Sprite>("Sprites/Monsters/FinalBoss/PrimordialTitan"),
             },

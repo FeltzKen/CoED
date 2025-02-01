@@ -1,6 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -9,125 +12,85 @@ namespace CoED
     public class PlayerStats : MonoBehaviour
     {
         public static PlayerStats Instance { get; private set; }
+        private PlayerUI playerUI;
 
-        [Header("Leveling System")]
-        [SerializeField, Min(1)]
+        // Experience & Leveling
         public int level = 1;
-
-        [SerializeField, Min(0)]
         private int currentExp = 0;
-
-        [SerializeField, Min(1)]
         private int expToNextLevel = 100;
-
-        [SerializeField, Min(1)]
         private int maxLevel = 50;
 
-        // Steps & resting mechanics
         public int stepCounter { get; private set; } = 0;
         public float restInterval = 3f;
         private float originalRestInterval; // To avoid repeatedly dividing by level
 
-        [Header("Health")]
-        [SerializeField, Min(0)]
-        private float baseHealth = 1000f;
-        public int CurrentHealth { get; private set; }
-        public int MaxHealth { get; private set; }
-        private float equipmentHealth = 0f;
+        private int currency = 275;
+        public int currentFloor = 0;
 
-        private float currentShieldValue = 0f;
+        public bool HasEnteredDungeon { get; set; } = false;
         private bool invincible = false;
         public bool Invincible => invincible;
+        private Dictionary<Stat, float> equipmentStats = new Dictionary<Stat, float>()
+        {
+            { Stat.HP, 0f },
+            { Stat.Attack, 0f },
+            { Stat.Intelligence, 0f },
+            { Stat.Evasion, 0f },
+            { Stat.Defense, 0f },
+            { Stat.Dexterity, 0f },
+            { Stat.Magic, 0f },
+            { Stat.Accuracy, 0f },
+            { Stat.FireRate, 0f },
+            { Stat.ProjectileRange, 0f },
+            { Stat.AttackRange, 0f },
+            { Stat.Speed, 0f },
+            { Stat.Shield, 0f },
+            { Stat.Stamina, 0f },
+            { Stat.ElementalDamage, 0f },
+            { Stat.CritChance, 0f },
+            { Stat.CritDamage, 0f },
+            { Stat.ChanceToInflictStatusEffect, 0f },
+        };
+        private Dictionary<Stat, float> playerStats = new Dictionary<Stat, float>()
+        {
+            { Stat.HP, 0f },
+            { Stat.MaxHP, 500f },
+            { Stat.Attack, 10f },
+            { Stat.Intelligence, 5f },
+            { Stat.Evasion, 0f },
+            { Stat.Defense, 5f },
+            { Stat.Dexterity, 5f },
+            { Stat.Magic, 0f },
+            { Stat.MaxMagic, 100f },
+            { Stat.Accuracy, 5f },
+            { Stat.FireRate, 1f },
+            { Stat.ProjectileRange, 5f },
+            { Stat.AttackRange, 3f },
+            { Stat.Speed, 5f },
+            { Stat.Shield, 0f },
+            { Stat.Stamina, 0f },
+            { Stat.MaxStamina, 100f },
+            { Stat.ElementalDamage, 5f },
+            { Stat.CritChance, 5f },
+            { Stat.CritDamage, 1.5f },
+            { Stat.ChanceToInflictStatusEffect, 0.05f },
+        };
 
-        [Header("Stamina")]
-        [SerializeField, Min(0)]
-        private int baseStamina = 100;
-        public int CurrentStamina { get; private set; }
-        public int MaxStamina { get; private set; }
-
-        [Header("Magic")]
-        [SerializeField, Min(0)]
-        private int baseMagic = 100;
-        public float CurrentMagic { get; private set; }
-        public int MaxMagic { get; private set; }
-        private float equipmentMagic = 0f;
-
-        [Header("Attack")]
-        [SerializeField, Min(0)]
-        private int baseAttack = 10;
-        public float CurrentAttack { get; private set; }
-        private float equipmentAttack = 0f;
-
-        [SerializeField]
-        public float AttackRange = 3f;
-
-        [Header("Defense")]
-        [SerializeField, Min(0)]
-        private int baseDefense = 5;
-        public float CurrentDefense { get; private set; }
-        private float equipmentDefense = 0f;
-
-        [Header("Range")]
-        [SerializeField, Min(0f)]
-        private float baseProjectileRange = 5f;
-        public float CurrentProjectileRange { get; private set; }
-        public float targetingRange = 0f;
-        private float equipmentRange = 0f;
-
-        [Header("Dexterity")]
-        [SerializeField, Min(0)]
-        private int baseDexterity = 5;
-        public float CurrentDexterity { get; private set; }
-        private float equipmentDexterity = 0f;
-
-        [Header("Intelligence")]
-        [SerializeField, Min(0)]
-        private int baseIntelligence = 5;
-        public float CurrentIntelligence { get; private set; }
-        private float equipmentIntelligence = 0f;
-
-        [Header("Crit Chance")]
-        [SerializeField, Min(0)]
-        private int baseCritChance = 5;
-        public float CurrentCritChance { get; private set; }
-        private float equipmentCritChance = 0f;
-
-        [Header("Speed")]
-        [SerializeField, Min(0)]
-        private int baseSpeed = 5;
-        public float CurrentSpeed { get; private set; }
-        private float equipmentSpeed = 0f;
-
-        [Header("Equipment Elemental Damage (Read-Only Summary)")]
-        [SerializeField]
-        private Dictionary<DamageType, float> equipmentElementalDamage =
-            new Dictionary<DamageType, float>();
-        private float burnDamage = 0f;
-        private float iceDamage = 0f;
-        private float lightningDamage = 0f;
-        private float poisonDamage = 0f;
-        private float arcaneDamage = 0f;
-        private float bleedDamage = 0f;
-        private float holyDamage = 0f;
-        private float shadowDamage = 0f;
-
-        [Header("Fire Rate")]
-        [SerializeField, Min(0f)]
-        private float baseFireRate = 1f;
-        public float CurrentFireRate { get; private set; }
-
-        [Header("Projectile Lifespan")]
-        [SerializeField, Min(0f)]
-        private float baseProjectileLifespan = 2f;
-        public float CurrentProjectileLifespan { get; private set; }
-
-        [Header("Dungeon & UI")]
-        public bool HasEnteredDungeon { get; set; } = false;
-
-        [SerializeField, Min(0)]
-        private int currency = 0;
-        public int currentFloor = 0;
-        private PlayerUI playerUI;
+        private Dictionary<DamageType, float> equipmentElementalDamage = new Dictionary<
+            DamageType,
+            float
+        >()
+        {
+            { DamageType.Physical, 0f },
+            { DamageType.Fire, 0f },
+            { DamageType.Ice, 0f },
+            { DamageType.Lightning, 0f },
+            { DamageType.Poison, 0f },
+            { DamageType.Arcane, 0f },
+            { DamageType.Bleed, 0f },
+            { DamageType.Holy, 0f },
+            { DamageType.Shadow, 0f },
+        };
 
         // Resistances, Weaknesses, Immunities
         [Header("Elemental Attributes & Statuses")]
@@ -137,52 +100,67 @@ namespace CoED
         public List<Weaknesses> activeWeaknesses = new List<Weaknesses>();
         public List<Resistances> activeResistances = new List<Resistances>();
         public List<Immunities> activeImmunities = new List<Immunities>();
-        public float chanceToInflictStatusEffect = 0.1f;
-        public float CurrentChanceToInflictStatusEffect { get; private set; }
 
         // Death event
         public event Action OnPlayerDeath;
 
         #region Public Stat Getters
-        public float GetCurrentHealth() => CurrentHealth;
+        public float GetCurrentHealth() => playerStats[Stat.HP];
 
-        public float GetCurrentMagic() => CurrentMagic;
+        public float GetCurrentMaxHealth() => playerStats[Stat.MaxHP];
 
-        public float GetCurrentStamina() => CurrentStamina;
+        public float GetCurrentMagic() => playerStats[Stat.Magic];
 
-        public float GetCurrentAttack() => CurrentAttack;
+        public float GetCurrentMaxMagic() => playerStats[Stat.MaxMagic];
 
-        public float GetCurrentDefense() => CurrentDefense;
+        public float GetCurrentAccuracy() => playerStats[Stat.Accuracy];
 
-        public float GetCurrentProjectileRange() => CurrentProjectileRange;
+        public float GetCurrentEvasion() => playerStats[Stat.Evasion];
 
-        public float GetCurrentSpeed() => CurrentSpeed;
+        public float GetCurrentStamina() =>
+            playerStats[Stat.Stamina] + equipmentStats[Stat.Stamina];
 
-        public float GetCurrentFireRate() => CurrentFireRate;
+        public float GetCurrentMaxStamina() => playerStats[Stat.MaxStamina];
 
-        public float GetCurrentProjectileLifespan() => CurrentProjectileLifespan;
+        public float GetCurrentAttack() => playerStats[Stat.Attack];
 
-        public float GetCurrentDexterity() => CurrentDexterity;
+        public float GetCurrentDefense() =>
+            playerStats[Stat.Defense] + equipmentStats[Stat.Defense];
 
-        public float GetCurrentIntelligence() => CurrentIntelligence;
+        public float GetCurrentProjectileRange() => playerStats[Stat.ProjectileRange];
 
-        public float GetCurrentCritChance() => CurrentCritChance;
+        public float GetCurrentSpeed() => playerStats[Stat.Speed];
 
-        public float GetCurrentBurnDamage() => burnDamage;
+        public float GetCurrentFireRate() => playerStats[Stat.FireRate];
 
-        public float GetCurrentIceDamage() => iceDamage;
+        public float GetCurrentProjectileLifespan() => 5f;
 
-        public float GetCurrentLightningDamage() => lightningDamage;
+        public float GetCurrentDexterity() => playerStats[Stat.Dexterity];
 
-        public float GetCurrentPoisonDamage() => poisonDamage;
+        public float GetCurrentIntelligence() => playerStats[Stat.Intelligence];
 
-        public float GetCurrentArcaneDamage() => arcaneDamage;
+        public float GetCurrentCritChance() => playerStats[Stat.CritChance];
 
-        public float GetCurrentBleedDamage() => bleedDamage;
+        public float GetCurrentAttackRange() => playerStats[Stat.AttackRange];
 
-        public float GetCurrentHolyDamage() => holyDamage;
+        public float GetCurrentChanceToInflictStatusEffect() =>
+            playerStats[Stat.ChanceToInflictStatusEffect];
 
-        public float GetCurrentShadowDamage() => shadowDamage;
+        public float GetCurrentBurnDamage() => equipmentElementalDamage[DamageType.Fire];
+
+        public float GetCurrentIceDamage() => equipmentElementalDamage[DamageType.Ice];
+
+        public float GetCurrentLightningDamage() => equipmentElementalDamage[DamageType.Lightning];
+
+        public float GetCurrentPoisonDamage() => equipmentElementalDamage[DamageType.Poison];
+
+        public float GetCurrentArcaneDamage() => equipmentElementalDamage[DamageType.Arcane];
+
+        public float GetCurrentBleedDamage() => equipmentElementalDamage[DamageType.Bleed];
+
+        public float GetCurrentHolyDamage() => equipmentElementalDamage[DamageType.Holy];
+
+        public float GetCurrentShadowDamage() => equipmentElementalDamage[DamageType.Shadow];
 
         public string GetStatusEffects() => string.Join(", ", activeStatusEffects);
 
@@ -225,10 +203,10 @@ namespace CoED
 
             if (playerUI != null)
             {
-                playerUI.SetHealthBarMax(CurrentHealth);
+                playerUI.SetHealthBarMax(GetCurrentHealth());
                 UpdateExperienceUI();
-                playerUI.SetMagicBarMax(CurrentMagic);
-                playerUI.SetStaminaBarMax(CurrentStamina);
+                playerUI.SetMagicBarMax(GetCurrentMagic());
+                playerUI.SetStaminaBarMax(GetCurrentStamina());
                 playerUI.UpdateLevelDisplay();
             }
         }
@@ -242,53 +220,67 @@ namespace CoED
         /// <param name="refillResources">If true, refills Health, Magic, and Stamina to max.</param>
         public void CalculateStats(bool refillResources = true)
         {
-            // Attack, scaled with level & equipment
-            CurrentAttack =
-                baseAttack + Mathf.RoundToInt((baseAttack * level * 0.2f) + equipmentAttack);
+            // Reset base stats before calculations
+            playerStats[Stat.MaxHP] =
+                playerStats[Stat.MaxHP] + (level * 20) + equipmentStats[Stat.HP];
 
-            // Stamina & Health & Magic
-            MaxStamina = baseStamina + level * 5;
-            MaxHealth = Mathf.RoundToInt(baseHealth + level * 20 + equipmentHealth);
-            MaxMagic = Mathf.RoundToInt(baseMagic + level * 10 + equipmentMagic);
+            playerStats[Stat.MaxMagic] =
+                playerStats[Stat.MaxMagic] + (level * 10) + equipmentStats[Stat.Magic];
 
-            // Defense (inc. shield)
-            CurrentDefense =
-                baseDefense
-                + Mathf.RoundToInt((baseDefense * level * 0.1f) + equipmentDefense)
-                + currentShieldValue;
+            playerStats[Stat.MaxStamina] =
+                playerStats[Stat.MaxStamina] + (level * 5) + equipmentStats[Stat.Stamina];
 
-            // Projectile range
-            CurrentProjectileRange = baseProjectileRange + level * 0.1f + equipmentRange;
+            playerStats[Stat.Attack] =
+                playerStats[Stat.Attack] + (level * 0.2f) + equipmentStats[Stat.Attack];
 
-            // Speed
-            CurrentSpeed = baseSpeed + level * 0.05f + equipmentSpeed;
+            playerStats[Stat.Defense] =
+                playerStats[Stat.Defense]
+                + (level * 0.1f)
+                + equipmentStats[Stat.Defense]
+                + playerStats[Stat.Shield];
 
-            // FireRate (higher level => slower is subtracted, so net is "faster"?)
-            CurrentFireRate = Mathf.Max(0.1f, baseFireRate - level * 0.02f);
+            playerStats[Stat.Speed] =
+                playerStats[Stat.Speed] + (level * 0.1f) + equipmentStats[Stat.Speed];
 
-            // Lifespan
-            CurrentProjectileLifespan = baseProjectileLifespan + level * 0.05f;
+            playerStats[Stat.FireRate] = Mathf.Max(
+                0.2f,
+                1f / (1f + (level * 0.05f)) + equipmentStats[Stat.FireRate]
+            );
 
-            // Dexterity & Intelligence
-            CurrentDexterity = baseDexterity + level * 0.1f + equipmentDexterity;
-            CurrentIntelligence = baseIntelligence + level * 0.1f + equipmentIntelligence;
+            playerStats[Stat.ProjectileRange] =
+                playerStats[Stat.ProjectileRange]
+                + (level * 0.1f)
+                + equipmentStats[Stat.ProjectileRange];
 
-            // Crit Chance
-            CurrentCritChance = baseCritChance + level * 0.1f + equipmentCritChance;
-            CurrentChanceToInflictStatusEffect = chanceToInflictStatusEffect + level * 0.1f;
-            // Avoid repeatedly dividing restInterval by level
-            // Instead, we do a base calculation from the original restInterval if you want it to get faster
+            playerStats[Stat.Dexterity] =
+                playerStats[Stat.Dexterity] + (level * 0.1f) + equipmentStats[Stat.Dexterity];
+
+            playerStats[Stat.Intelligence] =
+                playerStats[Stat.Intelligence] + (level * 0.1f) + equipmentStats[Stat.Intelligence];
+
+            playerStats[Stat.CritChance] =
+                playerStats[Stat.CritChance] + (level * 0.1f) + equipmentStats[Stat.CritChance];
+
+            playerStats[Stat.ChanceToInflictStatusEffect] =
+                playerStats[Stat.ChanceToInflictStatusEffect]
+                + (level * 0.05f)
+                + equipmentStats[Stat.ChanceToInflictStatusEffect];
+
+            // Ensure Rest Interval scales with level
             restInterval = originalRestInterval / Mathf.Max(level, 1);
 
-            // Refill HP/MP/Stamina if needed
+            // Refill HP, Magic, and Stamina if requested
             if (refillResources)
             {
-                CurrentHealth = MaxHealth;
-                CurrentMagic = MaxMagic;
-                CurrentStamina = MaxStamina;
+                playerStats[Stat.HP] = playerStats[Stat.MaxHP];
+                playerStats[Stat.Magic] = playerStats[Stat.MaxMagic];
+                playerStats[Stat.Stamina] = playerStats[Stat.MaxStamina];
             }
 
             InitializeUI();
+            Debug.Log(
+                $"Player stats: {string.Join(", ", playerStats.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}"
+            );
         }
 
         /// <summary>
@@ -305,6 +297,16 @@ namespace CoED
                 totalDexterity = 0,
                 totalIntelligence = 0,
                 totalCritChance = 0,
+                totalCritDamage = 0,
+                totalAccuracy = 0,
+                totalFireRate = 0,
+                totalProjectileRange = 0,
+                totalAttackRange = 0,
+                totalElementalDamage = 0,
+                totalChanceToInflictStatusEffect = 0,
+                totalStatusEffectDuration = 0,
+                totalShield = 0,
+                totalEvasion = 0,
                 totalBurnDamage = 0,
                 totalIceDamage = 0,
                 totalLightningDamage = 0,
@@ -316,14 +318,15 @@ namespace CoED
 
             foreach (var item in equippedItems)
             {
-                totalAttack += Mathf.RoundToInt(item.attack);
-                totalDefense += Mathf.RoundToInt(item.defense);
-                totalHealth += Mathf.RoundToInt(item.health);
-                totalMagic += Mathf.RoundToInt(item.magic);
-                totalSpeed += Mathf.RoundToInt(item.speed);
-                totalDexterity += Mathf.RoundToInt(item.dexterity);
-                totalIntelligence += Mathf.RoundToInt(item.intelligence);
-                totalCritChance += Mathf.RoundToInt(item.critChance);
+                totalAttack += Mathf.RoundToInt(item.equipmentStats[Stat.Attack]);
+                totalDefense += Mathf.RoundToInt(item.equipmentStats[Stat.Defense]);
+                totalHealth += Mathf.RoundToInt(item.equipmentStats[Stat.MaxHP]);
+                totalMagic += Mathf.RoundToInt(item.equipmentStats[Stat.MaxMagic]);
+                totalSpeed += Mathf.RoundToInt(item.equipmentStats[Stat.Speed]);
+                totalDexterity += Mathf.RoundToInt(item.equipmentStats[Stat.Dexterity]);
+                totalIntelligence += Mathf.RoundToInt(item.equipmentStats[Stat.Intelligence]);
+                totalCritChance += Mathf.RoundToInt(item.equipmentStats[Stat.CritChance]);
+                totalCritDamage += Mathf.RoundToInt(item.equipmentStats[Stat.CritDamage]);
 
                 totalBurnDamage += Mathf.RoundToInt(
                     item.damageModifiers.GetValueOrDefault(DamageType.Fire, 0)
@@ -352,23 +355,33 @@ namespace CoED
             }
 
             // Store these in our local "equipment" variables
-            equipmentAttack = totalAttack;
-            equipmentDefense = totalDefense;
-            equipmentHealth = totalHealth;
-            equipmentMagic = totalMagic;
-            equipmentSpeed = totalSpeed;
-            equipmentDexterity = totalDexterity;
-            equipmentIntelligence = totalIntelligence;
-            equipmentCritChance = totalCritChance;
+            equipmentStats[Stat.Attack] = totalAttack;
+            equipmentStats[Stat.Defense] = totalDefense;
+            equipmentStats[Stat.MaxHP] = totalHealth;
+            equipmentStats[Stat.MaxMagic] = totalMagic;
+            equipmentStats[Stat.Speed] = totalSpeed;
+            equipmentStats[Stat.Dexterity] = totalDexterity;
+            equipmentStats[Stat.Intelligence] = totalIntelligence;
+            equipmentStats[Stat.CritChance] = totalCritChance;
+            equipmentStats[Stat.CritDamage] = totalCritDamage;
+            equipmentStats[Stat.Accuracy] = totalAccuracy;
+            equipmentStats[Stat.FireRate] = totalFireRate;
+            equipmentStats[Stat.ProjectileRange] = totalProjectileRange;
+            equipmentStats[Stat.AttackRange] = totalAttackRange;
+            equipmentStats[Stat.ElementalDamage] = totalElementalDamage;
+            equipmentStats[Stat.ChanceToInflictStatusEffect] = totalChanceToInflictStatusEffect;
+            equipmentStats[Stat.StatusEffectDuration] = totalStatusEffectDuration;
+            equipmentStats[Stat.Shield] = totalShield;
+            equipmentStats[Stat.Evasion] = totalEvasion;
 
-            burnDamage = totalBurnDamage;
-            iceDamage = totalIceDamage;
-            lightningDamage = totalLightningDamage;
-            poisonDamage = totalPoisonDamage;
-            arcaneDamage = totalArcaneDamage;
-            bleedDamage = totalBleedDamage;
-            holyDamage = totalHolyDamage;
-            shadowDamage = totalShadowDamage;
+            equipmentElementalDamage[DamageType.Fire] = totalBurnDamage;
+            equipmentElementalDamage[DamageType.Ice] = totalIceDamage;
+            equipmentElementalDamage[DamageType.Lightning] = totalLightningDamage;
+            equipmentElementalDamage[DamageType.Poison] = totalPoisonDamage;
+            equipmentElementalDamage[DamageType.Arcane] = totalArcaneDamage;
+            equipmentElementalDamage[DamageType.Bleed] = totalBleedDamage;
+            equipmentElementalDamage[DamageType.Holy] = totalHolyDamage;
+            equipmentElementalDamage[DamageType.Shadow] = totalShadowDamage;
 
             // Recalculate final stats without refilling resources
             CalculateStats(refillResources: false);
@@ -385,9 +398,9 @@ namespace CoED
                 return;
             }
 
-            currentShieldValue += shieldValue;
-            CurrentDefense += shieldValue; // Immediately buff defense
-            Debug.Log($"Shield added: {shieldValue}. Current defense: {CurrentDefense}");
+            playerStats[Stat.Shield] += shieldValue;
+            playerStats[Stat.Defense] += shieldValue; // Immediately buff defense
+            Debug.Log($"Shield added: {shieldValue}. Current defense: {playerStats[Stat.Defense]}");
         }
 
         public void RemoveShield(float shieldValue)
@@ -398,12 +411,12 @@ namespace CoED
                 return;
             }
 
-            float effectiveShieldRemoval = Mathf.Min(currentShieldValue, shieldValue);
-            currentShieldValue -= effectiveShieldRemoval;
-            CurrentDefense -= effectiveShieldRemoval;
+            float effectiveShieldRemoval = Mathf.Min(playerStats[Stat.Shield], shieldValue);
+            playerStats[Stat.Shield] -= effectiveShieldRemoval;
+            playerStats[Stat.Shield] -= effectiveShieldRemoval;
 
             Debug.Log(
-                $"Shield removed: {effectiveShieldRemoval}. Current defense: {CurrentDefense}"
+                $"Shield removed: {effectiveShieldRemoval}. Current defense: {playerStats[Stat.Shield]}"
             );
         }
 
@@ -574,10 +587,13 @@ namespace CoED
             }
 
             // 3) Defense application, never below 1
-            float effectiveDamage = Mathf.Max(totalDamage - CurrentDefense, 1);
+            float effectiveDamage = Mathf.Max(totalDamage - playerStats[Stat.Defense], 1);
 
             // 4) Subtract HP
-            CurrentHealth = Mathf.Max(CurrentHealth - Mathf.RoundToInt(effectiveDamage), 0);
+            playerStats[Stat.HP] = Mathf.Max(
+                playerStats[Stat.HP] - Mathf.RoundToInt(effectiveDamage),
+                0
+            );
 
             // 5) Inflict any status effects
             foreach (var effect in damageInfo.InflictedStatusEffects)
@@ -600,7 +616,7 @@ namespace CoED
             );
 
             // 7) Check death
-            if (CurrentHealth <= 0)
+            if (playerStats[Stat.HP] <= 0)
             {
                 HandleDeath();
             }
@@ -618,7 +634,7 @@ namespace CoED
                 StatusEffectManager.Instance.RemoveEquipmentEffects(ActiveWhileEquipped.ReviveOnce);
 
                 // Restore partial HP
-                CurrentHealth = Mathf.RoundToInt(MaxHealth * 0.25f);
+                playerStats[Stat.HP] = Mathf.RoundToInt(playerStats[Stat.MaxHP] * 0.25f);
                 Debug.Log("ReviveOnce triggered! Player revived at 25% HP.");
                 FloatingTextManager.Instance.ShowFloatingText("Revived!", transform, Color.green);
                 return;
@@ -656,37 +672,46 @@ namespace CoED
                 Debug.LogWarning("Heal amount must be positive.");
                 return;
             }
-            CurrentHealth = Mathf.Min(CurrentHealth + Mathf.RoundToInt(amount), MaxHealth);
+            playerStats[Stat.HP] = Mathf.Min(
+                playerStats[Stat.HP] + amount,
+                playerStats[Stat.MaxHP]
+            );
             UpdateHealthUI();
         }
 
         public void ConsumeMagic(float amount)
         {
-            CurrentMagic = Mathf.Max(CurrentMagic - amount, 0);
+            playerStats[Stat.Magic] = Mathf.Max(playerStats[Stat.Magic] - amount, 0);
             UpdateMagicUI();
         }
 
         public void RefillMagic(float amount)
         {
-            CurrentMagic = Mathf.Min(CurrentMagic + amount, MaxMagic);
+            playerStats[Stat.Magic] = Mathf.Min(
+                playerStats[Stat.Magic] + amount,
+                playerStats[Stat.MaxMagic]
+            );
             UpdateMagicUI();
         }
 
         public void IncreaseMaxMagic(float amount)
         {
-            MaxMagic += Mathf.RoundToInt(amount);
+            playerStats[Stat.MaxMagic] += Mathf.RoundToInt(amount);
             UpdateMagicUI();
         }
 
         public void RefillStamina(float amount)
         {
-            CurrentStamina = Mathf.Clamp(CurrentStamina + Mathf.RoundToInt(amount), 0, MaxStamina);
+            playerStats[Stat.Stamina] = Mathf.Min(
+                playerStats[Stat.Stamina] + amount,
+                playerStats[Stat.MaxStamina]
+            );
             UpdateStaminaUI();
         }
 
         public void DecreaseStamina(float amount)
         {
-            CurrentStamina = Mathf.RoundToInt(amount);
+            playerStats[Stat.Stamina] = Mathf.RoundToInt(amount);
             UpdateStaminaUI();
         }
 
@@ -704,51 +729,51 @@ namespace CoED
 
         public IEnumerator GainAttack(float amount, float duration)
         {
-            CurrentAttack += amount;
+            playerStats[Stat.Attack] += amount;
             yield return new WaitForSeconds(duration);
-            CurrentAttack -= amount;
+            playerStats[Stat.Attack] -= amount;
         }
 
         public IEnumerator GainDefense(float amount, float duration)
         {
-            CurrentDefense += amount;
+            playerStats[Stat.Defense] += amount;
             yield return new WaitForSeconds(duration);
-            CurrentDefense -= amount;
+            playerStats[Stat.Defense] -= amount;
         }
 
         public IEnumerator GainSpeed(float amount, float duration)
         {
-            CurrentSpeed += amount;
+            playerStats[Stat.Speed] += amount;
             yield return new WaitForSeconds(duration);
-            CurrentSpeed -= amount;
+            playerStats[Stat.Speed] -= amount;
         }
 
         public IEnumerator GainDexterity(float amount, float duration)
         {
-            CurrentDexterity += amount;
+            playerStats[Stat.Dexterity] += amount;
             yield return new WaitForSeconds(duration);
-            CurrentDexterity -= amount;
+            playerStats[Stat.Dexterity] -= amount;
         }
 
         public IEnumerator GainIntelligence(float amount, float duration)
         {
-            CurrentIntelligence += amount;
+            playerStats[Stat.Intelligence] += amount;
             yield return new WaitForSeconds(duration);
-            CurrentIntelligence -= amount;
+            playerStats[Stat.Intelligence] -= amount;
         }
 
         public IEnumerator GainCritChance(float amount, float duration)
         {
-            CurrentCritChance += amount;
+            playerStats[Stat.CritChance] += amount;
             yield return new WaitForSeconds(duration);
-            CurrentCritChance -= amount;
+            playerStats[Stat.CritChance] -= amount;
         }
 
         private void UpdateMagicUI()
         {
             if (playerUI != null)
             {
-                playerUI.UpdateMagicBar(CurrentMagic, MaxMagic);
+                playerUI.UpdateMagicBar(playerStats[Stat.Magic], playerStats[Stat.MaxMagic]);
             }
         }
 
@@ -756,7 +781,7 @@ namespace CoED
         {
             if (playerUI != null)
             {
-                playerUI.UpdateHealthBar(CurrentHealth, MaxHealth);
+                playerUI.UpdateHealthBar(playerStats[Stat.HP], playerStats[Stat.MaxHP]);
             }
         }
 
@@ -764,7 +789,7 @@ namespace CoED
         {
             if (playerUI != null)
             {
-                playerUI.UpdateStaminaBar(CurrentStamina, MaxStamina);
+                playerUI.UpdateStaminaBar(playerStats[Stat.Stamina], playerStats[Stat.MaxStamina]);
             }
         }
         #endregion

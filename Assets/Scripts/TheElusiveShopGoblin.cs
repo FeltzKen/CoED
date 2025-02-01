@@ -220,7 +220,7 @@ namespace CoED
             for (int i = 0; i < maxItemsForSale; i++)
             {
                 Equipment eq = EquipmentGenerator.GenerateShopEquipment(tier);
-                itemPrices[eq] = PricingLibrary.CalculateEquipmentPrice(eq);
+                itemPrices[eq] = (int)PricingLibrary.CalculateEquipmentPrice(eq);
 
                 shopEquipmentInventory.Add(i, eq);
             }
@@ -586,15 +586,15 @@ namespace CoED
 
         private void BuildEquipmentStats(Equipment eq)
         {
-            itemAttackValue.text = eq.attack.ToString();
-            itemDefenseValue.text = eq.defense.ToString();
-            itemMagicValue.text = eq.magic.ToString();
-            itemHealthValue.text = eq.health.ToString();
-            itemStaminaValue.text = eq.stamina.ToString();
-            itemIntelligenceValue.text = eq.intelligence.ToString();
-            itemDexterityValue.text = eq.dexterity.ToString();
-            itemSpeedValue.text = eq.speed.ToString();
-            itemCritChanceValue.text = eq.critChance.ToString();
+            itemAttackValue.text = eq.equipmentStats[Stat.Attack].ToString();
+            itemDefenseValue.text = eq.equipmentStats[Stat.Defense].ToString();
+            itemMagicValue.text = eq.equipmentStats[Stat.MaxMagic].ToString();
+            itemHealthValue.text = eq.equipmentStats[Stat.MaxHP].ToString();
+            itemStaminaValue.text = eq.equipmentStats[Stat.MaxStamina].ToString();
+            itemIntelligenceValue.text = eq.equipmentStats[Stat.Intelligence].ToString();
+            itemDexterityValue.text = eq.equipmentStats[Stat.Dexterity].ToString();
+            itemSpeedValue.text = eq.equipmentStats[Stat.Speed].ToString();
+            itemCritChanceValue.text = eq.equipmentStats[Stat.CritChance].ToString();
 
             StatusEffectsValueParent.text = "Inflicted Effects";
             resistancesValueParent.text = "Resistances";
@@ -673,7 +673,7 @@ namespace CoED
 
             int price =
                 (selectedItem is Equipment eq)
-                    ? PricingLibrary.CalculateEquipmentPrice(eq)
+                    ? (int)PricingLibrary.CalculateEquipmentPrice(eq)
                     : PricingLibrary.CalculateConsumablePrice((ConsumableItem)selectedItem);
 
             if (playerStats.GetCurrency() < price)
@@ -845,6 +845,5 @@ public interface IShopItem
 {
     string GetName();
     string GetDescription();
-    int GetPrice();
     Sprite GetSprite();
 }

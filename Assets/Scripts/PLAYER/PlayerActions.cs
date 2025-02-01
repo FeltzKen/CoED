@@ -294,7 +294,7 @@ namespace CoED
         {
             isResting = true;
             while (
-                playerStats.CurrentHealth < playerStats.MaxHealth
+                playerStats.GetCurrentHealth() < playerStats.GetCurrentMaxHealth()
                 && !IsDangerNearby()
                 && Vector3.Distance(restPosition, transform.position) < 0.1f
             )
@@ -327,7 +327,7 @@ namespace CoED
         {
             isResting = true;
             while (
-                playerStats.CurrentMagic < playerStats.MaxMagic
+                playerStats.GetCurrentMagic() < playerStats.GetCurrentMaxMagic()
                 && !IsDangerNearby()
                 && Vector3.Distance(restPosition, transform.position) < 0.1f
             )
