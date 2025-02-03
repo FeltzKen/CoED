@@ -5,26 +5,39 @@ namespace CoED
 {
     public static class MonsterInitializer
     {
+        private static float RandomBoost(float baseValue)
+        {
+            return baseValue * Random.Range(0.9f, 1.1f);
+        }
+
+        /// <summary>
+        /// Adds a random bonus to each monster stat based on the given level.
+        /// Does not overwrite existing values, but adds to them.
+        /// </summary>
         public static void CalculateMonsterBaseStatsFromLevel(Monster monster, int level)
         {
-            monster.monsterStats[Stat.MaxHP] = Mathf.RoundToInt(20 + (level * 15));
-            monster.monsterStats[Stat.Attack] = 3 + (level * 2.5f);
-            monster.monsterStats[Stat.Defense] = 1 + (level * 1.5f);
-            monster.monsterStats[Stat.Dexterity] = 1 + (level * 1.5f);
-            monster.monsterStats[Stat.ProjectileRange] = 1 + (level * 1.5f);
-            monster.monsterStats[Stat.AttackRange] = 1 + (level * 1.5f);
-            monster.monsterStats[Stat.Speed] = 1 + (level * 1.5f);
-            monster.monsterStats[Stat.ElementalDamage] = 1 + (level * 1.5f);
-            monster.monsterStats[Stat.ChanceToInflictStatusEffect] = 1 + (level * 1.5f);
-            monster.monsterStats[Stat.StatusEffectDuration] = 1 + (level * 1.5f);
-            monster.monsterStats[Stat.PatrolSpeed] = 1 + (level * 1.5f);
-            monster.monsterStats[Stat.CritChance] = 1 + (level * 1.5f);
-            monster.monsterStats[Stat.CritDamage] = 1 + (level * 1.5f);
-            monster.monsterStats[Stat.FireRate] = 1 + (level * 1.5f);
-            monster.monsterStats[Stat.Shield] = 1 + (level * 1.5f);
-            monster.monsterStats[Stat.Accuracy] = 1 + (level * 1.5f);
-            monster.monsterStats[Stat.Intelligence] = 1 + (level * 1.5f);
-            monster.monsterStats[Stat.ChaseSpeed] = 1 + (level * 1.5f);
+            // Note: Since monster.monsterStats maps Stat to float,
+            // we add the computed bonus to each existing value.
+            monster.monsterStats[Stat.MaxHP] += Mathf.RoundToInt(RandomBoost(20 + (level * 15)));
+            monster.monsterStats[Stat.Attack] += RandomBoost(3 + (level * 0.55f));
+            monster.monsterStats[Stat.Defense] += RandomBoost(1 + (level * 0.55f));
+            monster.monsterStats[Stat.Dexterity] += RandomBoost(1 + (level * 0.55f));
+            monster.monsterStats[Stat.ProjectileRange] += RandomBoost(1 + (level * 0.25f));
+            monster.monsterStats[Stat.AttackRange] += RandomBoost(1 + (level * 0.25f));
+            monster.monsterStats[Stat.Speed] += RandomBoost(1 + (level * 0.25f));
+            monster.monsterStats[Stat.ElementalDamage] += RandomBoost(1 + (level * 0.55f));
+            monster.monsterStats[Stat.ChanceToInflictStatusEffect] += RandomBoost(
+                1 + (level * 0.1f)
+            );
+            monster.monsterStats[Stat.StatusEffectDuration] += RandomBoost(1 + (level * 0.25f));
+            monster.monsterStats[Stat.CritChance] += RandomBoost(1 + (level * 0.15f));
+            monster.monsterStats[Stat.CritDamage] += RandomBoost(1 + (level * 0.2f));
+            monster.monsterStats[Stat.FireRate] += RandomBoost(1 + (level * 0.15f));
+            monster.monsterStats[Stat.Shield] += RandomBoost(1 + (level * 0.05f));
+            monster.monsterStats[Stat.Accuracy] += RandomBoost(1 + (level * 0.1f));
+            monster.monsterStats[Stat.Intelligence] += RandomBoost(1 + (level * 0.55f));
+            monster.monsterStats[Stat.PatrolSpeed] = RandomBoost(1 + (level * 0.25f));
+            monster.monsterStats[Stat.ChaseSpeed] = monster.monsterStats[Stat.PatrolSpeed] * 1.5f;
         }
 
         public static void InitializeEnemy(

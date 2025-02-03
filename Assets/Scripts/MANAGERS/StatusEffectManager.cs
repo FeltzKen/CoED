@@ -15,6 +15,8 @@ namespace CoED
             new Dictionary<GameObject, List<ActiveStatusEffect>>();
         private Dictionary<GameObject, List<ActiveStatusEffect>> enemyEffects =
             new Dictionary<GameObject, List<ActiveStatusEffect>>();
+        private Dictionary<GameObject, List<StatusEffect>> activeEffects =
+            new Dictionary<GameObject, List<StatusEffect>>();
 
         public StatusEffectIconLibrary statusEffectLibrary;
 
@@ -27,7 +29,16 @@ namespace CoED
                 { StatusEffectType.Poison, Immunities.Poison },
                 { StatusEffectType.Freeze, Immunities.Ice },
                 { StatusEffectType.Stun, Immunities.Lightning },
-                { StatusEffectType.Blindness, Immunities.Darkness },
+                { StatusEffectType.Blindness, Immunities.Shadow },
+                { StatusEffectType.Silence, Immunities.Arcane },
+                { StatusEffectType.Curse, Immunities.Shadow },
+                { StatusEffectType.Bleed, Immunities.Physical },
+                { StatusEffectType.Confusion, Immunities.Arcane },
+                { StatusEffectType.Fear, Immunities.Shadow },
+                { StatusEffectType.Petrify, Immunities.Arcane },
+                { StatusEffectType.Root, Immunities.Nature },
+                { StatusEffectType.Sleep, Immunities.Arcane },
+                { StatusEffectType.Berserk, Immunities.Physical },
                 // You can add Slow => Resistances.Ice, Stun => Resistances.Lightning, etc., if desired.
             };
 
@@ -45,150 +56,64 @@ namespace CoED
 
         private void Update()
         {
-            UpdateEffects(playerEffects);
-            UpdateEffects(enemyEffects);
+            UpdateEffects();
         }
 
         /// <summary>
         /// Spawns the status effect prefab and attaches it to the entity.
         /// </summary>
-        public void AddStatusEffect(GameObject entity, StatusEffectType effectType)
+        public void AddStatusEffect(GameObject entity, StatusEffectType effectType, float duration)
         {
-            bool isPlayer = entity.CompareTag("Player");
-            var targetEffects = isPlayer ? playerEffects : enemyEffects;
-
-            // -- 1) Check Resistances for Players
-            if (isPlayer)
+            var entityStats = entity.GetComponent<IEntityStats>();
+            if (entityStats == null)
             {
-                // If this status effect maps to an elemental damage type that the player resists:
-                if (effectToImmunityMap.TryGetValue(effectType, out Immunities neededImmunity))
-                {
-                    if (PlayerStats.Instance.activeImmunities.Contains(neededImmunity))
-                    {
-                        Debug.Log($"Player is resistant to {effectType}; effect blocked.");
-                        return;
-                    }
-                }
-            }
-            else
-            {
-                // -- 2) Resistance Check for Enemies
-                _EnemyStats enemyStats = entity.GetComponent<_EnemyStats>();
-                if (
-                    enemyStats != null
-                    && effectToImmunityMap.TryGetValue(effectType, out Immunities neededImmunity)
-                )
-                {
-                    if (enemyStats.immunities.Contains(neededImmunity))
-                    {
-                        Debug.Log($"{entity.name} is resistant to {effectType}. Effect blocked.");
-                        return;
-                    }
-                }
+                Debug.LogError($"AddStatusEffect: {entity.name} has no IEntityStats component.");
+                return;
             }
 
-            // Determine container (player or enemy)
-            Transform targetContainer;
-            if (isPlayer)
+            if (!activeEffects.ContainsKey(entity))
+                activeEffects[entity] = new List<StatusEffect>();
+
+            foreach (var existingEffect in activeEffects[entity])
             {
-                targetContainer = playerStatusEffectContainer; // The player UI slot
-            }
-            else
-            {
-                var enemyPanel = entity.transform.Find("StatusEffectsPanel");
-                if (enemyPanel == null)
+                if (existingEffect.effectType == effectType)
                 {
-                    Debug.LogWarning($"Enemy {entity.name} does not have a StatusEffectsPanel.");
+                    existingEffect.duration = duration; // Refresh duration
                     return;
                 }
-                targetContainer = enemyPanel;
-            }
-
-            // Ensure entity is in the dictionary
-            if (!targetEffects.ContainsKey(entity))
-            {
-                targetEffects[entity] = new List<ActiveStatusEffect>();
-            }
-
-            // Check for duplicate effect
-            List<ActiveStatusEffect> effects = targetEffects[entity];
-            foreach (var activeEffect in effects)
-            {
-                if (activeEffect.Effect != null && activeEffect.Effect.effectType == effectType)
-                {
-                    // Refresh duration
-                    Debug.LogWarning(
-                        $"Effect {effectType} already on {entity.name}; refreshing duration."
-                    );
-                    activeEffect.RemainingDuration = statusEffectLibrary
-                        .GetEffectPrefab(effectType)
-                        .GetComponent<StatusEffect>()
-                        .duration;
-                    return;
-                }
-            }
-
-            // Instantiate the effect prefab
-            GameObject effectObj = Instantiate(
-                statusEffectLibrary.GetEffectPrefab(effectType),
-                targetContainer
-            );
-            effectObj.SetActive(true);
-
-            // Optionally scale the icon
-            RectTransform rectTransform = effectObj.GetComponent<RectTransform>();
-            if (rectTransform != null)
-            {
-                rectTransform.localScale = Vector3.one * 3.0f;
-            }
-
-            StatusEffect newEffect = effectObj.GetComponent<StatusEffect>();
-            if (newEffect != null)
-            {
-                newEffect.ApplyToEntity(entity);
-                effects.Add(new ActiveStatusEffect(newEffect));
-                Debug.Log($"Applied {newEffect.effectType} to {entity.name}.");
-            }
-            else
-            {
-                Debug.LogWarning("StatusEffectManager: Prefab missing StatusEffect component.");
-                Destroy(effectObj);
             }
         }
 
         /// <summary>
         /// Main loop to decrement durations and remove expired effects.
         /// </summary>
-        private void UpdateEffects(Dictionary<GameObject, List<ActiveStatusEffect>> targetEffects)
+        private void UpdateEffects()
         {
-            foreach (var kvp in targetEffects)
+            foreach (var entityEffects in activeEffects)
             {
-                GameObject entity = kvp.Key;
-                List<ActiveStatusEffect> effects = kvp.Value;
-
+                List<StatusEffect> effects = entityEffects.Value;
                 for (int i = effects.Count - 1; i >= 0; i--)
                 {
-                    ActiveStatusEffect activeEffect = effects[i];
-                    if (
-                        entity == null
-                        || activeEffect.Effect == null
-                        || activeEffect.Effect.gameObject == null
-                    )
-                    {
-                        effects.RemoveAt(i);
+                    StatusEffect effect = effects[i];
+                    if (!effect.hasDuration)
                         continue;
-                    }
 
-                    if (!activeEffect.Effect.hasDuration)
-                        continue; // E.g. a permanent effect that doesn’t expire
-
-                    activeEffect.RemainingDuration -= Time.deltaTime;
-                    if (activeEffect.RemainingDuration <= 0)
+                    effect.duration -= Time.deltaTime;
+                    if (effect.duration <= 0)
                     {
-                        RemoveEffect(entity, activeEffect.Effect);
+                        RemoveStatusEffect(entityEffects.Key, effect);
                     }
                 }
             }
+        }
+
+        public void RemoveStatusEffect(GameObject entity, StatusEffect effect)
+        {
+            if (!activeEffects.ContainsKey(entity))
+                return;
+
+            activeEffects[entity].Remove(effect);
+            Destroy(effect.gameObject);
         }
 
         // -------------- Public Removal Methods -----------------
@@ -223,6 +148,11 @@ namespace CoED
                     StatusEffectType.Invincible,
                     StatusEffectType.PoisonAura,
                     StatusEffectType.StealHealth,
+                    StatusEffectType.RandomDebuff,
+                    StatusEffectType.Blindness,
+                    StatusEffectType.Silence,
+                    StatusEffectType.Curse,
+                    StatusEffectType.Bleed,
                 }
             );
         }
@@ -257,6 +187,7 @@ namespace CoED
                 }
             }
         }
+
         public void RemoveEquipmentEffects(ActiveWhileEquipped effectType)
         {
             if (playerEffects.Count == 0)
@@ -264,7 +195,6 @@ namespace CoED
                 Debug.LogWarning("No player effects to remove.");
                 return;
             }
-
         }
 
         // --------------- Internal Removal -----------------

@@ -566,15 +566,15 @@ namespace CoED
 
         private void BuildItemStats(ConsumableItem item)
         {
-            itemAttackValue.text = item.attackBoost.ToString();
-            itemDefenseValue.text = item.defenseBoost.ToString();
-            itemMagicValue.text = item.magicBoost.ToString();
-            itemHealthValue.text = item.healthBoost.ToString();
-            itemStaminaValue.text = item.staminaBoost.ToString();
-            itemIntelligenceValue.text = item.intelligenceBoost.ToString();
-            itemDexterityValue.text = item.dexterityBoost.ToString();
-            itemSpeedValue.text = item.speedBoost.ToString();
-            itemCritChanceValue.text = item.critChanceBoost.ToString();
+            itemAttackValue.text = item.consumableStats[Stat.Attack].ToString();
+            itemDefenseValue.text = item.consumableStats[Stat.Defense].ToString();
+            itemMagicValue.text = item.consumableStats[Stat.MaxMagic].ToString();
+            itemHealthValue.text = item.consumableStats[Stat.MaxHP].ToString();
+            itemStaminaValue.text = item.consumableStats[Stat.MaxStamina].ToString();
+            itemIntelligenceValue.text = item.consumableStats[Stat.Intelligence].ToString();
+            itemDexterityValue.text = item.consumableStats[Stat.Dexterity].ToString();
+            itemSpeedValue.text = item.consumableStats[Stat.Speed].ToString();
+            itemCritChanceValue.text = item.consumableStats[Stat.CritChance].ToString();
 
             resistancesValueParent.text = "Removed Effects";
             resistancesValue.text = string.Join(", ", item.removedEffects);
@@ -839,11 +839,4 @@ namespace CoED
             return false; // No walls within radius => safe
         }
     }
-}
-
-public interface IShopItem
-{
-    string GetName();
-    string GetDescription();
-    Sprite GetSprite();
 }

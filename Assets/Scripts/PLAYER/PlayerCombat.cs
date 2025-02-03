@@ -122,7 +122,7 @@ namespace CoED
                             )
                         )
                         {
-                            successfulEffects.Add(statusEffect);
+                            successfulEffects.Add(statusEffect.Key);
                         }
                     }
 

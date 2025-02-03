@@ -31,8 +31,18 @@ namespace CoED
             GameObject spawnPointObj = GameObject.FindGameObjectWithTag("SpawnPoint");
             Vector3 spawnPosition = spawnPointObj.transform.position;
             currentPlayer = Instantiate(playerPrefab, spawnPosition, Quaternion.identity);
-            GameManager.Instance.RegisterPlayer(currentPlayer);
 
+            // If a class was selected, update the sprite accordingly.
+            if (GameManager.SelectedClass != null)
+            {
+                SpriteRenderer sr = currentPlayer.GetComponent<SpriteRenderer>();
+                if (sr != null)
+                {
+                    sr.sprite = GameManager.SelectedClass.CharacterSprite;
+                }
+            }
+
+            GameManager.Instance.RegisterPlayer(currentPlayer);
             return currentPlayer;
         }
     }

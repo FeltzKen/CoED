@@ -123,7 +123,7 @@ namespace CoED
             if (playerTransform != null)
             {
                 CenterCameraOnPlayerWithoutClamping();
-                UpdateBounds(PlayerStats.Instance.GetCurrentFloor());
+                UpdateBounds(PlayerStats.Instance.currentFloor);
                 boundsClampingEnabled = true;
 
                 Debug.Log("Camera exited spawning room and is now following the player.");

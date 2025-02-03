@@ -62,6 +62,7 @@ namespace CoED
             PlaceStairs();
             DungeonSpawner.Instance.SpawnItemsForAllFloors();
             DungeonSpawner.Instance.SpawnEnemiesForAllFloors();
+            UIPanelToggleManager.Instance.PauseGame();
         }
 
         private void CreateDungeonParent()

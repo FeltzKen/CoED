@@ -77,7 +77,7 @@ namespace CoED
             // if (item.name.Contains("Cursed")) {...}
 
             Vector3 dropPos = PlayerStats.Instance.transform.position;
-            GameObject dropObj = new GameObject($"DroppedConsumable_{item.name}");
+            GameObject dropObj = new GameObject($"DroppedConsumable_{item.GetName()}");
             dropObj.transform.position = dropPos;
             dropObj.transform.localScale = new Vector3(2f, 2f, 0f);
 
@@ -87,7 +87,7 @@ namespace CoED
             // Add a sprite renderer for the consumable icon
             var sr = dropObj.AddComponent<SpriteRenderer>();
             sr.sortingOrder = 3;
-            sr.sprite = item.icon; // show the consumable's sprite
+            sr.sprite = item.GetSprite(); // show the consumable's sprite
 
             // Add a trigger collider
             var col = dropObj.AddComponent<CircleCollider2D>();
@@ -100,7 +100,7 @@ namespace CoED
             // Remove from inventory
             ConsumableInventory.Instance.RemoveItem(item);
 
-            Debug.Log($"{item.name} dropped at {dropPos}.");
+            Debug.Log($"{item.GetName()} dropped at {dropPos}.");
 
             // Clear out the old selection
             DeselectOld();
@@ -143,7 +143,7 @@ namespace CoED
                 return;
             }
 
-            GameObject buttonObj = new GameObject($"{item.name}_{Guid.NewGuid()}");
+            GameObject buttonObj = new GameObject($"{item.GetName()}_{Guid.NewGuid()}");
             buttonObj.transform.SetParent(parent, false);
 
             RectTransform buttonRect = buttonObj.AddComponent<RectTransform>();
@@ -171,9 +171,9 @@ namespace CoED
             var iconRect = icon.AddComponent<RectTransform>();
             iconRect.sizeDelta = new Vector2(1.65f, 1.65f);
             var iconImg = icon.AddComponent<Image>();
-            if (item.icon != null)
+            if (item.GetSprite() != null)
             {
-                iconImg.sprite = item.icon;
+                iconImg.sprite = item.GetSprite();
             }
             iconImg.preserveAspect = true;
 
@@ -216,7 +216,7 @@ namespace CoED
 
             if (!consumableToButtonMapping.ContainsKey(consumable))
             {
-                Debug.LogWarning($"{consumable.name} not in mapping, can't highlight.");
+                Debug.LogWarning($"{consumable.GetName()} not in mapping, can't highlight.");
                 return;
             }
 

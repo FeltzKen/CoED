@@ -13,6 +13,9 @@ public class ConsumablePrefixData
     public float priceMultiplier;
 
     // Multi-stat modification support
+    public Dictionary<Stat, float> statModifiers = new Dictionary<Stat, float>();
+    public List<StatusEffectType> removedEffects = new List<StatusEffectType>();
+    public List<StatusEffectType> addedEffects = new List<StatusEffectType>();
     public float modifierAmount;
 
     // One-time effect flag

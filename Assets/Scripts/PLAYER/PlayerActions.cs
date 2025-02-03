@@ -188,7 +188,7 @@ namespace CoED
                     if (consumableInventory.AddItem(consumableData))
                     {
                         ItemCollectionAnimator.Instance.AnimateItemCollection(
-                            consumableData.icon,
+                            consumableData.GetSprite(),
                             itemCollider.transform.position,
                             GameObject.Find("ShowHideEquipmentPanel").GetComponent<RectTransform>()
                         );

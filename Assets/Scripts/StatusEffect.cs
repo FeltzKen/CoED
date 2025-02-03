@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CoED
@@ -11,7 +12,7 @@ namespace CoED
         public bool hasDuration = true;
 
         [Min(0.1f)]
-        public float duration = 5f; // how long the effect lasts
+        public float duration = 5f;
 
         [Header("Periodic Tick Settings")]
         [Tooltip("For over-time effects (DoT, HoT).")]
@@ -21,102 +22,109 @@ namespace CoED
         public float tickInterval = 1f;
         private float tickTimer;
 
-        // For doT or hoT amounts, you could place them here:
         public float tickDamageOrHeal = 5f;
 
-        private GameObject targetEntity;
-        private PlayerStats playerStats;
-        private _EnemyStats enemyStats;
-
-        // Any immediate flags we set
-        private bool wasInvincible = false;
-        private bool addedDamageReflect = false;
         private bool addedShield = false;
+        private bool wasInvincible = false;
 
-        public void ApplyToEntity(GameObject entity)
+        public void ApplyToEntity(IEntityStats entityStats, float effectValue)
         {
-            targetEntity = entity;
-            if (entity.CompareTag("Player"))
-            {
-                playerStats = entity.GetComponent<PlayerStats>();
-            }
-            else
-            {
-                enemyStats = entity.GetComponent<_EnemyStats>();
-            }
-
-            // Immediate effect application:
             switch (effectType)
             {
+                // Debuffs
+                case StatusEffectType.Burn:
+                case StatusEffectType.Poison:
+                case StatusEffectType.Bleed:
+                    hasPeriodicTick = true;
+                    break;
+
+                case StatusEffectType.Slow:
+                    entityStats.ModifyStat(Stat.Speed, effectValue);
+                    break;
+
+                case StatusEffectType.Stun:
+                case StatusEffectType.Paralyze:
+                case StatusEffectType.Freeze:
+                    entityStats.ModifyStat(Stat.Speed, effectValue);
+                    break;
+
+                case StatusEffectType.Curse:
+                    entityStats.ModifyStat(Stat.Intelligence, effectValue);
+                    break;
+
+                case StatusEffectType.Blindness:
+                    entityStats.ModifyStat(Stat.Accuracy, effectValue);
+                    break;
+
+                case StatusEffectType.Silence:
+                    // block entity from casting spells
+                    entityStats.IsSilenced(true);
+                    break;
+
+                case StatusEffectType.Fear:
+                    entityStats.ModifyStat(Stat.Evasion, effectValue);
+                    break;
+
+                case StatusEffectType.Sleep:
+                    entityStats.NullStat(Stat.Speed, effectValue);
+                    entityStats.NullStat(Stat.Evasion, effectValue);
+                    entityStats.NullStat(Stat.Dexterity, effectValue);
+                    break;
+
+                case StatusEffectType.Root:
+                    entityStats.ModifyStat(Stat.Speed, effectValue);
+                    break;
+
+                // Buffs
                 case StatusEffectType.Regen:
-                    // We can do an immediate small heal if desired, or just let OverTime ticks handle it
+                    hasPeriodicTick = true;
+                    break;
+
+                case StatusEffectType.StealHealth:
+                    hasPeriodicTick = true;
                     break;
 
                 case StatusEffectType.Shield:
-                    // Example: add 10 shield
-                    if (playerStats != null)
-                    {
-                        playerStats.AddShield(10);
-                        addedShield = true;
-                    }
-                    else if (enemyStats != null)
-                    {
-                        enemyStats.AddShield(10);
-                        addedShield = true;
-                    }
+                    entityStats.ModifyStat(Stat.Shield, effectValue);
+                    addedShield = true;
                     break;
 
                 case StatusEffectType.Invincible:
-                    if (playerStats != null)
-                    {
-                        playerStats.SetInvincible(true);
-                        wasInvincible = true;
-                    }
-                    else if (enemyStats != null)
-                    {
-                        enemyStats.SetInvincible(true);
-                        wasInvincible = true;
-                    }
+                    entityStats.SetInvincible(true);
+                    wasInvincible = true;
+                    break;
+
+                case StatusEffectType.DamageAbsorb:
+                    entityStats.AddActiveStatusEffect(StatusEffectType.DamageAbsorb);
+                    break;
+
+                case StatusEffectType.DamageReduction:
+                    entityStats.AddActiveStatusEffect(StatusEffectType.DamageReduction);
+                    break;
+
+                case StatusEffectType.DamageIncrease:
+                    entityStats.AddActiveStatusEffect(StatusEffectType.DamageIncrease);
+                    break;
+
+                case StatusEffectType.AttackSpeedIncrease:
+                    entityStats.ModifyStat(Stat.FireRate, effectValue);
+                    break;
+
+                case StatusEffectType.MovementSpeedIncrease:
+                    entityStats.ModifyStat(Stat.Speed, effectValue);
+                    break;
+
+                case StatusEffectType.EvasionIncrease:
+                    entityStats.ModifyStat(Stat.Evasion, effectValue);
+                    break;
+
+                case StatusEffectType.AccuracyIncrease:
+                    entityStats.ModifyStat(Stat.Accuracy, effectValue);
                     break;
 
                 case StatusEffectType.DamageReflect:
-                    // Mark that the player or enemy has reflect.
-                    // Typically you handle the reflection inside TakeDamage,
-                    // checking if "DamageReflect" is active in their stats list or a bool.
-                    if (playerStats != null)
-                    {
-                        // Just add to the player's "activeStatusEffects" if needed
-                        if (
-                            !playerStats.activeStatusEffects.Contains(
-                                StatusEffectType.DamageReflect
-                            )
-                        )
-                        {
-                            playerStats.activeStatusEffects.Add(StatusEffectType.DamageReflect);
-                            addedDamageReflect = true;
-                        }
-                    }
-                    else if (enemyStats != null)
-                    {
-                        // For an enemy, we could do something similar
-                        if (
-                            !enemyStats.activeStatusEffects.Contains(StatusEffectType.DamageReflect)
-                        )
-                        {
-                            enemyStats.activeStatusEffects.Add(StatusEffectType.DamageReflect);
-                            addedDamageReflect = true;
-                        }
-                    }
+                    entityStats.AddActiveStatusEffect(StatusEffectType.DamageReflect);
                     break;
-            }
-
-            // etc. for any other immediate changes
-            if (entity.CompareTag("Player"))
-            {
-                // “ReviveOnce” gets handled in PlayerStats.HandleDeath
-                // We do not need to do anything here except maybe track a bool
-                playerStats.EquippedmentEffects.Add(ActiveWhileEquipped.ReviveOnce);
-                // no immediate action; the logic is in PlayerStats.HandleDeath
             }
         }
 
@@ -125,7 +133,6 @@ namespace CoED
             if (!hasPeriodicTick)
                 return;
 
-            // If we do have a periodic tick (like Burn or Poison or Regen), we do it here:
             tickTimer -= Time.deltaTime;
             if (tickTimer <= 0f)
             {
@@ -134,111 +141,73 @@ namespace CoED
             }
         }
 
-        /// <summary>
-        /// Called each tick for DoT/HoT etc.
-        /// </summary>
         private void ApplyPeriodicEffect()
         {
-            if (targetEntity == null)
+            var entityStats = GetComponentInParent<IEntityStats>();
+            if (entityStats == null)
                 return;
 
             switch (effectType)
             {
                 case StatusEffectType.Burn:
-                    // Deal “Fire” damage
-                    DoDamage(DamageType.Fire, tickDamageOrHeal);
+                    entityStats.TakeDamage(
+                        new DamageInfo(
+                            new Dictionary<DamageType, float>
+                            {
+                                { DamageType.Fire, tickDamageOrHeal },
+                            },
+                            null
+                        )
+                    );
                     break;
 
                 case StatusEffectType.Poison:
-                    // Deal “Poison” damage
-                    DoDamage(DamageType.Poison, tickDamageOrHeal);
+                    entityStats.TakeDamage(
+                        new DamageInfo(
+                            new Dictionary<DamageType, float>
+                            {
+                                { DamageType.Poison, tickDamageOrHeal },
+                            },
+                            null
+                        )
+                    );
+                    break;
+
+                case StatusEffectType.Bleed:
+                    entityStats.TakeDamage(
+                        new DamageInfo(
+                            new Dictionary<DamageType, float>
+                            {
+                                { DamageType.Physical, tickDamageOrHeal },
+                            },
+                            null
+                        )
+                    );
                     break;
 
                 case StatusEffectType.Regen:
-                    // Heal
-                    DoHeal(tickDamageOrHeal);
+                    entityStats.Heal(tickDamageOrHeal);
                     break;
-                // You can add more if you want “Slow” to do something each tick, etc.
+
+                case StatusEffectType.StealHealth:
+                    entityStats.Heal(tickDamageOrHeal);
+                    break;
             }
         }
 
-        private void DoDamage(DamageType type, float amount)
-        {
-            if (playerStats != null)
-            {
-                var dmgDict = new System.Collections.Generic.Dictionary<DamageType, float>
-                {
-                    { type, amount },
-                };
-                var dmgInfo = new DamageInfo(
-                    dmgDict,
-                    new System.Collections.Generic.List<StatusEffectType>()
-                );
-                playerStats.TakeDamage(dmgInfo);
-            }
-            else if (enemyStats != null)
-            {
-                var dmgDict = new System.Collections.Generic.Dictionary<DamageType, float>
-                {
-                    { type, amount },
-                };
-                var dmgInfo = new DamageInfo(
-                    dmgDict,
-                    new System.Collections.Generic.List<StatusEffectType>()
-                );
-                enemyStats.TakeDamage(dmgInfo);
-            }
-        }
-
-        private void DoHeal(float amount)
-        {
-            if (playerStats != null)
-            {
-                playerStats.Heal(amount);
-            }
-            else if (enemyStats != null)
-            {
-                enemyStats.Heal(Mathf.RoundToInt(amount));
-            }
-        }
-
-        private void OnEnable()
-        {
-            tickTimer = tickInterval;
-        }
-
-        /// <summary>
-        /// Called by StatusEffectManager when this effect is removed OR destroyed on scene unload.
-        /// We revert any persistent changes here (like invincibility or reflect).
-        /// </summary>
         private void OnDestroy()
         {
-            // Undo any immediate changes we made in ApplyToEntity
+            var entityStats = GetComponentInParent<IEntityStats>();
+            if (entityStats == null)
+                return;
+
             if (wasInvincible)
             {
-                if (playerStats != null)
-                    playerStats.SetInvincible(false);
-                else if (enemyStats != null)
-                    enemyStats.SetInvincible(false);
+                entityStats.SetInvincible(false);
             }
             if (addedShield)
             {
-                // If we added 10 shield, we can remove it now
-                if (playerStats != null)
-                    playerStats.RemoveShield(10);
-                else if (enemyStats != null)
-                    enemyStats.RemoveShield(10);
-            }
-            if (addedDamageReflect)
-            {
-                if (playerStats != null)
-                {
-                    playerStats.activeStatusEffects.Remove(StatusEffectType.DamageReflect);
-                }
-                else if (enemyStats != null)
-                {
-                    enemyStats.activeStatusEffects.Remove(StatusEffectType.DamageReflect);
-                }
+                entityStats.ModifyStat(Stat.Shield, -10);
             }
         }
     }

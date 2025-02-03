@@ -49,7 +49,7 @@ namespace CoED
             {
                 consumableInventory.AddItem(consumableRewardItem);
                 FloatingTextManager.Instance.ShowFloatingText(
-                    $"{consumableRewardItem.name} added to inventory!",
+                    $"{consumableRewardItem.GetName()} added to inventory!",
                     transform,
                     Color.green
                 );

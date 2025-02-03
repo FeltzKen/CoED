@@ -1554,7 +1554,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3766508911145675736, guid: aa2fe92272ffaed41aabd4d9b18b7e0b, type: 3}
       propertyPath: m_Name
-      value: designated1
+      value: SpawnPoint
       objectReference: {fileID: 0}
     - target: {fileID: 3766508911145675736, guid: aa2fe92272ffaed41aabd4d9b18b7e0b, type: 3}
       propertyPath: m_TagString
@@ -1622,11 +1622,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7507712099046825613, guid: aa2fe92272ffaed41aabd4d9b18b7e0b, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0.5
+      value: -1
       objectReference: {fileID: 0}
     - target: {fileID: 7507712099046825613, guid: aa2fe92272ffaed41aabd4d9b18b7e0b, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -1.5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7507712099046825613, guid: aa2fe92272ffaed41aabd4d9b18b7e0b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x

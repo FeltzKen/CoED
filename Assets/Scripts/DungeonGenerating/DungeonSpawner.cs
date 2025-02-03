@@ -123,10 +123,10 @@ namespace CoED
 
         #endregion
 
-        #region Enemy Spawning (refactored)
+        #region Enemy Spawning
         public void SpawnEnemiesForAllFloors()
         {
-            // We iterate all floors from DungeonManager, skipping floor 0
+            // Iterate through floors (skipping floor 0)
             foreach (var kvp in DungeonManager.Instance.floors.OrderBy(e => e.Key))
             {
                 int floorNum = kvp.Key;
@@ -160,6 +160,7 @@ namespace CoED
             FloorData floorData
         )
         {
+            // Get all valid spawn positions on this floor.
             List<Vector2Int> validTiles = floorData
                 .FloorTiles.Where(pos => IsValidSpawnPosition(floorData, pos))
                 .ToList();
@@ -169,8 +170,9 @@ namespace CoED
                 Debug.LogWarning($"No valid tiles available for enemies on floor {floorNumber}.");
                 return;
             }
+
             int spawnCount = Mathf.Min(dungeonSettings.numberOfEnemiesPerFloor, validTiles.Count);
-            var pathfinder = GetOrCreateFloorPathfinder(floorData);
+            Pathfinder pathfinder = GetOrCreateFloorPathfinder(floorData);
             if (pathfinder == null)
             {
                 Debug.LogError(
@@ -178,95 +180,57 @@ namespace CoED
                 );
                 return;
             }
-            var floorTransformData = DungeonManager.Instance.GetFloorData(floorNumber);
-            if (floorTransformData == null)
-            {
-                Debug.LogError(
-                    $"No floor transform data found for floor {floorNumber}. Skipping enemy spawn."
-                );
-                return;
-            }
 
             for (int i = 0; i < spawnCount; i++)
             {
-                Vector2Int tilePos = validTiles[Random.Range(0, validTiles.Count)];
-                validTiles.Remove(tilePos);
+                // Choose and remove a random valid tile.
+                int randIndex = Random.Range(0, validTiles.Count);
+                Vector2Int tilePos = validTiles[randIndex];
+                validTiles.RemoveAt(randIndex);
+
                 Vector3 worldPos =
                     floorData.FloorTilemap.CellToWorld((Vector3Int)tilePos)
                     + new Vector3(0.5f, 0.5f, 0);
 
-                Monster monsterData = null;
-                // Attempt mini-boss/final boss logic
-                /* if (floorNumber % 2 == 0 && !floorTransformData.hasSpawnedMiniBoss)
-                 {
-                     floorTransformData.hasSpawnedMiniBoss = true;
-                     var mb = MonsterGenerator.GetRandomMiniBoss();
-                     if (mb != null)
-                         monsterData = ConvertMiniBossToMonster(mb);
-                 }
-                 else if (floorNumber == 6 && !floorTransformData.hasSpawnedBoss)
-                 {
-                     floorTransformData.hasSpawnedBoss = true;
-                     var fb = MonsterGenerator.GetRandomFinalBoss();
-                     if (fb != null)
-                         monsterData = ConvertFinalBossToMonster(fb);
-                 }
-                */
-                // If not mini/final
-                if (monsterData == null)
+                // Get a monster for the current floor.
+                Monster template = MonsterGenerator.GetMonsterForFloor(floorNumber);
+                if (template == null)
                 {
-                    // 1) Pick a random "template" monster from DB
-                    Monster templateMonster = MonsterGenerator.GetRandomMonster();
-                    if (templateMonster == null)
-                    {
-                        Debug.LogWarning("No standard monster found! Skipping spawn.");
-                        continue;
-                    }
-
-                    // 2) create a new monster data instance from template
-                    monsterData = new Monster
-                    {
-                        name = templateMonster.name,
-                        description = templateMonster.description,
-                        monsterStats = new Dictionary<Stat, float>(templateMonster.monsterStats),
-                        damageType = templateMonster.damageType,
-                        monsterSprite = templateMonster.monsterSprite,
-                        statusInflictionChance = templateMonster.statusInflictionChance,
-                        inflictedStatusEffect = templateMonster.inflictedStatusEffect,
-                        resistance = templateMonster.resistance,
-                        weakness = templateMonster.weakness,
-                    };
-
-                    // 3) Decide the monster's new level from floor + random variation
-                    int randomLevel = Mathf.RoundToInt(floorNumber * Random.Range(0.8f, 1.6f));
-                    randomLevel = Mathf.Clamp(randomLevel, 1, 30);
-                    monsterData.level = randomLevel;
-
-                    // 4) Recompute stats from that level
-                    MonsterInitializer.CalculateMonsterBaseStatsFromLevel(
-                        monsterData,
-                        monsterData.level
-                    );
-                    // etc.
+                    Debug.LogWarning("No monster available for floor spawn, skipping spawn.");
+                    continue;
                 }
 
-                // Now monsterData has either pre-set mini/final stats or newly computed standard stats
+                // Clone the monster data.
+                Monster monsterData = new Monster(template);
+
+                // Determine the monster's level.
+                int randomLevel = Mathf.RoundToInt(floorNumber * Random.Range(0.8f, 1.6f));
+                randomLevel = Mathf.Clamp(randomLevel, 1, 30);
+                monsterData.level = randomLevel;
+
+                // Recalculate the monster's stats for this level.
+                MonsterInitializer.CalculateMonsterBaseStatsFromLevel(
+                    monsterData,
+                    monsterData.level
+                );
+
+                // Create the enemy GameObject.
                 GameObject enemyGO = new GameObject($"Enemy_{monsterData.name}");
                 enemyGO.AddComponent<Rigidbody2D>();
-
                 RectTransform enemyRect = enemyGO.AddComponent<RectTransform>();
                 enemyRect.sizeDelta = new Vector2(1, 1);
-
                 enemyGO.transform.position = worldPos;
                 enemyGO.transform.SetParent(enemyParent);
 
-                var col = enemyGO.AddComponent<CircleCollider2D>();
+                CircleCollider2D col = enemyGO.AddComponent<CircleCollider2D>();
                 col.isTrigger = false;
-
+                enemyGO.AddComponent<InspectorStatDisplay>();
+                // Attach the _EnemyStats component and assign the monster data.
                 _EnemyStats statsComp = enemyGO.AddComponent<_EnemyStats>();
                 statsComp.monsterData = monsterData;
                 statsComp.spawnFloorLevel = floorNumber;
 
+                // Initialize enemy behavior, pathfinding, UI, etc.
                 MonsterInitializer.InitializeEnemy(
                     enemyGO,
                     pathfinder,
@@ -279,104 +243,20 @@ namespace CoED
         }
 
         /// <summary>
-        /// Convert MiniBoss => Monster
-        /// </summary>
-        private Monster ConvertMiniBossToMonster(MiniBoss mb)
-        {
-            return new Monster
-            {
-                name = mb.name,
-                description = mb.description,
-                level = mb.level,
-                monsterStats = new Dictionary<Stat, float>()
-                {
-                    { Stat.MaxHP, mb.MiniBossStats[Stat.MaxHP] },
-                    { Stat.Attack, mb.MiniBossStats[Stat.Attack] },
-                    { Stat.Defense, mb.MiniBossStats[Stat.Defense] },
-                    { Stat.Speed, mb.MiniBossStats[Stat.Speed] },
-                    { Stat.Intelligence, mb.MiniBossStats[Stat.Intelligence] },
-                    { Stat.Dexterity, mb.MiniBossStats[Stat.Dexterity] },
-                    { Stat.CritChance, mb.MiniBossStats[Stat.CritChance] },
-                    { Stat.CritDamage, mb.MiniBossStats[Stat.CritDamage] },
-                    { Stat.FireRate, mb.MiniBossStats[Stat.FireRate] },
-                    { Stat.Shield, mb.MiniBossStats[Stat.Shield] },
-                    { Stat.Accuracy, mb.MiniBossStats[Stat.Accuracy] },
-                    { Stat.ElementalDamage, mb.MiniBossStats[Stat.ElementalDamage] },
-                    {
-                        Stat.ChanceToInflictStatusEffect,
-                        mb.MiniBossStats[Stat.ChanceToInflictStatusEffect]
-                    },
-                    { Stat.StatusEffectDuration, mb.MiniBossStats[Stat.StatusEffectDuration] },
-                    { Stat.PatrolSpeed, mb.MiniBossStats[Stat.PatrolSpeed] },
-                    { Stat.ChaseSpeed, mb.MiniBossStats[Stat.ChaseSpeed] },
-                },
-                damageType = mb.damageType,
-                statusInflictionChance = mb.MiniBossStats[Stat.ChanceToInflictStatusEffect],
-                inflictedStatusEffect = mb.inflictedStatusEffect,
-                monsterSprite = mb.miniBossSprite,
-            };
-        }
-
-        /// <summary>
-        /// Convert FinalBoss => Monster
-        /// </summary>
-        private Monster ConvertFinalBossToMonster(FinalBoss fb)
-        {
-            return new Monster
-            {
-                name = fb.name,
-                description = fb.description,
-                level = fb.level,
-                monsterStats = new Dictionary<Stat, float>()
-                {
-                    { Stat.MaxHP, fb.finalBossStats[Stat.MaxHP] },
-                    { Stat.Attack, fb.finalBossStats[Stat.Attack] },
-                    { Stat.Defense, fb.finalBossStats[Stat.Defense] },
-                    { Stat.Speed, fb.finalBossStats[Stat.Speed] },
-                    { Stat.Intelligence, fb.finalBossStats[Stat.Intelligence] },
-                    { Stat.Dexterity, fb.finalBossStats[Stat.Dexterity] },
-                    { Stat.CritChance, fb.finalBossStats[Stat.CritChance] },
-                    { Stat.CritDamage, fb.finalBossStats[Stat.CritDamage] },
-                    { Stat.FireRate, fb.finalBossStats[Stat.FireRate] },
-                    { Stat.Shield, fb.finalBossStats[Stat.Shield] },
-                    { Stat.Accuracy, fb.finalBossStats[Stat.Accuracy] },
-                    { Stat.ElementalDamage, fb.finalBossStats[Stat.ElementalDamage] },
-                    {
-                        Stat.ChanceToInflictStatusEffect,
-                        fb.finalBossStats[Stat.ChanceToInflictStatusEffect]
-                    },
-                    { Stat.StatusEffectDuration, fb.finalBossStats[Stat.StatusEffectDuration] },
-                    { Stat.PatrolSpeed, fb.finalBossStats[Stat.PatrolSpeed] },
-                    { Stat.ChaseSpeed, fb.finalBossStats[Stat.ChaseSpeed] },
-                },
-                damageType = fb.damageType,
-                statusInflictionChance = fb.finalBossStats[Stat.ChanceToInflictStatusEffect],
-                inflictedStatusEffect = fb.inflictedStatusEffect,
-                monsterSprite = fb.bossSprite,
-            };
-        }
-
-        /// <summary>
-        /// Same as before: checks if a floor tile is valid for spawn
-        /// (unchanged).
+        /// Checks whether a given grid position is valid for spawning an enemy.
         /// </summary>
         public bool IsValidSpawnPosition(FloorData floorData, Vector2Int gridPos)
         {
-            List<Vector2Int> wallList = DungeonManager
-                .Instance.GetFloorData(floorData.FloorNumber)
-                .WallTiles.ToList();
-            List<Vector2Int> voidList = DungeonManager
-                .Instance.GetFloorData(floorData.FloorNumber)
-                .VoidTiles.ToList();
+            FloorData data = DungeonManager.Instance.GetFloorData(floorData.FloorNumber);
+            List<Vector2Int> wallList = data.WallTiles.ToList();
+            List<Vector2Int> voidList = data.VoidTiles.ToList();
 
             if (
                 !floorData.FloorTiles.Contains(gridPos)
                 || wallList.Contains(gridPos)
                 || voidList.Contains(gridPos)
             )
-            {
                 return false;
-            }
 
             Vector3 worldPos = floorData.FloorTilemap.CellToWorld(
                 new Vector3Int(gridPos.x, gridPos.y, 0)
@@ -384,14 +264,11 @@ namespace CoED
             float checkRadius = 0.4f;
             bool overlapsWall =
                 Physics2D.OverlapCircle(worldPos, checkRadius, obstacleLayer) != null;
-            if (overlapsWall)
-                return false;
-
-            return true;
+            return !overlapsWall;
         }
 
         /// <summary>
-        /// Same as before: creates a pathfinder for the floor if needed.
+        /// Returns a pathfinder for the floor, creating one if necessary.
         /// </summary>
         private Pathfinder GetOrCreateFloorPathfinder(FloorData floorData)
         {
@@ -406,6 +283,17 @@ namespace CoED
             Pathfinder pathfinder = new Pathfinder(grid);
             floorPathfinders[floorNum] = pathfinder;
             return pathfinder;
+        }
+        #endregion
+
+        #region Helper: Clone Monster
+        /// <summary>
+        /// Creates a new Monster instance by copying all properties from the template.
+        /// </summary>
+        private Monster CloneMonster(Monster template)
+        {
+            // In our new system, use the copy constructor.
+            return new Monster(template);
         }
         #endregion
 
@@ -541,7 +429,6 @@ namespace CoED
             if (equipment.equipmentStats[Stat.Evasion] > 0)
                 equipment.equipmentStats[Stat.Evasion] += modifierScale;
 
-
             var keys = new List<DamageType>(equipment.damageModifiers.Keys);
             foreach (var key in keys)
             {
@@ -674,7 +561,7 @@ namespace CoED
                 tiles.Remove(tilePos);
 
                 ConsumableItem coItem = ConsumableItemGenerator.GenerateRandomConsumable();
-                if (coItem == null || string.IsNullOrEmpty(coItem.name))
+                if (coItem == null || string.IsNullOrEmpty(coItem.GetName()))
                 {
                     Debug.LogWarning("Invalid consumable item generated, skipping spawn");
                     continue;
@@ -693,20 +580,20 @@ namespace CoED
 
                 try
                 {
-                    GameObject itemObject = new GameObject($"Consumable_{coItem.name}");
+                    GameObject itemObject = new GameObject($"Consumable_{coItem.GetName()}");
                     itemObject.transform.SetParent(parent);
 
                     itemObject.transform.position = spawnPos;
                     itemObject.tag = "Item";
 
                     var renderer = itemObject.AddComponent<SpriteRenderer>();
-                    if (coItem.icon == null)
+                    if (coItem.GetSprite() == null)
                     {
-                        Debug.LogError($"Consumable {coItem.name} has no icon");
+                        Debug.LogError($"Consumable {coItem.GetName()} has no icon");
                         Destroy(itemObject);
                         continue;
                     }
-                    renderer.sprite = coItem.icon;
+                    renderer.sprite = coItem.GetSprite();
                     renderer.sortingOrder = 3;
 
                     var collider = itemObject.AddComponent<CapsuleCollider2D>();
@@ -787,7 +674,7 @@ namespace CoED
         {
             List<Vector2Int> spawnPositions = GetValidSpawnPositions(
                 dungeonSettings.ambushEnemyCount,
-                5f,
+                dungeonSettings.ambushRadius,
                 floorData.FloorTilemap.WorldToCell(center),
                 floorData
             );
@@ -798,7 +685,7 @@ namespace CoED
                 return;
             }
 
-            var pathfinder = GetOrCreateFloorPathfinder(floorData);
+            Pathfinder pathfinder = GetOrCreateFloorPathfinder(floorData);
             if (pathfinder == null)
             {
                 Debug.LogError("No pathfinder found for ambush spawn.");
@@ -812,29 +699,30 @@ namespace CoED
                     floorData.FloorTilemap.CellToWorld(new Vector3Int(spawnPos.x, spawnPos.y, 0))
                     + new Vector3(0.5f, 0.5f, 0);
 
-                Monster monsterData = MonsterGenerator.GetRandomMonster();
-                if (monsterData == null)
+                Monster template = MonsterGenerator.GetMonsterForFloor(floorData.FloorNumber);
+                if (template == null)
                 {
-                    Debug.LogWarning("No monster found for ambush spawn.");
+                    Debug.LogWarning("No monster available for ambush spawn, skipping spawn.");
                     continue;
                 }
+
+                Monster monsterData = new Monster(template);
+
                 MonsterInitializer.CalculateMonsterBaseStatsFromLevel(
                     monsterData,
-                    floorData.FloorNumber
+                    monsterData.level
                 );
 
                 GameObject enemyGO = new GameObject($"Enemy_{monsterData.name}");
                 enemyGO.AddComponent<Rigidbody2D>();
-
                 RectTransform enemyRect = enemyGO.AddComponent<RectTransform>();
                 enemyRect.sizeDelta = new Vector2(1, 1);
-
                 enemyGO.transform.position = worldPos;
                 enemyGO.transform.SetParent(enemyParent);
 
-                var col = enemyGO.AddComponent<CircleCollider2D>();
+                CircleCollider2D col = enemyGO.AddComponent<CircleCollider2D>();
                 col.isTrigger = false;
-
+                enemyGO.AddComponent<InspectorStatDisplay>();
                 _EnemyStats statsComp = enemyGO.AddComponent<_EnemyStats>();
                 statsComp.monsterData = monsterData;
                 statsComp.spawnFloorLevel = floorData.FloorNumber;

@@ -524,7 +524,7 @@ namespace CoED
             if (selectedConsumable != null)
             {
                 // (Optional) check if cursed
-                if (selectedConsumable.name.Contains("Cursed"))
+                if (selectedConsumable.GetName().Contains("Cursed"))
                 {
                     Debug.LogWarning("Cannot drop a cursed consumable item.");
                     FloatingTextManager.Instance.ShowFloatingText(

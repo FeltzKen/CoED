@@ -18,6 +18,7 @@ public class ConsumableSuffixData
     public int priceIncrease;
     public int duration;
 
+    public Dictionary<Stat, float> statModifiers = new Dictionary<Stat, float>();
     // Status Effect
     public List<StatusEffectType> addedEffects = new List<StatusEffectType>();
     public List<StatusEffectType> removedEffects = new List<StatusEffectType>();

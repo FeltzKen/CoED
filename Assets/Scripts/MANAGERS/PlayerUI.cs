@@ -336,7 +336,7 @@ namespace CoED
         {
             if (stepCountText != null)
             {
-                stepCountText.text = PlayerStats.Instance.stepCounter.ToString();
+                stepCountText.text = PlayerStats.Instance.steps.ToString();
             }
         }
 

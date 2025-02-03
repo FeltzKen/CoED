@@ -1,11 +1,10 @@
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace CoED
 {
-    public class _EnemyStats : MonoBehaviour
+    public class _EnemyStats : MonoBehaviour, IEntityStats
     {
         [Header("Assigned Monster Data")]
         public Monster monsterData; // from the new system
@@ -14,51 +13,43 @@ namespace CoED
 
         private bool invincible = false;
         public bool Invincible => invincible;
-
-        [Header("Resistances/Weaknesses/Immunities")]
-        public List<Immunities> immunities = new List<Immunities>();
-        public List<Resistances> resistances = new List<Resistances>();
-        public List<Weaknesses> weaknesses = new List<Weaknesses>();
+        public bool Silenced { get; private set; }
 
         [Header("Dynamic Damage Types")]
         public Dictionary<DamageType, float> dynamicDamageTypes =
             new Dictionary<DamageType, float>();
 
-        [Header("Inflicted Status Effects")]
-        public List<StatusEffectType> inflictedStatusEffects = new List<StatusEffectType>();
-        public float chanceToInflictStatusEffect = 0.1f;
-
         [SerializeField]
         public List<StatusEffectType> activeStatusEffects = new List<StatusEffectType>();
-        public Sprite sprite;
+        public Dictionary<Stat, Coroutine> activeNullifications = new Dictionary<Stat, Coroutine>();
 
         // Current Stats
         private Dictionary<Stat, float> enemyStats = new Dictionary<Stat, float>()
         {
             { Stat.HP, 0f },
-            { Stat.MaxHP, 500f },
-            { Stat.Attack, 10f },
-            { Stat.Intelligence, 5f },
+            { Stat.MaxHP, 0f },
+            { Stat.Attack, 0f },
+            { Stat.Intelligence, 0f },
             { Stat.Evasion, 0f },
-            { Stat.Defense, 5f },
-            { Stat.Dexterity, 5f },
+            { Stat.Defense, 0f },
+            { Stat.Dexterity, 0f },
             { Stat.Magic, 0f },
-            { Stat.MaxMagic, 100f },
-            { Stat.Accuracy, 5f },
-            { Stat.FireRate, 1f },
-            { Stat.ProjectileRange, 5f },
-            { Stat.AttackRange, 3f },
-            { Stat.Speed, 5f },
+            { Stat.MaxMagic, 0f },
+            { Stat.Accuracy, 0f },
+            { Stat.FireRate, 0f },
+            { Stat.ProjectileRange, 0f },
+            { Stat.AttackRange, 0f },
+            { Stat.Speed, 0f },
             { Stat.Shield, 0f },
             { Stat.Stamina, 0f },
-            { Stat.MaxStamina, 100f },
-            { Stat.ElementalDamage, 5f },
-            { Stat.CritChance, 5f },
-            { Stat.CritDamage, 1.5f },
-            { Stat.ChanceToInflictStatusEffect, 0.05f },
-            { Stat.StatusEffectDuration, 5f },
-            { Stat.PatrolSpeed, 1f },
-            { Stat.ChaseSpeed, 1f },
+            { Stat.MaxStamina, 0f },
+            { Stat.ElementalDamage, 0f },
+            { Stat.CritChance, 0f },
+            { Stat.CritDamage, 0f },
+            { Stat.ChanceToInflictStatusEffect, 0f },
+            { Stat.StatusEffectDuration, 0f },
+            { Stat.PatrolSpeed, 0f },
+            { Stat.ChaseSpeed, 0f },
         };
 
         [SerializeField]
@@ -123,11 +114,9 @@ namespace CoED
         public float ScaledFactor { get; private set; }
 
         private EnemyUI enemyUI;
-        private _Enemy enemy;
 
         private void Start()
         {
-            enemy = GetComponent<_Enemy>();
             enemyUI = GetComponentInChildren<EnemyUI>();
 
             ApplyMonsterData(monsterData);
@@ -138,7 +127,7 @@ namespace CoED
             EquipmentTier = Mathf.Clamp(Mathf.FloorToInt(spawnFloor / 3) + 1, 1, 3);
 
             // 4) calculate final stats (the hybrid approach: monster base + floor scaling)
-            CalculateMonsterScaledStats();
+            //CalculateMonsterScaledStats();
             InitializeUI();
         }
 
@@ -148,6 +137,7 @@ namespace CoED
             {
                 enemyUI.SetHealthBarMax(enemyStats[Stat.MaxHP]);
             }
+            GetComponent<InspectorStatDisplay>().SetStats();
         }
 
         /// <summary>
@@ -160,7 +150,7 @@ namespace CoED
                 Debug.LogWarning("No monsterData assigned; using fallback stats.");
                 return;
             }
-            sprite = monster.monsterSprite;
+            monsterData.monsterSprite = monster.monsterSprite;
 
             elementalBase = monster.damageType;
             enemyStats[Stat.MaxHP] = monster.monsterStats[Stat.MaxHP];
@@ -181,101 +171,148 @@ namespace CoED
             enemyStats[Stat.Accuracy] = monster.monsterStats[Stat.Accuracy];
             enemyStats[Stat.StatusEffectDuration] = monster.monsterStats[Stat.StatusEffectDuration];
             enemyStats[Stat.PatrolSpeed] = monster.monsterStats[Stat.PatrolSpeed];
+            enemyStats[Stat.ChaseSpeed] = monster.monsterStats[Stat.ChaseSpeed];
 
-            inflictedStatusEffects.Clear();
-            if (monster.inflictedStatusEffect != StatusEffectType.None)
-            {
-                inflictedStatusEffects.Add(monster.inflictedStatusEffect);
-            }
-            if (monster.resistance != Resistances.None)
-            {
-                resistances.Add(monster.resistance);
-            }
-            {
-                resistances.Add(monster.resistance);
-            }
-            if (monster.weakness != Weaknesses.None)
-            {
-                weaknesses.Add(monster.weakness);
-            }
+            monsterData.inflictedStatusEffect = monster.inflictedStatusEffect;
         }
 
-        /// <summary>
-        /// Applies floor-based scaling so that monsters can appear on deeper floors
-        /// while still retaining their base identity from monsterData.
-        /// </summary>
-        private void CalculateMonsterScaledStats()
+        #region IEntity Implementation
+
+        public void ModifyStat(Stat stat, float value)
         {
-            var dungeonSettings = FindAnyObjectByType<DungeonGenerator>().dungeonSettings;
+            if (enemyStats.ContainsKey(stat))
+                enemyStats[stat] += value;
+            else
+                enemyStats[stat] = value;
 
-            float floorMultiplier =
-                1
-                + (spawnFloor * dungeonSettings.difficultyLevel * 0.1f)
-                + dungeonSettings.playerLevelFactor
-                + dungeonSettings.floorDifficultyFactor;
+            Debug.Log($"[EnemyStats] {stat} modified by {value}. New Value: {enemyStats[stat]}");
+        }
 
-            // random factor for variety
-            ScaledFactor = floorMultiplier * Random.Range(0.9f, 1.5f);
-
-            enemyStats[Stat.PatrolSpeed] =
-                Mathf.Lerp(1f, 3f, spawnFloor / 6f) + Random.Range(0f, 0.5f);
-            enemyStats[Stat.ChaseSpeed] = enemyStats[Stat.PatrolSpeed] * 1.5f;
-
-            enemyStats[Stat.MaxHP] = Mathf.RoundToInt(enemyStats[Stat.MaxHP] * ScaledFactor);
-            enemyStats[Stat.Attack] = Mathf.RoundToInt(enemyStats[Stat.Attack] * ScaledFactor);
-            enemyStats[Stat.Defense] = Mathf.RoundToInt(enemyStats[Stat.Defense] * ScaledFactor);
-            enemyStats[Stat.Dexterity] = Mathf.RoundToInt(
-                enemyStats[Stat.Dexterity] * ScaledFactor
-            );
-            enemyStats[Stat.ElementalDamage] = Mathf.RoundToInt(
-                enemyStats[Stat.ElementalDamage] * ScaledFactor
-            );
-            enemyStats[Stat.AttackRange] = Mathf.RoundToInt(
-                enemyStats[Stat.AttackRange] * ScaledFactor
-            );
-            enemyStats[Stat.ProjectileRange] = Mathf.RoundToInt(
-                enemyStats[Stat.ProjectileRange] * ScaledFactor
-            );
-            enemyStats[Stat.ChanceToInflictStatusEffect] = Mathf.RoundToInt(
-                enemyStats[Stat.ChanceToInflictStatusEffect] * ScaledFactor
-            );
-            enemyStats[Stat.Speed] = Mathf.RoundToInt(enemyStats[Stat.Speed] * ScaledFactor);
-            enemyStats[Stat.Intelligence] = Mathf.RoundToInt(
-                enemyStats[Stat.Intelligence] * ScaledFactor
-            );
-            enemyStats[Stat.Evasion] = Mathf.RoundToInt(enemyStats[Stat.Evasion] * ScaledFactor);
-            enemyStats[Stat.CritChance] = Mathf.RoundToInt(
-                enemyStats[Stat.CritChance] * ScaledFactor
-            );
-            enemyStats[Stat.CritDamage] = Mathf.RoundToInt(
-                enemyStats[Stat.CritDamage] * ScaledFactor
-            );
-            enemyStats[Stat.FireRate] = Mathf.RoundToInt(enemyStats[Stat.FireRate] * ScaledFactor);
-            enemyStats[Stat.Shield] = Mathf.RoundToInt(enemyStats[Stat.Shield] * ScaledFactor);
-            enemyStats[Stat.Accuracy] = Mathf.RoundToInt(enemyStats[Stat.Accuracy] * ScaledFactor);
-            enemyStats[Stat.StatusEffectDuration] = Mathf.RoundToInt(
-                enemyStats[Stat.StatusEffectDuration] * ScaledFactor
-            );
-
-            enemyStats[Stat.HP] = enemyStats[Stat.MaxHP];
-
-            // Setup dynamicDamageTypes
-            dynamicDamageTypes.Clear();
-            dynamicDamageTypes.Add(DamageType.Physical, enemyStats[Stat.Attack]);
-
-            if (elementalBase != DamageType.Physical)
+        public void NullStat(Stat stat, float duration)
+        {
+            if (activeNullifications.ContainsKey(stat))
             {
-                // e.g. half the scaled attack as elemental or something else
-                float extraElemental =
-                    (enemyStats[Stat.ElementalDamage] > 0)
-                        ? (enemyStats[Stat.ElementalDamage] * ScaledFactor)
-                        : (enemyStats[Stat.Attack] * 0.5f);
+                // If already nullifying, restart it
+                StopCoroutine(activeNullifications[stat]);
+            }
 
-                dynamicDamageTypes.Add(elementalBase, extraElemental);
+            activeNullifications[stat] = StartCoroutine(NullifyStatCoroutine(stat, duration)); // Default 5s duration
+        }
+
+        private IEnumerator NullifyStatCoroutine(Stat stat, float duration)
+        {
+            if (!enemyStats.ContainsKey(stat))
+                yield break;
+
+            float originalValue = enemyStats[stat];
+            enemyStats[stat] = 0;
+            Debug.Log($"[PlayerStats] {stat} nullified for {duration} seconds.");
+
+            yield return new WaitForSeconds(duration);
+
+            enemyStats[stat] = originalValue;
+            activeNullifications.Remove(stat);
+            Debug.Log($"[PlayerStats] {stat} restored to {originalValue}.");
+        }
+
+        public void Heal(float amount)
+        {
+            if (amount <= 0)
+            {
+                Debug.LogWarning("EnemyStats: Heal amount must be positive.");
+                return;
+            }
+
+            enemyStats[Stat.HP] = Mathf.Min(enemyStats[Stat.HP] + amount, enemyStats[Stat.MaxHP]);
+            UpdateHealthUI();
+            Debug.Log($"Healed {amount} => {enemyStats[Stat.HP]}/{enemyStats[Stat.MaxHP]}");
+        }
+
+        public void AddActiveStatusEffect(StatusEffectType effect)
+        {
+            if (!activeStatusEffects.Contains(effect))
+            {
+                activeStatusEffects.Add(effect);
             }
         }
 
-        public void TakeDamage(DamageInfo damageInfo, bool bypassInvincible = false)
+        public void RemoveActiveStatusEffect(StatusEffectType effect)
+        {
+            if (activeStatusEffects.Contains(effect))
+            {
+                activeStatusEffects.Remove(effect);
+            }
+        }
+
+        public void AddWeakness(Weaknesses weaknesses)
+        {
+            monsterData.weaknesses.Add(weaknesses);
+        }
+
+        public void RemoveWeakness(Weaknesses weaknesses)
+        {
+            monsterData.weaknesses.Remove(weaknesses);
+        }
+
+        public void AddImmunity(Immunities immunities)
+        {
+            monsterData.immunities.Add(immunities);
+        }
+
+        public void RemoveImmunity(Immunities immunities)
+        {
+            monsterData.immunities.Remove(immunities);
+        }
+
+        public void AddResistance(Resistances resistances)
+        {
+            monsterData.resistances.Add(resistances);
+        }
+
+        public void RemoveResistance(Resistances resistances)
+        {
+            monsterData.resistances.Remove(resistances);
+        }
+
+        public void AddShield(float shieldValue)
+        {
+            if (shieldValue <= 0)
+            {
+                Debug.LogWarning("Shield value must be positive.");
+                return;
+            }
+            shieldValue += shieldValue;
+            enemyStats[Stat.Defense] += shieldValue;
+        }
+
+        public void RemoveShield(float shieldValue)
+        {
+            if (shieldValue <= 0)
+            {
+                Debug.LogWarning("Shield value must be positive.");
+                return;
+            }
+
+            float effective = Mathf.Min(shieldValue, enemyStats[Stat.Shield]);
+            enemyStats[Stat.Shield] -= effective;
+            enemyStats[Stat.Defense] -= effective;
+        }
+
+        public bool HasStatusEffect(StatusEffectType effect)
+        {
+            return activeStatusEffects.Contains(effect);
+        }
+
+        public void IsSilenced(bool state)
+        {
+            Silenced = state;
+        }
+
+        public void TakeDamage(
+            DamageInfo damageInfo,
+            float statusChance = 0.05f,
+            bool bypassInvincible = false
+        )
         {
             if (!bypassInvincible && invincible)
             {
@@ -289,7 +326,7 @@ namespace CoED
                 DamageType type = damageEntry.Key;
                 float amount = damageEntry.Value;
 
-                if (immunities.Contains((Immunities)type))
+                if (monsterData.immunities.Contains((Immunities)type))
                 {
                     Debug.Log($"{gameObject.name} is immune to {type} damage.");
                     FloatingTextManager.Instance.ShowFloatingText(
@@ -300,11 +337,11 @@ namespace CoED
                     continue;
                 }
 
-                if (resistances.Contains((Resistances)type))
+                if (monsterData.resistances.Contains((Resistances)type))
                 {
                     amount *= 0.5f;
                 }
-                if (weaknesses.Contains((Weaknesses)type))
+                if (monsterData.weaknesses.Contains((Weaknesses)type))
                 {
                     amount *= 1.5f;
                 }
@@ -324,10 +361,17 @@ namespace CoED
                 // e.g. from playerStats or the skill used
                 if (Random.value < PlayerStats.Instance.GetCurrentChanceToInflictStatusEffect())
                 {
-                    StatusEffectManager.Instance.AddStatusEffect(gameObject, effect);
+                    StatusEffectManager.Instance.AddStatusEffect(
+                        gameObject,
+                        effect,
+                        enemyStats[Stat.StatusEffectDuration]
+                    );
                 }
             }
 
+        #endregion
+            #region End of IEntity Implementation
+            #endregion
             UpdateHealthUI();
             FloatingTextManager.Instance.ShowFloatingText(
                 effectiveDamage.ToString(),
@@ -339,19 +383,6 @@ namespace CoED
             {
                 HandleDeath();
             }
-        }
-
-        public void Heal(int amount)
-        {
-            if (amount <= 0)
-            {
-                Debug.LogWarning("EnemyStats: Heal amount must be positive.");
-                return;
-            }
-
-            enemyStats[Stat.HP] = Mathf.Min(enemyStats[Stat.HP] + amount, enemyStats[Stat.MaxHP]);
-            UpdateHealthUI();
-            Debug.Log($"Healed {amount} => {enemyStats[Stat.HP]}/{enemyStats[Stat.MaxHP]}");
         }
 
         private void HandleDeath()
@@ -379,30 +410,6 @@ namespace CoED
         public void SetInvincible(bool invincible)
         {
             this.invincible = invincible;
-        }
-
-        public void AddShield(int shieldValue)
-        {
-            if (shieldValue <= 0)
-            {
-                Debug.LogWarning("Shield value must be positive.");
-                return;
-            }
-            shieldValue += shieldValue;
-            enemyStats[Stat.Defense] += shieldValue;
-        }
-
-        public void RemoveShield(int shieldValue)
-        {
-            if (shieldValue <= 0)
-            {
-                Debug.LogWarning("Shield value must be positive.");
-                return;
-            }
-
-            float effective = Mathf.Min(shieldValue, enemyStats[Stat.Shield]);
-            enemyStats[Stat.Shield] -= effective;
-            enemyStats[Stat.Defense] -= effective;
         }
 
         private void UpdateHealthUI()

@@ -62,7 +62,7 @@ namespace CoED
             CameraController cameraController = Camera.main.GetComponent<CameraController>();
             if (cameraController != null)
             {
-                cameraController.UpdateBounds(PlayerStats.Instance.GetCurrentFloor());
+                cameraController.UpdateBounds(PlayerStats.Instance.currentFloor);
             }
         }
 

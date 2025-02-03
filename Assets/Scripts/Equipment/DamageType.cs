@@ -2,6 +2,7 @@ namespace CoED
 {
     public enum DamageType
     {
+        None,
         Physical,
         Fire,
         Ice,
@@ -11,10 +12,13 @@ namespace CoED
         Bleed,
         Holy,
         Shadow,
+        Heal,
+        Nature,
     }
 
     public enum Stat
     {
+        None,
         HP,
         MaxHP,
         Attack,

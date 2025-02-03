@@ -9,8 +9,11 @@ namespace CoED
         {
             { "Attack", 2 },
             { "Defense", 3 },
+            { "Magic", 2 },
             { "MaxMagic", 2 },
+            { "HP", 3 },
             { "MaxHP", 3 },
+            { "Stamina", 1 },
             { "MaxStamina", 1 },
             { "Intelligence", 2 },
             { "Dexterity", 3 },
@@ -90,7 +93,8 @@ namespace CoED
             totalPrice += equipment.equipmentStats[Stat.MaxMagic] * ValuePerStat["MaxMagic"];
             totalPrice += equipment.equipmentStats[Stat.MaxHP] * ValuePerStat["MaxHP"];
             totalPrice += equipment.equipmentStats[Stat.MaxStamina] * ValuePerStat["MaxStamina"];
-            totalPrice += equipment.equipmentStats[Stat.Intelligence] * ValuePerStat["Intelligence"];
+            totalPrice +=
+                equipment.equipmentStats[Stat.Intelligence] * ValuePerStat["Intelligence"];
             totalPrice += equipment.equipmentStats[Stat.Dexterity] * ValuePerStat["Dexterity"];
             totalPrice += equipment.equipmentStats[Stat.Speed] * ValuePerStat["Speed"];
             totalPrice += equipment.equipmentStats[Stat.CritChance] * ValuePerStat["CritChance"];
@@ -136,16 +140,39 @@ namespace CoED
         {
             int totalPrice = 0;
 
-            totalPrice += (int)consumable.attackBoost * ValuePerStat["Attack"];
-            totalPrice += (int)consumable.defenseBoost * ValuePerStat["Defense"];
-            totalPrice += (int)consumable.magicBoost * ValuePerStat["MaxMagic"];
-            totalPrice += (int)consumable.healthBoost * ValuePerStat["MaxHP"];
-            totalPrice += (int)consumable.staminaBoost * ValuePerStat["MaxStamina"];
-            totalPrice += (int)consumable.intelligenceBoost * ValuePerStat["Intelligence"];
-            totalPrice += (int)consumable.dexterityBoost * ValuePerStat["Dexterity"];
-            totalPrice += (int)consumable.speedBoost * ValuePerStat["Speed"];
-            totalPrice += (int)consumable.critChanceBoost * ValuePerStat["CritChance"];
-            totalPrice += (int)consumable.duration;
+            totalPrice += (int)consumable.consumableStats[Stat.Attack] * ValuePerStat["Attack"];
+            totalPrice += (int)consumable.consumableStats[Stat.Defense] * ValuePerStat["Defense"];
+            totalPrice += (int)consumable.consumableStats[Stat.Magic] * ValuePerStat["Magic"];
+            totalPrice += (int)consumable.consumableStats[Stat.HP] * ValuePerStat["HP"];
+            totalPrice += (int)consumable.consumableStats[Stat.Stamina] * ValuePerStat["Stamina"];
+            totalPrice +=
+                (int)consumable.consumableStats[Stat.Intelligence] * ValuePerStat["Intelligence"];
+            totalPrice +=
+                (int)consumable.consumableStats[Stat.Dexterity] * ValuePerStat["Dexterity"];
+            totalPrice += (int)consumable.consumableStats[Stat.Speed] * ValuePerStat["Speed"];
+            totalPrice +=
+                (int)consumable.consumableStats[Stat.CritChance] * ValuePerStat["CritChance"];
+            totalPrice +=
+                (int)consumable.consumableStats[Stat.CritDamage] * ValuePerStat["CritDamage"];
+            totalPrice +=
+                (int)consumable.consumableStats[Stat.ProjectileRange]
+                * ValuePerStat["ProjectileRange"];
+            totalPrice +=
+                (int)consumable.consumableStats[Stat.AttackRange] * ValuePerStat["AttackRange"];
+            totalPrice +=
+                (int)consumable.consumableStats[Stat.ElementalDamage]
+                * ValuePerStat["ElementalDamage"];
+            totalPrice +=
+                (int)consumable.consumableStats[Stat.ChanceToInflictStatusEffect]
+                * ValuePerStat["ChanceToInflictStatusEffect"];
+            totalPrice +=
+                (int)consumable.consumableStats[Stat.StatusEffectDuration]
+                * ValuePerStat["StatusEffectDuration"];
+            totalPrice += (int)consumable.consumableStats[Stat.FireRate] * ValuePerStat["FireRate"];
+            totalPrice += (int)consumable.consumableStats[Stat.Shield] * ValuePerStat["Shield"];
+            totalPrice += (int)consumable.consumableStats[Stat.Accuracy] * ValuePerStat["Accuracy"];
+            totalPrice += (int)consumable.consumableStats[Stat.Evasion] * ValuePerStat["Evasion"];
+
             foreach (var effect in consumable.addedEffects)
             {
                 if (statusEffectValues.ContainsKey(effect))

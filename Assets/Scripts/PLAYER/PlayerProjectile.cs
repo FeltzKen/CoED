@@ -87,7 +87,11 @@ namespace CoED
                             var effect in GetComponent<PlayerSpellWrapper>().InflictedStatusEffectTypes
                         )
                         {
-                            StatusEffectManager.Instance.AddStatusEffect(enemy.gameObject, effect);
+                            StatusEffectManager.Instance.AddStatusEffect(
+                                enemy.gameObject,
+                                effect,
+                                PlayerStats.Instance.GetCurrentStatusEffectDuration()
+                            );
                         }
                     }
                     Destroy(gameObject);

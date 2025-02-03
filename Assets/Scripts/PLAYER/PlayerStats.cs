@@ -2,43 +2,49 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace CoED
 {
-    public class PlayerStats : MonoBehaviour
+    public class PlayerStats : MonoBehaviour, IEntityStats
     {
         public static PlayerStats Instance { get; private set; }
         private PlayerUI playerUI;
 
-        // Experience & Leveling
+        #region Experience & Leveling
         public int level = 1;
         private int currentExp = 0;
         private int expToNextLevel = 100;
         private int maxLevel = 50;
+        #endregion
 
-        public int stepCounter { get; private set; } = 0;
-        public float restInterval = 3f;
-        private float originalRestInterval; // To avoid repeatedly dividing by level
-
-        private int currency = 275;
+        #region Core Resources & Floor
+        public int currency = 275;
         public int currentFloor = 0;
+        public int restInterval = 3;
+        public int steps;
+        public bool HasEnteredDungeon = false;
+        #endregion
 
-        public bool HasEnteredDungeon { get; set; } = false;
-        private bool invincible = false;
-        public bool Invincible => invincible;
+        #region Base Stats & Equipment Modifiers
+        // These dictionaries hold the unmodified base stats, the bonuses from equipment, and the final computed stats.
+        // It is assumed that baseStats never change once set (except on level-up) while equipmentStats is recalculated when gear is equipped/unequipped.
+        private Dictionary<Stat, float> baseStats = new Dictionary<Stat, float>();
+
+        // Equipment contributions are summed here.
         private Dictionary<Stat, float> equipmentStats = new Dictionary<Stat, float>()
         {
+            // Initialize every stat to zero so additions work properly.
             { Stat.HP, 0f },
+            { Stat.MaxHP, 0f },
             { Stat.Attack, 0f },
             { Stat.Intelligence, 0f },
             { Stat.Evasion, 0f },
             { Stat.Defense, 0f },
             { Stat.Dexterity, 0f },
             { Stat.Magic, 0f },
+            { Stat.MaxMagic, 0f },
             { Stat.Accuracy, 0f },
             { Stat.FireRate, 0f },
             { Stat.ProjectileRange, 0f },
@@ -46,36 +52,17 @@ namespace CoED
             { Stat.Speed, 0f },
             { Stat.Shield, 0f },
             { Stat.Stamina, 0f },
+            { Stat.MaxStamina, 0f },
             { Stat.ElementalDamage, 0f },
             { Stat.CritChance, 0f },
             { Stat.CritDamage, 0f },
             { Stat.ChanceToInflictStatusEffect, 0f },
         };
-        private Dictionary<Stat, float> playerStats = new Dictionary<Stat, float>()
-        {
-            { Stat.HP, 0f },
-            { Stat.MaxHP, 500f },
-            { Stat.Attack, 10f },
-            { Stat.Intelligence, 5f },
-            { Stat.Evasion, 0f },
-            { Stat.Defense, 5f },
-            { Stat.Dexterity, 5f },
-            { Stat.Magic, 0f },
-            { Stat.MaxMagic, 100f },
-            { Stat.Accuracy, 5f },
-            { Stat.FireRate, 1f },
-            { Stat.ProjectileRange, 5f },
-            { Stat.AttackRange, 3f },
-            { Stat.Speed, 5f },
-            { Stat.Shield, 0f },
-            { Stat.Stamina, 0f },
-            { Stat.MaxStamina, 100f },
-            { Stat.ElementalDamage, 5f },
-            { Stat.CritChance, 5f },
-            { Stat.CritDamage, 1.5f },
-            { Stat.ChanceToInflictStatusEffect, 0.05f },
-        };
 
+        // Final computed stats = baseStats + level bonuses + equipmentStats.
+        private Dictionary<Stat, float> playerStats = new Dictionary<Stat, float>();
+
+        // For elemental damage modifiers from gear.
         private Dictionary<DamageType, float> equipmentElementalDamage = new Dictionary<
             DamageType,
             float
@@ -90,21 +77,62 @@ namespace CoED
             { DamageType.Bleed, 0f },
             { DamageType.Holy, 0f },
             { DamageType.Shadow, 0f },
+            { DamageType.Heal, 0f },
+            { DamageType.Nature, 0f },
         };
+        #endregion
 
-        // Resistances, Weaknesses, Immunities
+        #region Resistances, Weaknesses, Immunities & Status Effects
         [Header("Elemental Attributes & Statuses")]
         public List<StatusEffectType> activeStatusEffects = new List<StatusEffectType>();
-        public List<ActiveWhileEquipped> EquippedmentEffects = new List<ActiveWhileEquipped>();
-        public List<StatusEffectType> inflictableStatusEffects = new List<StatusEffectType>();
+        public List<ActiveWhileEquipped> EquipmentEffects = new List<ActiveWhileEquipped>();
+        public Dictionary<StatusEffectType, float> inflictableStatusEffects =
+            new Dictionary<StatusEffectType, float>();
         public List<Weaknesses> activeWeaknesses = new List<Weaknesses>();
         public List<Resistances> activeResistances = new List<Resistances>();
         public List<Immunities> activeImmunities = new List<Immunities>();
+        #endregion
+        private Dictionary<Stat, Coroutine> activeNullifications =
+            new Dictionary<Stat, Coroutine>();
 
-        // Death event
+        #region Other
+        public bool invincible { get; private set; } = false;
+        public bool silenced { get; private set; } = false;
         public event Action OnPlayerDeath;
+        #endregion
 
-        #region Public Stat Getters
+        #region Unity Lifecycle
+        private void Awake()
+        {
+            if (Instance == null)
+            {
+                Instance = this;
+                DontDestroyOnLoad(gameObject);
+            }
+            else
+            {
+                Destroy(gameObject);
+                return;
+            }
+        }
+
+        private void Start()
+        {
+            // If a class was selected, override the default base stats.
+            if (GameManager.SelectedClass != null)
+            {
+                // Replace the default baseStats with the selected class's stats.
+                baseStats = new Dictionary<Stat, float>(GameManager.SelectedClass.BaseStats);
+            }
+
+            // Then, continue with the normal initialization.
+            CopyBaseToPlayerStats();
+            CalculateStats(refillResources: true);
+        }
+
+        #endregion
+
+        #region Stat Getters (For UI Display)
         public float GetCurrentHealth() => playerStats[Stat.HP];
 
         public float GetCurrentMaxHealth() => playerStats[Stat.MaxHP];
@@ -117,23 +145,19 @@ namespace CoED
 
         public float GetCurrentEvasion() => playerStats[Stat.Evasion];
 
-        public float GetCurrentStamina() =>
-            playerStats[Stat.Stamina] + equipmentStats[Stat.Stamina];
+        public float GetCurrentStamina() => playerStats[Stat.Stamina];
 
         public float GetCurrentMaxStamina() => playerStats[Stat.MaxStamina];
 
         public float GetCurrentAttack() => playerStats[Stat.Attack];
 
-        public float GetCurrentDefense() =>
-            playerStats[Stat.Defense] + equipmentStats[Stat.Defense];
+        public float GetCurrentDefense() => playerStats[Stat.Defense];
 
         public float GetCurrentProjectileRange() => playerStats[Stat.ProjectileRange];
 
         public float GetCurrentSpeed() => playerStats[Stat.Speed];
 
         public float GetCurrentFireRate() => playerStats[Stat.FireRate];
-
-        public float GetCurrentProjectileLifespan() => 5f;
 
         public float GetCurrentDexterity() => playerStats[Stat.Dexterity];
 
@@ -167,230 +191,239 @@ namespace CoED
         public string GetWeaknesses() => string.Join(", ", activeWeaknesses);
 
         public string GetResistances() => string.Join(", ", activeResistances);
+
+        public float GetCurrentStatusEffectDuration() => playerStats[Stat.StatusEffectDuration];
         #endregion
 
-        #region Unity Lifecycle
-        private void Awake()
+        #region Equipment Stats Management
+        /// <summary>
+        /// Adds the stat bonuses from an equipment item.
+        /// </summary>
+        public void AddEquipmentStats(Dictionary<Stat, float> statsToAdd)
         {
-            if (Instance == null)
+            foreach (var kvp in statsToAdd)
             {
-                Instance = this;
-                DontDestroyOnLoad(gameObject);
-                // Store original rest interval so we don’t keep dividing by level
-                originalRestInterval = restInterval;
-            }
-            else
-            {
-                Destroy(gameObject);
-                Debug.LogWarning("PlayerStats instance already exists. Destroying duplicate.");
-                return;
+                if (!equipmentStats.ContainsKey(kvp.Key))
+                    equipmentStats[kvp.Key] = 0;
+                equipmentStats[kvp.Key] += kvp.Value;
             }
         }
 
-        private void Start()
+        /// <summary>
+        /// Removes the stat bonuses from an equipment item.
+        /// </summary>
+        public void RemoveEquipmentStats(Dictionary<Stat, float> statsToRemove)
         {
-            CalculateStats(refillResources: true);
+            foreach (var kvp in statsToRemove)
+            {
+                if (equipmentStats.ContainsKey(kvp.Key))
+                    equipmentStats[kvp.Key] -= kvp.Value;
+            }
         }
 
-        #endregion
-
-        #region Initialization / UI
-        private void InitializeUI()
+        public void AddDamageModifier(DamageType type, float value)
         {
-            // Attempt to find the UI if not already assigned
-            if (playerUI == null)
-                playerUI = FindAnyObjectByType<PlayerUI>();
+            if (!equipmentElementalDamage.ContainsKey(type))
+                equipmentElementalDamage[type] = 0;
+            equipmentElementalDamage[type] += value;
+        }
 
-            if (playerUI != null)
-            {
-                playerUI.SetHealthBarMax(GetCurrentHealth());
-                UpdateExperienceUI();
-                playerUI.SetMagicBarMax(GetCurrentMagic());
-                playerUI.SetStaminaBarMax(GetCurrentStamina());
-                playerUI.UpdateLevelDisplay();
-            }
+        public void RemoveDamageModifier(DamageType type, float value)
+        {
+            if (equipmentElementalDamage.ContainsKey(type))
+                equipmentElementalDamage[type] -= value;
         }
 
         #endregion
 
         #region Stat Calculation
         /// <summary>
-        /// Recalculate all derived stats based on base stats, level, equipment, etc.
+        /// Copies baseStats into playerStats (for re-calculation).
         /// </summary>
-        /// <param name="refillResources">If true, refills Health, Magic, and Stamina to max.</param>
+        private void CopyBaseToPlayerStats()
+        {
+            playerStats = new Dictionary<Stat, float>(baseStats);
+        }
+
+        /// <summary>
+        /// Recalculates final player stats by combining baseStats, level-based scaling, and equipmentStats.
+        /// If refillResources is true, fills HP, Magic, and Stamina to their maximums.
+        /// </summary>
         public void CalculateStats(bool refillResources = true)
         {
-            // Reset base stats before calculations
-            playerStats[Stat.MaxHP] =
-                playerStats[Stat.MaxHP] + (level * 20) + equipmentStats[Stat.HP];
+            // Start with a fresh copy of base stats.
+            CopyBaseToPlayerStats();
 
-            playerStats[Stat.MaxMagic] =
-                playerStats[Stat.MaxMagic] + (level * 10) + equipmentStats[Stat.Magic];
+            // Level-based bonuses (example formulas; adjust as needed)
+            playerStats[Stat.MaxHP] += level * 20;
+            playerStats[Stat.MaxMagic] += level * 10;
+            playerStats[Stat.MaxStamina] += level * 5;
+            playerStats[Stat.Attack] += level * 0.2f;
+            playerStats[Stat.Defense] += level * 0.1f;
+            playerStats[Stat.Speed] += level * 0.1f;
+            playerStats[Stat.ProjectileRange] += level * 0.1f;
+            playerStats[Stat.Dexterity] += level * 0.1f;
+            playerStats[Stat.Intelligence] += level * 0.1f;
+            playerStats[Stat.CritChance] += level * 0.1f;
+            playerStats[Stat.ChanceToInflictStatusEffect] += level * 0.05f;
 
-            playerStats[Stat.MaxStamina] =
-                playerStats[Stat.MaxStamina] + (level * 5) + equipmentStats[Stat.Stamina];
-
-            playerStats[Stat.Attack] =
-                playerStats[Stat.Attack] + (level * 0.2f) + equipmentStats[Stat.Attack];
-
-            playerStats[Stat.Defense] =
-                playerStats[Stat.Defense]
-                + (level * 0.1f)
-                + equipmentStats[Stat.Defense]
-                + playerStats[Stat.Shield];
-
-            playerStats[Stat.Speed] =
-                playerStats[Stat.Speed] + (level * 0.1f) + equipmentStats[Stat.Speed];
-
-            playerStats[Stat.FireRate] = Mathf.Max(
-                0.2f,
-                1f / (1f + (level * 0.05f)) + equipmentStats[Stat.FireRate]
-            );
-
-            playerStats[Stat.ProjectileRange] =
-                playerStats[Stat.ProjectileRange]
-                + (level * 0.1f)
-                + equipmentStats[Stat.ProjectileRange];
-
-            playerStats[Stat.Dexterity] =
-                playerStats[Stat.Dexterity] + (level * 0.1f) + equipmentStats[Stat.Dexterity];
-
-            playerStats[Stat.Intelligence] =
-                playerStats[Stat.Intelligence] + (level * 0.1f) + equipmentStats[Stat.Intelligence];
-
-            playerStats[Stat.CritChance] =
-                playerStats[Stat.CritChance] + (level * 0.1f) + equipmentStats[Stat.CritChance];
-
-            playerStats[Stat.ChanceToInflictStatusEffect] =
-                playerStats[Stat.ChanceToInflictStatusEffect]
-                + (level * 0.05f)
-                + equipmentStats[Stat.ChanceToInflictStatusEffect];
-
-            // Ensure Rest Interval scales with level
-            restInterval = originalRestInterval / Mathf.Max(level, 1);
-
-            // Refill HP, Magic, and Stamina if requested
-            if (refillResources)
+            // Add equipment bonuses
+            foreach (var stat in equipmentStats)
             {
-                playerStats[Stat.HP] = playerStats[Stat.MaxHP];
-                playerStats[Stat.Magic] = playerStats[Stat.MaxMagic];
-                playerStats[Stat.Stamina] = playerStats[Stat.MaxStamina];
+                if (playerStats.ContainsKey(stat.Key))
+                    playerStats[stat.Key] += stat.Value;
+                else
+                    playerStats[stat.Key] = stat.Value;
             }
 
+            // For this example, let HP equal MaxHP after calculation.
+            playerStats[Stat.HP] = playerStats[Stat.MaxHP];
+
+            // Update UI elements.
             InitializeUI();
             Debug.Log(
                 $"Player stats: {string.Join(", ", playerStats.Select(kvp => $"{kvp.Key}: {kvp.Value}"))}"
             );
         }
-
-        /// <summary>
-        /// Collates equipment stats from all equipped items and recalculates final stats.
-        /// </summary>
-        public void SetEquipmentStats(List<Equipment> equippedItems)
-        {
-            // We'll sum up each stat from the items
-            int totalAttack = 0,
-                totalDefense = 0,
-                totalHealth = 0,
-                totalMagic = 0,
-                totalSpeed = 0,
-                totalDexterity = 0,
-                totalIntelligence = 0,
-                totalCritChance = 0,
-                totalCritDamage = 0,
-                totalAccuracy = 0,
-                totalFireRate = 0,
-                totalProjectileRange = 0,
-                totalAttackRange = 0,
-                totalElementalDamage = 0,
-                totalChanceToInflictStatusEffect = 0,
-                totalStatusEffectDuration = 0,
-                totalShield = 0,
-                totalEvasion = 0,
-                totalBurnDamage = 0,
-                totalIceDamage = 0,
-                totalLightningDamage = 0,
-                totalPoisonDamage = 0,
-                totalArcaneDamage = 0,
-                totalBleedDamage = 0,
-                totalHolyDamage = 0,
-                totalShadowDamage = 0;
-
-            foreach (var item in equippedItems)
-            {
-                totalAttack += Mathf.RoundToInt(item.equipmentStats[Stat.Attack]);
-                totalDefense += Mathf.RoundToInt(item.equipmentStats[Stat.Defense]);
-                totalHealth += Mathf.RoundToInt(item.equipmentStats[Stat.MaxHP]);
-                totalMagic += Mathf.RoundToInt(item.equipmentStats[Stat.MaxMagic]);
-                totalSpeed += Mathf.RoundToInt(item.equipmentStats[Stat.Speed]);
-                totalDexterity += Mathf.RoundToInt(item.equipmentStats[Stat.Dexterity]);
-                totalIntelligence += Mathf.RoundToInt(item.equipmentStats[Stat.Intelligence]);
-                totalCritChance += Mathf.RoundToInt(item.equipmentStats[Stat.CritChance]);
-                totalCritDamage += Mathf.RoundToInt(item.equipmentStats[Stat.CritDamage]);
-
-                totalBurnDamage += Mathf.RoundToInt(
-                    item.damageModifiers.GetValueOrDefault(DamageType.Fire, 0)
-                );
-                totalIceDamage += Mathf.RoundToInt(
-                    item.damageModifiers.GetValueOrDefault(DamageType.Ice, 0)
-                );
-                totalLightningDamage += Mathf.RoundToInt(
-                    item.damageModifiers.GetValueOrDefault(DamageType.Lightning, 0)
-                );
-                totalPoisonDamage += Mathf.RoundToInt(
-                    item.damageModifiers.GetValueOrDefault(DamageType.Poison, 0)
-                );
-                totalArcaneDamage += Mathf.RoundToInt(
-                    item.damageModifiers.GetValueOrDefault(DamageType.Arcane, 0)
-                );
-                totalBleedDamage += Mathf.RoundToInt(
-                    item.damageModifiers.GetValueOrDefault(DamageType.Bleed, 0)
-                );
-                totalHolyDamage += Mathf.RoundToInt(
-                    item.damageModifiers.GetValueOrDefault(DamageType.Holy, 0)
-                );
-                totalShadowDamage += Mathf.RoundToInt(
-                    item.damageModifiers.GetValueOrDefault(DamageType.Shadow, 0)
-                );
-            }
-
-            // Store these in our local "equipment" variables
-            equipmentStats[Stat.Attack] = totalAttack;
-            equipmentStats[Stat.Defense] = totalDefense;
-            equipmentStats[Stat.MaxHP] = totalHealth;
-            equipmentStats[Stat.MaxMagic] = totalMagic;
-            equipmentStats[Stat.Speed] = totalSpeed;
-            equipmentStats[Stat.Dexterity] = totalDexterity;
-            equipmentStats[Stat.Intelligence] = totalIntelligence;
-            equipmentStats[Stat.CritChance] = totalCritChance;
-            equipmentStats[Stat.CritDamage] = totalCritDamage;
-            equipmentStats[Stat.Accuracy] = totalAccuracy;
-            equipmentStats[Stat.FireRate] = totalFireRate;
-            equipmentStats[Stat.ProjectileRange] = totalProjectileRange;
-            equipmentStats[Stat.AttackRange] = totalAttackRange;
-            equipmentStats[Stat.ElementalDamage] = totalElementalDamage;
-            equipmentStats[Stat.ChanceToInflictStatusEffect] = totalChanceToInflictStatusEffect;
-            equipmentStats[Stat.StatusEffectDuration] = totalStatusEffectDuration;
-            equipmentStats[Stat.Shield] = totalShield;
-            equipmentStats[Stat.Evasion] = totalEvasion;
-
-            equipmentElementalDamage[DamageType.Fire] = totalBurnDamage;
-            equipmentElementalDamage[DamageType.Ice] = totalIceDamage;
-            equipmentElementalDamage[DamageType.Lightning] = totalLightningDamage;
-            equipmentElementalDamage[DamageType.Poison] = totalPoisonDamage;
-            equipmentElementalDamage[DamageType.Arcane] = totalArcaneDamage;
-            equipmentElementalDamage[DamageType.Bleed] = totalBleedDamage;
-            equipmentElementalDamage[DamageType.Holy] = totalHolyDamage;
-            equipmentElementalDamage[DamageType.Shadow] = totalShadowDamage;
-
-            // Recalculate final stats without refilling resources
-            CalculateStats(refillResources: false);
-        }
-
         #endregion
 
-        #region Shields & Invincibility
-        public void AddShield(int shieldValue)
+        #region UI Initialization & Updates
+        private void InitializeUI()
+        {
+            if (playerUI == null)
+                playerUI = FindAnyObjectByType<PlayerUI>();
+
+            if (playerUI != null)
+            {
+                playerUI.SetHealthBarMax(GetCurrentMaxHealth());
+                playerUI.SetMagicBarMax(GetCurrentMaxMagic());
+                playerUI.SetStaminaBarMax(GetCurrentMaxStamina());
+                playerUI.UpdateLevelDisplay();
+                UpdateExperienceUI();
+            }
+        }
+
+        private void UpdateExperienceUI()
+        {
+            if (playerUI != null)
+            {
+                playerUI.UpdateExperienceBar(currentExp, expToNextLevel);
+            }
+        }
+
+        private void UpdateHealthUI()
+        {
+            if (playerUI != null)
+                playerUI.UpdateHealthBar(GetCurrentHealth(), GetCurrentMaxHealth());
+        }
+
+        private void UpdateMagicUI()
+        {
+            if (playerUI != null)
+                playerUI.UpdateMagicBar(GetCurrentMagic(), GetCurrentMaxMagic());
+        }
+
+        private void UpdateStaminaUI()
+        {
+            if (playerUI != null)
+                playerUI.UpdateStaminaBar(GetCurrentStamina(), GetCurrentMaxStamina());
+        }
+        #endregion
+
+        #region IEntity Implementation
+        public void ModifyStat(Stat stat, float value)
+        {
+            if (playerStats.ContainsKey(stat))
+                playerStats[stat] += value;
+            else
+                playerStats[stat] = value;
+
+            Debug.Log($"[PlayerStats] {stat} modified by {value}. New Value: {playerStats[stat]}");
+        }
+
+        public void NullStat(Stat stat, float duration)
+        {
+            if (activeNullifications.ContainsKey(stat))
+            {
+                StopCoroutine(activeNullifications[stat]);
+                activeNullifications.Remove(stat);
+            }
+
+            activeNullifications[stat] = StartCoroutine(NullifyStat(stat, duration));
+        }
+
+        private IEnumerator NullifyStat(Stat stat, float duration)
+        {
+            if (!playerStats.ContainsKey(stat))
+                yield break;
+            float originalValue = playerStats[stat];
+            playerStats[stat] = 0;
+            yield return new WaitForSeconds(duration);
+            playerStats[stat] = originalValue;
+            activeNullifications.Remove(stat);
+        }
+
+        public void AddResistance(Resistances res)
+        {
+            if (!activeResistances.Contains(res))
+                activeResistances.Add(res);
+        }
+
+        public void RemoveResistance(Resistances res)
+        {
+            activeResistances.Remove(res);
+        }
+
+        public void AddWeakness(Weaknesses weak)
+        {
+            if (!activeWeaknesses.Contains(weak))
+                activeWeaknesses.Add(weak);
+        }
+
+        public void RemoveWeakness(Weaknesses weak)
+        {
+            activeWeaknesses.Remove(weak);
+        }
+
+        public void AddImmunity(Immunities imm)
+        {
+            if (!activeImmunities.Contains(imm))
+                activeImmunities.Add(imm);
+        }
+
+        public void RemoveImmunity(Immunities imm)
+        {
+            activeImmunities.Remove(imm);
+        }
+
+        public void AddActiveStatusEffect(StatusEffectType status)
+        {
+            if (!activeStatusEffects.Contains(status))
+                activeStatusEffects.Add(status);
+        }
+
+        public void RemoveActiveStatusEffect(StatusEffectType status)
+        {
+            activeStatusEffects.Remove(status);
+        }
+
+        public void AddInflictableStatusEffect(StatusEffectType status)
+        {
+            foreach (var effect in inflictableStatusEffects)
+            {
+                if (!inflictableStatusEffects.ContainsKey(status))
+                    inflictableStatusEffects.Add(status, 0.05f);
+
+                return;
+            }
+        }
+
+        public void RemoveInflictableStatusEffect(StatusEffectType status)
+        {
+            inflictableStatusEffects.Remove(status);
+        }
+
+        public void AddShield(float shieldValue)
         {
             if (shieldValue <= 0)
             {
@@ -399,8 +432,8 @@ namespace CoED
             }
 
             playerStats[Stat.Shield] += shieldValue;
-            playerStats[Stat.Defense] += shieldValue; // Immediately buff defense
-            Debug.Log($"Shield added: {shieldValue}. Current defense: {playerStats[Stat.Defense]}");
+            playerStats[Stat.Defense] += shieldValue; // Buff defense immediately.
+            Debug.Log($"Shield added: {shieldValue}. Current Defense: {playerStats[Stat.Defense]}");
         }
 
         public void RemoveShield(float shieldValue)
@@ -411,12 +444,11 @@ namespace CoED
                 return;
             }
 
-            float effectiveShieldRemoval = Mathf.Min(playerStats[Stat.Shield], shieldValue);
-            playerStats[Stat.Shield] -= effectiveShieldRemoval;
-            playerStats[Stat.Shield] -= effectiveShieldRemoval;
-
+            float effectiveRemoval = Mathf.Min(playerStats[Stat.Shield], shieldValue);
+            playerStats[Stat.Shield] -= effectiveRemoval;
+            playerStats[Stat.Defense] -= effectiveRemoval;
             Debug.Log(
-                $"Shield removed: {effectiveShieldRemoval}. Current defense: {playerStats[Stat.Shield]}"
+                $"Shield removed: {effectiveRemoval}. Current Defense: {playerStats[Stat.Defense]}"
             );
         }
 
@@ -424,7 +456,93 @@ namespace CoED
         {
             invincible = value;
         }
+
+        public bool HasStatusEffect(StatusEffectType effect)
+        {
+            return activeStatusEffects.Contains(effect);
+        }
+
+        public void IsSilenced(bool state)
+        {
+            silenced = state;
+        }
+
+        public void TakeDamage(
+            DamageInfo damageInfo,
+            float statusChance = 0.05f,
+            bool bypassInvincible = false
+        )
+        {
+            if (!bypassInvincible && invincible)
+            {
+                Debug.Log("Player is invincible. No damage taken.");
+                return;
+            }
+
+            float totalDamage = 0f;
+            foreach (var damageEntry in damageInfo.DamageAmounts)
+            {
+                DamageType type = damageEntry.Key;
+                float amount = damageEntry.Value;
+
+                if (type != DamageType.Physical)
+                {
+                    if (activeImmunities.Contains((Immunities)type))
+                    {
+                        FloatingTextManager.Instance.ShowFloatingText(
+                            $"{type.ToString().ToUpper()} IMMUNE",
+                            transform,
+                            Color.cyan
+                        );
+                        continue;
+                    }
+                    if (activeResistances.Contains((Resistances)type))
+                    {
+                        amount *= 0.5f;
+                        Debug.Log($"Resisted {type}: {amount}");
+                    }
+                    if (activeWeaknesses.Contains((Weaknesses)type))
+                    {
+                        amount *= 1.5f;
+                        Debug.Log($"Weakness to {type}: {amount}");
+                    }
+                }
+                totalDamage += amount;
+            }
+
+            float effectiveDamage = Mathf.Max(totalDamage - playerStats[Stat.Defense], 1);
+            playerStats[Stat.HP] = Mathf.Max(
+                playerStats[Stat.HP] - Mathf.RoundToInt(effectiveDamage),
+                0
+            );
+
+            // Inflict status effects if applicable.
+            foreach (var effect in damageInfo.InflictedStatusEffects)
+            {
+                if (!activeStatusEffects.Contains(effect) && Random.value < statusChance)
+                {
+                    StatusEffectManager.Instance.AddStatusEffect(
+                        gameObject,
+                        effect,
+                        playerStats[Stat.StatusEffectDuration]
+                    );
+                }
+            }
+
+            UpdateHealthUI();
+            FloatingTextManager.Instance.ShowFloatingText(
+                effectiveDamage.ToString(),
+                transform,
+                Color.red
+            );
+
+            if (playerStats[Stat.HP] <= 0)
+                HandleDeath();
+        }
+
         #endregion
+
+
 
         #region XP & Leveling
         public void GainExperience(int amount)
@@ -452,20 +570,16 @@ namespace CoED
 
             if (playerUI != null)
             {
-                playerUI.UpdateLevelDisplay();
                 expToNextLevel = Mathf.CeilToInt(expToNextLevel * 1.25f);
-
                 UpdateHealthUI();
                 UpdateExperienceUI();
                 UpdateMagicUI();
                 UpdateStaminaUI();
-
                 CalculateStats(refillResources: true);
+                playerUI.UpdateLevelDisplay();
             }
 
-            Debug.Log(
-                $"PlayerStats: Leveled up to level {level}! Next level at {expToNextLevel} EXP."
-            );
+            Debug.Log($"Leveled up to {level}! Next level at {expToNextLevel} EXP.");
         }
 
         private void LevelUpSpells()
@@ -507,7 +621,7 @@ namespace CoED
             }
             if (currency < amount)
             {
-                Debug.LogWarning("PlayerStats: Insufficient currency.");
+                Debug.LogWarning("Insufficient currency.");
                 return;
             }
 
@@ -516,133 +630,22 @@ namespace CoED
         }
         #endregion
 
-        #region Damage / Status Effect Handling
-        /// <summary>
-        /// Handles complex damage calculations and dynamic status effects.
-        /// </summary>
-        /// <param name="damageInfo">Damage package with typed damage and inflicted statuses.</param>
-        /// <param name="bypassInvincible">If true, ignore the invincible flag.</param>
-        public void TakeDamage(
-            DamageInfo damageInfo,
-            float chanceToInflictStatusEffect = 0.05f,
-            bool bypassInvincible = false
-        )
-        {
-            // 1) Invincibility check
-            if (!bypassInvincible && invincible)
-            {
-                Debug.Log("Player is invincible. No damage taken.");
-                return;
-            }
+        #region Damage & Status Effect Handling
 
-            float totalDamage = 0f;
 
-            foreach (var damageEntry in damageInfo.DamageAmounts)
-            {
-                DamageType type = damageEntry.Key;
-                float amount = damageEntry.Value;
-
-                if (type == DamageType.Physical)
-                {
-                    // Physical always applies
-                    totalDamage += amount;
-                }
-                else
-                {
-                    // Immunity check
-                    if (activeImmunities.Contains((Immunities)type))
-                    {
-                        FloatingTextManager.Instance.ShowFloatingText(
-                            $"{type.ToString().ToUpper()} IMMUNE",
-                            transform,
-                            Color.cyan
-                        );
-                        continue;
-                    }
-                    // Resistance (halve damage)
-                    if (activeResistances.Contains((Resistances)type))
-                    {
-                        amount *= 0.5f;
-                        Debug.Log($"Player resisted {type}. Reduced damage => {amount}");
-                    }
-                    // Weakness (increase damage by 50%)
-                    if (activeWeaknesses.Contains((Weaknesses)type))
-                    {
-                        amount *= 1.5f;
-                        Debug.Log($"Player is weak to {type}. Increased damage => {amount}");
-                    }
-
-                    totalDamage += amount;
-                }
-            }
-
-            // 2) Reflect check (if we want immediate reflection)
-            // If the player has "DamageReflect" in activeStatusEffects, do partial reflection
-            if (activeStatusEffects.Contains(StatusEffectType.DamageReflect))
-            {
-                float reflectAmount = totalDamage * 0.15f; // 15% reflection example
-                // We would need an "attacker" reference to actually damage them
-                // For now, we just log it
-                Debug.Log($"Reflected {reflectAmount} damage back to attacker!");
-            }
-
-            // 3) Defense application, never below 1
-            float effectiveDamage = Mathf.Max(totalDamage - playerStats[Stat.Defense], 1);
-
-            // 4) Subtract HP
-            playerStats[Stat.HP] = Mathf.Max(
-                playerStats[Stat.HP] - Mathf.RoundToInt(effectiveDamage),
-                0
-            );
-
-            // 5) Inflict any status effects
-            foreach (var effect in damageInfo.InflictedStatusEffects)
-            {
-                // If the effect is something the player can “inflict,” skip or handle differently;
-                // but typically, we just add the effect to the player
-                if (!inflictableStatusEffects.Contains(effect))
-                {
-                    if (Random.value < chanceToInflictStatusEffect)
-                        StatusEffectManager.Instance.AddStatusEffect(gameObject, effect);
-                }
-            }
-
-            // 6) UI feedback
-            UpdateHealthUI();
-            FloatingTextManager.Instance.ShowFloatingText(
-                effectiveDamage.ToString(),
-                transform,
-                Color.red
-            );
-
-            // 7) Check death
-            if (playerStats[Stat.HP] <= 0)
-            {
-                HandleDeath();
-            }
-        }
-
-        /// <summary>
-        /// Called whenever the player's Health hits 0 or below.
-        /// </summary>
         private void HandleDeath()
         {
-            // Check for "ReviveOnce"
-            if (EquippedmentEffects.Contains(ActiveWhileEquipped.ReviveOnce))
+            // Check for ReviveOnce effect.
+            if (EquipmentEffects.Contains(ActiveWhileEquipped.ReviveOnce))
             {
-                // Remove the effect from the manager so it doesn't trigger again
                 StatusEffectManager.Instance.RemoveEquipmentEffects(ActiveWhileEquipped.ReviveOnce);
-
-                // Restore partial HP
                 playerStats[Stat.HP] = Mathf.RoundToInt(playerStats[Stat.MaxHP] * 0.25f);
                 Debug.Log("ReviveOnce triggered! Player revived at 25% HP.");
                 FloatingTextManager.Instance.ShowFloatingText("Revived!", transform, Color.green);
                 return;
             }
 
-            // Normal death flow
-            var gameManager = FindAnyObjectByType<GameManager>();
-            gameManager?.OnPlayerDeath();
+            FindAnyObjectByType<GameManager>()?.OnPlayerDeath();
             OnPlayerDeath?.Invoke();
         }
         #endregion
@@ -650,19 +653,16 @@ namespace CoED
         #region Steps & Misc
         public void AddStep()
         {
-            stepCounter++;
-            // Example: heal every 30 steps
-            if (stepCounter % 30 == 0)
-            {
-                Heal(10);
-            }
-            // Example: restore magic every 100 steps
-            if (stepCounter % 100 == 0)
-            {
-                RefillMagic(10);
-            }
-
+            steps++;
+            // Increment steps and apply occasional healing/magic refill.
+            // (For example, heal 10 HP every 30 steps.)
             PlayerUI.Instance.UpdateStepCount();
+        }
+
+        public void DeductStamina(float amount)
+        {
+            playerStats[Stat.Stamina] = Mathf.Max(playerStats[Stat.Stamina] - amount, 0);
+            UpdateStaminaUI();
         }
 
         public void Heal(float amount)
@@ -694,12 +694,6 @@ namespace CoED
             UpdateMagicUI();
         }
 
-        public void IncreaseMaxMagic(float amount)
-        {
-            playerStats[Stat.MaxMagic] += Mathf.RoundToInt(amount);
-            UpdateMagicUI();
-        }
-
         public void RefillStamina(float amount)
         {
             playerStats[Stat.Stamina] = Mathf.Min(
@@ -708,25 +702,9 @@ namespace CoED
             );
             UpdateStaminaUI();
         }
-
-        public void DecreaseStamina(float amount)
-        {
-            playerStats[Stat.Stamina] = Mathf.RoundToInt(amount);
-            UpdateStaminaUI();
-        }
-
-        public int GetCurrentFloor() => currentFloor;
         #endregion
 
-        #region UI Updates
-        private void UpdateExperienceUI()
-        {
-            if (playerUI != null)
-            {
-                playerUI.UpdateExperienceBar(currentExp, expToNextLevel);
-            }
-        }
-
+        #region Temporary Boosts (Coroutines)
         public IEnumerator GainAttack(float amount, float duration)
         {
             playerStats[Stat.Attack] += amount;
@@ -755,6 +733,13 @@ namespace CoED
             playerStats[Stat.Dexterity] -= amount;
         }
 
+        public IEnumerator GainMaxHP(float amount, float duration)
+        {
+            playerStats[Stat.MaxHP] += amount;
+            yield return new WaitForSeconds(duration);
+            playerStats[Stat.MaxHP] -= amount;
+        }
+
         public IEnumerator GainIntelligence(float amount, float duration)
         {
             playerStats[Stat.Intelligence] += amount;
@@ -767,30 +752,6 @@ namespace CoED
             playerStats[Stat.CritChance] += amount;
             yield return new WaitForSeconds(duration);
             playerStats[Stat.CritChance] -= amount;
-        }
-
-        private void UpdateMagicUI()
-        {
-            if (playerUI != null)
-            {
-                playerUI.UpdateMagicBar(playerStats[Stat.Magic], playerStats[Stat.MaxMagic]);
-            }
-        }
-
-        private void UpdateHealthUI()
-        {
-            if (playerUI != null)
-            {
-                playerUI.UpdateHealthBar(playerStats[Stat.HP], playerStats[Stat.MaxHP]);
-            }
-        }
-
-        private void UpdateStaminaUI()
-        {
-            if (playerUI != null)
-            {
-                playerUI.UpdateStaminaBar(playerStats[Stat.Stamina], playerStats[Stat.MaxStamina]);
-            }
         }
         #endregion
     }

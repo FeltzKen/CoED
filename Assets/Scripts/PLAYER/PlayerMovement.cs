@@ -286,7 +286,7 @@ namespace CoED
 
         private void DeductStamina(float amount)
         {
-            playerStats.DecreaseStamina(amount);
+            playerStats.DeductStamina(amount);
             UpdateStaminaUI();
         }
     }

@@ -9,6 +9,9 @@ namespace CoED
         public bool IsPlayerSpawned => playerTransform != null;
         private GameObject currentPlayer;
 
+        // This will be set by your menu when the player chooses a class.
+        public static CharacterClass SelectedClass { get; set; }
+
         private void Awake()
         {
             if (Instance == null)
@@ -21,7 +24,7 @@ namespace CoED
             }
         }
 
-        private void Start()
+        public void SpawnPlayer()
         {
             if (PlayerSpawner.Instance != null)
             {

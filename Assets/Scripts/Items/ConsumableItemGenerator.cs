@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace CoED
 {
-    public class ConsumableItemGenerator
+    public static class ConsumableItemGenerator
     {
         /// <summary>
         /// Generates a random consumable item based on tier and available affixes.
@@ -14,89 +14,98 @@ namespace CoED
         {
             // Get a base consumable from the database
             ConsumableItem baseConsumable = GetBaseConsumable();
-            ConsumableItem generatedConsumable = new ConsumableItem();
             if (baseConsumable == null)
             {
                 Debug.LogError("Failed to retrieve a base consumable item.");
                 return null;
             }
 
-            InitializeItem(generatedConsumable, baseConsumable); // Clone the base consumable
-            // Clone the base consumable
+            // Create a new consumable instance using the new constructor (or copy constructor)
+            ConsumableItem generatedConsumable = InitializeItem(baseConsumable);
 
-            if (!generatedConsumable.canHaveAffixes)
-                return generatedConsumable;
-
-            // Apply Suffix
-            ConsumableSuffixData suffix = RollSuffix();
-            if (suffix != null)
+            // Only apply affixes if the item can have them.
+            if (generatedConsumable.canHaveAffixes)
             {
-                generatedConsumable.ApplySuffix(suffix);
-                generatedConsumable.name = generatedConsumable.name + " " + suffix.suffixName;
+                // Roll for a suffix (30% chance)
+                ConsumableSuffixData suffix = RollSuffix();
+                if (suffix != null)
+                {
+                    generatedConsumable.suffix = suffix;
+                }
+                // Roll for a prefix (50% chance)
+                ConsumablePrefixData prefix = RollPrefix();
+                if (prefix != null)
+                {
+                    generatedConsumable.prefix = prefix;
+                }
+                // Now update the consumable's stats and name based on the applied affixes.
+                generatedConsumable.ApplyAffixes();
             }
-
-            // Apply Prefix
-            List<ConsumablePrefixData> prefixes = ConsumableAffixesDatabase.prefixes;
-            ConsumablePrefixData prefix = prefixes[Random.Range(0, prefixes.Count)];
-            generatedConsumable.ApplyPrefix(prefix);
-            generatedConsumable.name = prefix.prefixName + " " + generatedConsumable.name;
-
             return generatedConsumable;
         }
 
-        // Apply affix data to the consumable item
-        private static void InitializeItem(
-            ConsumableItem generatedConsumable,
-            ConsumableItem baseConsumable
-        )
+        /// <summary>
+        /// Creates a new ConsumableItem by cloning the base consumable using the new constructor.
+        /// </summary>
+        private static ConsumableItem InitializeItem(ConsumableItem baseConsumable)
         {
-            generatedConsumable.Initialize(
-                baseConsumable.name,
+            ConsumableItem newItem = new ConsumableItem(
+                baseConsumable.itemID,
+                baseConsumable.itemName,
                 baseConsumable.description,
-                baseConsumable.icon,
+                baseConsumable.baseSprite,
+                baseConsumable.hasDuration,
                 baseConsumable.duration,
-                baseConsumable.attackBoost,
-                baseConsumable.defenseBoost,
-                baseConsumable.speedBoost,
-                baseConsumable.healthBoost,
-                baseConsumable.magicBoost,
-                baseConsumable.staminaBoost,
-                baseConsumable.dexterityBoost,
-                baseConsumable.intelligenceBoost,
-                baseConsumable.critChanceBoost,
-                baseConsumable.addedEffects,
-                baseConsumable.removedEffects,
+                new Dictionary<Stat, float>(baseConsumable.consumableStats),
+                new List<StatusEffectType>(baseConsumable.addedEffects),
+                new List<StatusEffectType>(baseConsumable.removedEffects),
                 baseConsumable.canHaveAffixes,
-                baseConsumable.amountPerInterval,
-                baseConsumable.price
+                baseConsumable.amountPerInterval
             );
+            // Copy pricing fields
+            newItem.price = baseConsumable.price;
+            newItem.suffixPriceIncrease = baseConsumable.suffixPriceIncrease;
+            newItem.prefixPriceMultiplier = baseConsumable.prefixPriceMultiplier;
+            return newItem;
         }
 
         /// <summary>
-        /// Retrieves a base consumable item based on the tier.
+        /// Retrieves a base consumable item from the database at random.
         /// </summary>
         private static ConsumableItem GetBaseConsumable()
         {
             List<ConsumableItem> availableItems = ConsumablesDatabase.consumables;
             if (availableItems == null || availableItems.Count == 0)
             {
-                Debug.LogError($"No consumable items found.");
+                Debug.LogError("No consumable items found.");
                 return null;
             }
             return availableItems[Random.Range(0, availableItems.Count)];
         }
 
         /// <summary>
-        /// Rolls for a suffix based on the tier.
+        /// Rolls for a suffix with a 30% chance.
         /// </summary>
         private static ConsumableSuffixData RollSuffix()
         {
             List<ConsumableSuffixData> suffixes = ConsumableAffixesDatabase.suffixes;
             if (suffixes == null || suffixes.Count == 0)
                 return null;
-
-            if (Random.value < 0.3f) // 30% chance to apply a suffix
+            if (Random.value < 0.3f)
                 return suffixes[Random.Range(0, suffixes.Count)];
+            return null;
+        }
+
+        /// <summary>
+        /// Rolls for a prefix with a 50% chance.
+        /// </summary>
+        private static ConsumablePrefixData RollPrefix()
+        {
+            List<ConsumablePrefixData> prefixes = ConsumableAffixesDatabase.prefixes;
+            if (prefixes == null || prefixes.Count == 0)
+                return null;
+            if (Random.value < 0.5f)
+                return prefixes[Random.Range(0, prefixes.Count)];
             return null;
         }
     }

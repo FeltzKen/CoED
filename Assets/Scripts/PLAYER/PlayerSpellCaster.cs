@@ -293,7 +293,11 @@ namespace CoED
 
                 foreach (var effect in spell.InflictedStatusEffectTypes)
                 {
-                    StatusEffectManager.Instance.AddStatusEffect(currentTarget, effect);
+                    StatusEffectManager.Instance.AddStatusEffect(
+                        currentTarget,
+                        effect,
+                        playerStats.GetCurrentStatusEffectDuration()
+                    );
                 }
             }
         }

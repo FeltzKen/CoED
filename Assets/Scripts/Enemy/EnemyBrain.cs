@@ -470,7 +470,7 @@ namespace CoED
 
             // ✅ Apply status effects based on enemy's chance
             List<StatusEffectType> successfulEffects = new List<StatusEffectType>();
-            foreach (var statusEffect in enemyStats.inflictedStatusEffects)
+            foreach (var statusEffect in enemyStats.monsterData.inflictedStatusEffect)
             {
                 if (
                     BattleCalculations.ApplyStatusEffect(
