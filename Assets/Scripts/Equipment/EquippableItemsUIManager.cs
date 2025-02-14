@@ -62,9 +62,6 @@ namespace CoED
         private TextMeshProUGUI poisonDamageModifierText;
 
         [SerializeField]
-        private TextMeshProUGUI activeStatusEffectsText;
-
-        [SerializeField]
         private TextMeshProUGUI inflictedStatusEffectsText;
 
         [SerializeField]
@@ -575,7 +572,7 @@ namespace CoED
         public void DisplayPlayerStats()
         {
             PlayerStats ps = PlayerStats.Instance;
-            if (ps == null)
+            if (ps == null || ps.HasEnteredDungeon == false)
                 return;
 
             playerAttackText.text = ps.GetCurrentAttack().ToString();
@@ -619,7 +616,6 @@ namespace CoED
                 iceDamageModifierText.text = "0";
                 lightningDamageModifierText.text = "0";
                 poisonDamageModifierText.text = "0";
-                activeStatusEffectsText.text = "None";
                 inflictedStatusEffectsText.text = "None";
                 resistanceEffectsText.text = "None";
                 weaknessEffectsText.text = "None";
@@ -644,7 +640,6 @@ namespace CoED
                 $"+ {equipment.damageModifiers.GetValueOrDefault(DamageType.Lightning, 0)}";
             poisonDamageModifierText.text =
                 $"+ {equipment.damageModifiers.GetValueOrDefault(DamageType.Poison, 0)}";
-            activeStatusEffectsText.text = string.Join(", ", equipment.activeStatusEffects);
             inflictedStatusEffectsText.text = string.Join(", ", equipment.inflictedStatusEffects);
             resistanceEffectsText.text = string.Join(", ", equipment.resistanceEffects);
             weaknessEffectsText.text = string.Join(", ", equipment.weaknessEffects);

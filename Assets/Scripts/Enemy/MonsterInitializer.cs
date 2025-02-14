@@ -25,16 +25,12 @@ namespace CoED
             monster.monsterStats[Stat.ProjectileRange] += RandomBoost(1 + (level * 0.25f));
             monster.monsterStats[Stat.AttackRange] += RandomBoost(1 + (level * 0.25f));
             monster.monsterStats[Stat.Speed] += RandomBoost(1 + (level * 0.25f));
-            monster.monsterStats[Stat.ElementalDamage] += RandomBoost(1 + (level * 0.55f));
-            monster.monsterStats[Stat.ChanceToInflictStatusEffect] += RandomBoost(
-                1 + (level * 0.1f)
-            );
+            monster.monsterStats[Stat.ChanceToInflict] += RandomBoost(1 + (level * 0.1f));
             monster.monsterStats[Stat.StatusEffectDuration] += RandomBoost(1 + (level * 0.25f));
             monster.monsterStats[Stat.CritChance] += RandomBoost(1 + (level * 0.15f));
             monster.monsterStats[Stat.CritDamage] += RandomBoost(1 + (level * 0.2f));
             monster.monsterStats[Stat.FireRate] += RandomBoost(1 + (level * 0.15f));
             monster.monsterStats[Stat.Shield] += RandomBoost(1 + (level * 0.05f));
-            monster.monsterStats[Stat.Accuracy] += RandomBoost(1 + (level * 0.1f));
             monster.monsterStats[Stat.Intelligence] += RandomBoost(1 + (level * 0.55f));
             monster.monsterStats[Stat.PatrolSpeed] = RandomBoost(1 + (level * 0.25f));
             monster.monsterStats[Stat.ChaseSpeed] = monster.monsterStats[Stat.PatrolSpeed] * 1.5f;
@@ -66,23 +62,26 @@ namespace CoED
             );
             brain.visualObstructionLayer = obstacleLayer;
 
+            // Add and set up the SpriteRenderer.
             SpriteRenderer sr = enemy.AddComponent<SpriteRenderer>();
-            if (enemy.GetComponent<_EnemyStats>().monsterData.monsterSprite != null)
+            var enemyStats = enemy.GetComponent<_EnemyStats>();
+            if (enemyStats.monsterData.monsterSprite != null)
             {
-                sr.sprite = enemy.GetComponent<_EnemyStats>().monsterData.monsterSprite;
+                sr.sprite = enemyStats.monsterData.monsterSprite;
                 sr.sortingOrder = 3;
             }
+
+            DungeonSpawner.Instance.ApplyFogMaterial(enemy, floorData);
+
+            // Optionally, set up the enemy health bar and UI.
             GameObject healthBarPrefab = Resources.Load<GameObject>("Prefabs/enemyHealthBar");
             if (healthBarPrefab != null)
             {
                 GameObject healthBar = Object.Instantiate(healthBarPrefab);
                 healthBar.transform.SetParent(enemy.transform, false);
-                healthBar.transform.localPosition = new Vector3(0, 0.5f, 0); // e.g., above the enemy’s head
-
-                // If your health bar has a script or a Slider, link it to enemy
+                healthBar.transform.localPosition = new Vector3(0, 0.5f, 0);
                 EnemyUI barController = enemy.AddComponent<EnemyUI>();
-
-                barController.SetHealthBarMax(enemy.GetComponent<_EnemyStats>().GetEnemyHP()); // e.g., pass the enemy’s data
+                barController.SetHealthBarMax(enemyStats.GetEnemyHP());
             }
         }
     }

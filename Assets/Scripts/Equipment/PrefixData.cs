@@ -22,22 +22,20 @@ public class EquipmentPrefixData
         { Stat.CritChance, 0 },
         { Stat.CritDamage, 0 },
         { Stat.ElementalDamage, 0 },
-        { Stat.ChanceToInflictStatusEffect, 0 },
+        { Stat.ChanceToInflict, 0 },
         { Stat.StatusEffectDuration, 0 },
         { Stat.FireRate, 0 },
         { Stat.Shield, 0 },
-        { Stat.Accuracy, 0 },
         { Stat.ProjectileRange, 0 },
         { Stat.AttackRange, 0 },
-        { Stat.Evasion, 0 },
     };
 
     // Elemental Damage
     public Dictionary<DamageType, float> damageModifiers = new Dictionary<DamageType, float>();
 
     // Status Effect
-    public List<StatusEffectType> activeStatusEffects = new List<StatusEffectType>();
-    public List<StatusEffectType> inflictedStatusEffects = new List<StatusEffectType>();
+    public List<StatusEffectType> equipmentEffects = new List<StatusEffectType>();
+    public List<StatusEffectType> inflictedEffectsFromEquipment = new List<StatusEffectType>();
 
     // One-time effect flag
     public bool isOneTimeEffect;

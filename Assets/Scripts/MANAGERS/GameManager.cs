@@ -5,9 +5,8 @@ namespace CoED
     public class GameManager : MonoBehaviour
     {
         public static GameManager Instance { get; private set; }
-        private Transform playerTransform;
+        public Transform playerTransform;
         public bool IsPlayerSpawned => playerTransform != null;
-        private GameObject currentPlayer;
 
         // This will be set by your menu when the player chooses a class.
         public static CharacterClass SelectedClass { get; set; }
@@ -21,26 +20,6 @@ namespace CoED
             else
             {
                 Destroy(gameObject);
-            }
-        }
-
-        public void SpawnPlayer()
-        {
-            if (PlayerSpawner.Instance != null)
-            {
-                GameObject player = PlayerSpawner.Instance.SpawnPlayer();
-                if (player != null)
-                {
-                    currentPlayer = player;
-                }
-                else
-                {
-                    Debug.LogError("GameManager: Failed to spawn player.");
-                }
-            }
-            else
-            {
-                Debug.LogError("GameManager: PlayerSpawner instance is missing.");
             }
         }
 

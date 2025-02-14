@@ -20,6 +20,7 @@ GameObject:
   - component: {fileID: 5833244433419089174}
   - component: {fileID: -4137153357304739670}
   - component: {fileID: -4301195232088452716}
+  - component: {fileID: -6259558826781857516}
   m_Layer: 3
   m_Name: player
   m_TagString: Player
@@ -126,7 +127,7 @@ SpriteRenderer:
   m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!223 &-5451514820897329398
@@ -274,33 +275,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   level: 1
-  currentExp: 0
-  expToNextLevel: 100
-  maxLevel: 50
-  restInterval: 3
-  baseHealth: 250
-  baseStamina: 100
-  baseMagic: 50
-  baseAttack: 5
-  AttackRange: 1.4
-  baseDefense: 3
-  baseProjectileRange: 5
-  targetingRange: 7
-  baseDexterity: 2
-  baseIntelligence: 3
-  baseCritChance: 3
-  baseSpeed: 2
-  baseFireRate: 1
-  baseProjectileLifespan: 2
   currency: 525
   currentFloor: 0
+  restInterval: 3
+  steps: 0
+  HasEnteredDungeon: 0
   activeStatusEffects: 
-  EquippedmentEffects: 
+  EquipmentEffects: 
   inflictableStatusEffects: 
   activeWeaknesses: 
   activeResistances: 
   activeImmunities: 
-  chanceToInflictStatusEffect: 0.1
 --- !u!114 &-4137153357304739670
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -317,12 +302,6 @@ MonoBehaviour:
   enemyLayer:
     serializedVersion: 2
     m_Bits: 256
-  statusEffectLibrary: {fileID: 11400000, guid: 86dd547b78145e94db6970253d681118, type: 2}
-  spellPrefabs:
-  - {fileID: 11400000, guid: a781e18ceab702b4eb978bed1709f647, type: 2}
-  - {fileID: 11400000, guid: c8daa40fa2231734ca539aad4df3701f, type: 2}
-  - {fileID: 11400000, guid: d02e4e08f45320346b6adec2fbe9149f, type: 2}
-  - {fileID: 11400000, guid: 3b5012b31a116ed48a06b2b34dab2950, type: 2}
 --- !u!114 &-4301195232088452716
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -333,6 +312,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5704a0b53c2fad24696b3268ed07dae0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-6259558826781857516
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8948494598534906761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ff84bd9f9eda2b4db621b51275b5117, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1001 &8593987073900837000

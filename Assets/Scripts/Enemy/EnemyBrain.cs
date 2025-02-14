@@ -72,6 +72,10 @@ namespace CoED
         private void Start()
         {
             var playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj == null)
+            {
+                return;
+            }
             if (playerObj != null)
             {
                 playerTransform = playerObj.transform;
@@ -388,13 +392,12 @@ namespace CoED
 
             // ✅ Calculate hit success
             bool hitSuccess = BattleCalculations.IsAttackSuccessful(
-                enemyStats.GetEnemyAccuracy(),
-                playerStats.GetCurrentEvasion()
+                enemyStats.GetEnemyDexterity(),
+                playerStats.GetCurrentDexterity()
             );
 
             if (!hitSuccess)
             {
-                Debug.Log($"{gameObject.name} missed the attack on {playerStats.name}!");
                 return;
             }
 
@@ -406,75 +409,22 @@ namespace CoED
                 enemyStats.GetEnemyAttack(),
                 0, // No additional weapon power here (could be modified later)
                 playerStats.GetCurrentDefense(),
-                isCritical
+                isCritical,
+                1.5f // crit damage multiplier
             );
 
             // ✅ Calculate elemental damage separately
-            Dictionary<DamageType, float> damageDealt = new Dictionary<DamageType, float>
+            Dictionary<DamageType, float> damageDealt = new Dictionary<DamageType, float>()
             {
-                {
-                    DamageType.Physical,
-                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Physical)
-                        ? enemyStats.dynamicDamageTypes[DamageType.Physical]
-                        : 0
-                },
-                {
-                    DamageType.Fire,
-                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Fire)
-                        ? enemyStats.dynamicDamageTypes[DamageType.Fire]
-                        : 0
-                },
-                {
-                    DamageType.Poison,
-                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Poison)
-                        ? enemyStats.dynamicDamageTypes[DamageType.Poison]
-                        : 0
-                },
-                {
-                    DamageType.Ice,
-                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Ice)
-                        ? enemyStats.dynamicDamageTypes[DamageType.Ice]
-                        : 0
-                },
-                {
-                    DamageType.Lightning,
-                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Lightning)
-                        ? enemyStats.dynamicDamageTypes[DamageType.Lightning]
-                        : 0
-                },
-                {
-                    DamageType.Shadow,
-                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Shadow)
-                        ? enemyStats.dynamicDamageTypes[DamageType.Shadow]
-                        : 0
-                },
-                {
-                    DamageType.Arcane,
-                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Arcane)
-                        ? enemyStats.dynamicDamageTypes[DamageType.Arcane]
-                        : 0
-                },
-                {
-                    DamageType.Holy,
-                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Holy)
-                        ? enemyStats.dynamicDamageTypes[DamageType.Holy]
-                        : 0
-                },
-                {
-                    DamageType.Bleed,
-                    enemyStats.dynamicDamageTypes.ContainsKey(DamageType.Bleed)
-                        ? enemyStats.dynamicDamageTypes[DamageType.Bleed]
-                        : 0
-                },
+                { enemyStats.GetElementalBase(), physicalDamage },
             };
-
             // ✅ Apply status effects based on enemy's chance
             List<StatusEffectType> successfulEffects = new List<StatusEffectType>();
             foreach (var statusEffect in enemyStats.monsterData.inflictedStatusEffect)
             {
                 if (
-                    BattleCalculations.ApplyStatusEffect(
-                        enemyStats.GetEnemyChanceToInflictStatusEffect(),
+                    BattleCalculations.ShouldApplyStatusEffect(
+                        enemyStats.GetEnemyChanceToInflict(),
                         enemyStats.GetEnemyIntelligence()
                     )
                 )
@@ -488,10 +438,6 @@ namespace CoED
             playerStats.TakeDamage(damageInfo);
 
             lastAttackTime = Time.time;
-
-            Debug.Log(
-                $"{gameObject.name} attacked {playerStats.name} for {physicalDamage} damage {(isCritical ? "(Critical Hit!)" : "")}."
-            );
         }
 
         /// <summary>

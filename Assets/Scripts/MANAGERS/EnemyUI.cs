@@ -1,16 +1,18 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace CoED
 {
-    public class EnemyUI : MonoBehaviour
+    public class EnemyUI : MonoBehaviour, IStatusEffectSubscriber
     {
         public static EnemyUI enemyAI;
         public static _EnemyStats enemyStats;
 
         [Header("Health UI")]
         private Slider healthBar;
+        private Transform statusEffectIconPanel;
 
         [SerializeField]
         private Color healthBarBackground = Color.red;
@@ -32,6 +34,15 @@ namespace CoED
             if (healthBar == null)
             {
                 Debug.LogError("EnemyUI: HealthBar component not found.");
+            }
+            statusEffectIconPanel = transform.GetChild(0).GetChild(0);
+            if (statusEffectIconPanel != null)
+            {
+                Debug.Log($"EnemyUI: StatusEffectIconPanel found at {statusEffectIconPanel.name}."); // Debugging
+            }
+            if (statusEffectIconPanel == null)
+            {
+                Debug.LogError("EnemyUI: StatusEffectIconPanel not found.");
             }
         }
 
@@ -83,6 +94,49 @@ namespace CoED
                     Mathf.PingPong(Time.time * pulseSpeed, 1)
                 );
                 yield return null;
+            }
+        }
+
+        // This method is called by the StatusEffectManager whenever effects change.using UnityEngine;
+
+
+        /// <summary>
+        /// Call this method when the active status effects on the entity change.
+        /// It will refresh the icons displayed on the panel.
+        /// </summary>
+        public void OnStatusEffectsChanged(List<StatusEffect> activeEffects)
+        {
+            // Clear previous icons.
+            foreach (Transform child in statusEffectIconPanel)
+            {
+                Destroy(child.gameObject);
+            }
+
+            // For each active effect, instantiate its icon prefab.
+            foreach (StatusEffect effect in activeEffects)
+            {
+                if (effect.effectIconPrefab != null)
+                {
+                    // Instantiate the prefab as a child of the panel.
+                    GameObject iconGO = Instantiate(
+                        effect.effectIconPrefab,
+                        statusEffectIconPanel,
+                        false
+                    );
+
+                    // Optionally, if you want to assign the effect's sprite to an Image component:
+                    Image iconImage = iconGO.GetComponent<Image>();
+                    if (iconImage != null)
+                    {
+                        iconImage.sprite = effect.effectSprite;
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        $"Status effect {effect.effectName} does not have an icon prefab assigned."
+                    );
+                }
             }
         }
     }

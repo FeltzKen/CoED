@@ -22,6 +22,7 @@ namespace CoED
         // Duration-related fields
         public bool hasDuration = true;
         public float duration;
+        public int floorNumber;
 
         // ------------------------------
         // Stat Modifiers
@@ -34,7 +35,6 @@ namespace CoED
             { Stat.Defense, 0f },
             { Stat.Speed, 0f },
             { Stat.HP, 0f },
-            //{ Stat.MaxHP, 0f },
             { Stat.Magic, 0f },
             { Stat.Stamina, 0f },
             { Stat.Dexterity, 0f },
@@ -45,10 +45,8 @@ namespace CoED
             { Stat.CritDamage, 0f },
             { Stat.ProjectileRange, 0f },
             { Stat.AttackRange, 0f },
-            { Stat.Accuracy, 0f },
-            { Stat.Evasion, 0f },
             { Stat.ElementalDamage, 0f },
-            { Stat.ChanceToInflictStatusEffect, 0f },
+            { Stat.ChanceToInflict, 0f },
             { Stat.StatusEffectDuration, 0f },
         };
 
@@ -254,22 +252,8 @@ namespace CoED
             var playerStats = PlayerStats.Instance;
             if (playerStats != null)
             {
-                // For example, if the MaxHP boost is negative, we treat it as a healing amount.
-                if (consumableStats[Stat.MaxHP] < 0)
-                    playerStats.StartCoroutine(
-                        playerStats.GainMaxHP(
-                            consumableStats[Stat.MaxHP],
-                            consumableStats[Stat.StatusEffectDuration]
-                        )
-                    );
                 if (consumableStats[Stat.HP] > 0)
                     playerStats.Heal(consumableStats[Stat.HP]);
-
-                if (consumableStats[Stat.MaxMagic] > 0)
-                    playerStats.RefillMagic(consumableStats[Stat.MaxMagic]);
-
-                if (consumableStats[Stat.MaxStamina] > 0)
-                    playerStats.RefillStamina(consumableStats[Stat.MaxStamina]);
 
                 if (consumableStats[Stat.Dexterity] > 0)
                     playerStats.StartCoroutine(
@@ -311,7 +295,7 @@ namespace CoED
                 );
 
             foreach (var effect in removedEffects)
-                StatusEffectManager.Instance.RemoveSpecificEffect(playerStats.gameObject, effect);
+                StatusEffectManager.Instance.RemoveStatusEffect(playerStats.gameObject, effect);
         }
     }
 }

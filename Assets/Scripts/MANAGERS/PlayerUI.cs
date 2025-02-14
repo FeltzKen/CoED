@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace CoED
 {
-    public class PlayerUI : MonoBehaviour
+    public class PlayerUI : MonoBehaviour, IStatusEffectSubscriber
     {
         public static PlayerUI Instance { get; private set; }
 
@@ -24,6 +24,9 @@ namespace CoED
 
         [SerializeField]
         private TMP_Text healthText;
+
+        [SerializeField]
+        private Transform statusEffectIconPanel;
 
         [SerializeField]
         private Color healthBarBackground = Color.red;
@@ -52,13 +55,9 @@ namespace CoED
         [SerializeField]
         private GameObject spellButtonPrefab;
 
-        [Header("Available Spells")]
-        [SerializeField]
-        private List<PlayerSpellWrapper> availableSpells;
-
         private PlayerSpellCaster spellCaster;
-        private Dictionary<PlayerSpellWrapper, SpellUIElement> spellUIMap =
-            new Dictionary<PlayerSpellWrapper, SpellUIElement>();
+        private Dictionary<Spell, SpellUIElement> spellUIMap =
+            new Dictionary<Spell, SpellUIElement>();
 
         [Header("Experience UI")]
         [SerializeField]
@@ -130,49 +129,14 @@ namespace CoED
                 );
                 return;
             }
-
-            PopulateSpellPanel();
         }
 
-        private void PopulateSpellPanel()
+        public void AddSpell(Spell spell)
         {
-            availableSpells = PlayerSpellCaster.Instance.GetKnownSpells(); // Fetch known spells
-
-            if (spellPanel == null || leftContainer == null || rightContainer == null)
-            {
-                Debug.LogError("Spell panel or one of the containers is not assigned.");
-                return;
-            }
-
-            if (spellButtonPrefab == null)
-            {
-                Debug.LogError("spellButtonPrefab is not assigned in the Inspector.");
-                return;
-            }
-
-            foreach (Transform child in leftContainer)
-            {
-                Destroy(child.gameObject);
-            }
-            foreach (Transform child in rightContainer)
-            {
-                Destroy(child.gameObject);
-            }
-
-            foreach (var spell in availableSpells)
-            {
-                if (spell.SelfTargeting)
-                {
-                    AddSpellToUI(spell, rightContainer);
-                }
-                else
-                {
-                    AddSpellToUI(spell, leftContainer);
-                }
-            }
+            AddSpellToUI(spell, spell.SelfTargeting ? rightContainer : leftContainer);
         }
 
-        private void AddSpellToUI(PlayerSpellWrapper spell, Transform targetSpellPanel)
+        private void AddSpellToUI(Spell spell, Transform targetSpellPanel)
         {
             if (spellUIMap.ContainsKey(spell))
             {
@@ -242,7 +206,7 @@ namespace CoED
             spellUIMap.Add(spell, uiElement);
         }
 
-        private void HighlightSelectedSpell(PlayerSpellWrapper selectedSpell)
+        private void HighlightSelectedSpell(Spell selectedSpell)
         {
             foreach (var pair in spellUIMap)
             {
@@ -257,7 +221,7 @@ namespace CoED
             }
         }
 
-        public void OnSpellCast(PlayerSpellWrapper spell)
+        public void OnSpellCast(Spell spell)
         {
             if (spellUIMap.TryGetValue(spell, out SpellUIElement uiElement))
             {
@@ -274,7 +238,7 @@ namespace CoED
             );
         }
 
-        private IEnumerator CooldownCoroutine(PlayerSpellWrapper spell, SpellUIElement uiElement)
+        private IEnumerator CooldownCoroutine(Spell spell, SpellUIElement uiElement)
         {
             while (uiElement.cooldownTimer > 0)
             {
@@ -287,7 +251,7 @@ namespace CoED
             uiElement.button.interactable = true;
         }
 
-        public bool IsSpellOnCooldown(PlayerSpellWrapper spell)
+        public bool IsSpellOnCooldown(Spell spell)
         {
             if (spellUIMap.TryGetValue(spell, out SpellUIElement uiElement))
             {
@@ -296,7 +260,7 @@ namespace CoED
             return false;
         }
 
-        private void OnSpellSelected(PlayerSpellWrapper spell)
+        private void OnSpellSelected(Spell spell)
         {
             if (!spell.SelfTargeting)
             {
@@ -523,6 +487,37 @@ namespace CoED
                 PlayerStats.Instance.GetCurrentMagic(),
                 PlayerStats.Instance.GetCurrentMaxMagic()
             );
+        }
+
+        public void OnStatusEffectsChanged(List<StatusEffect> activeEffects)
+        {
+            // Clear previous icons.
+            foreach (Transform child in statusEffectIconPanel)
+            {
+                Destroy(child.gameObject);
+            }
+
+            // For each active effect, create a new icon GameObject
+            foreach (StatusEffect effect in activeEffects)
+            {
+                // Create a new GameObject to hold the icon.
+                GameObject iconGO = new GameObject(effect.effectName + "_Icon");
+                // Set its parent so it appears in the icon panel.
+                iconGO.transform.SetParent(statusEffectIconPanel, false);
+
+                // Optionally, add a RectTransform if you need layout options.
+                RectTransform rect = iconGO.AddComponent<RectTransform>();
+                // You can set default size if needed (example: 32x32)
+                rect.sizeDelta = new Vector2(32, 32);
+
+                // Add the Image component to the GameObject.
+                Image iconImage = iconGO.AddComponent<Image>();
+                // Set the Image's sprite to the effect's sprite.
+                iconImage.sprite = effect.effectSprite;
+
+                // (Optional) Set additional properties on the Image (like preserving aspect ratio)
+                iconImage.preserveAspect = true;
+            }
         }
     }
 }

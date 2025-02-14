@@ -1,10 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace CoED
 {
-    public class _EnemyStats : MonoBehaviour, IEntityStats
+    public class _EnemyStats : MonoBehaviour, IEntityStats, IHasImmunities
     {
         [Header("Assigned Monster Data")]
         public Monster monsterData; // from the new system
@@ -14,10 +15,7 @@ namespace CoED
         private bool invincible = false;
         public bool Invincible => invincible;
         public bool Silenced { get; private set; }
-
-        [Header("Dynamic Damage Types")]
-        public Dictionary<DamageType, float> dynamicDamageTypes =
-            new Dictionary<DamageType, float>();
+        private int dungeonDifficultySetting;
 
         [SerializeField]
         public List<StatusEffectType> activeStatusEffects = new List<StatusEffectType>();
@@ -26,30 +24,25 @@ namespace CoED
         // Current Stats
         private Dictionary<Stat, float> enemyStats = new Dictionary<Stat, float>()
         {
-            { Stat.HP, 0f },
-            { Stat.MaxHP, 0f },
-            { Stat.Attack, 0f },
-            { Stat.Intelligence, 0f },
-            { Stat.Evasion, 0f },
-            { Stat.Defense, 0f },
-            { Stat.Dexterity, 0f },
-            { Stat.Magic, 0f },
-            { Stat.MaxMagic, 0f },
-            { Stat.Accuracy, 0f },
-            { Stat.FireRate, 0f },
-            { Stat.ProjectileRange, 0f },
-            { Stat.AttackRange, 0f },
-            { Stat.Speed, 0f },
-            { Stat.Shield, 0f },
-            { Stat.Stamina, 0f },
-            { Stat.MaxStamina, 0f },
-            { Stat.ElementalDamage, 0f },
-            { Stat.CritChance, 0f },
-            { Stat.CritDamage, 0f },
-            { Stat.ChanceToInflictStatusEffect, 0f },
-            { Stat.StatusEffectDuration, 0f },
-            { Stat.PatrolSpeed, 0f },
-            { Stat.ChaseSpeed, 0f },
+            { Stat.HP, 0 },
+            { Stat.MaxHP, 0 },
+            { Stat.Attack, 0 },
+            { Stat.Defense, 0 },
+            { Stat.Dexterity, 0 },
+            { Stat.Magic, 0 },
+            { Stat.MaxMagic, 0 },
+            { Stat.Intelligence, 0 },
+            { Stat.FireRate, 0 },
+            { Stat.ProjectileRange, 0 },
+            { Stat.AttackRange, 0 },
+            { Stat.Speed, 0 },
+            { Stat.Shield, 0 },
+            { Stat.CritChance, 0 },
+            { Stat.CritDamage, 0 },
+            { Stat.ChanceToInflict, 0 },
+            { Stat.StatusEffectDuration, 0 },
+            { Stat.PatrolSpeed, 0 },
+            { Stat.ChaseSpeed, 0 }
         };
 
         [SerializeField]
@@ -62,8 +55,6 @@ namespace CoED
 
         public float GetEnemyIntelligence() => enemyStats[Stat.Intelligence];
 
-        public float GetEnemyEvasion() => enemyStats[Stat.Evasion];
-
         public float GetEnemyDefense() => enemyStats[Stat.Defense];
 
         public float GetEnemyDexterity() => enemyStats[Stat.Dexterity];
@@ -71,8 +62,6 @@ namespace CoED
         public float GetEnemyMagic() => enemyStats[Stat.Magic];
 
         public float GetEnemyMaxMagic() => enemyStats[Stat.MaxMagic];
-
-        public float GetEnemyAccuracy() => enemyStats[Stat.Accuracy];
 
         public float GetEnemyFireRate() => enemyStats[Stat.FireRate];
 
@@ -90,14 +79,15 @@ namespace CoED
 
         public float GetEnemyCritDamage() => enemyStats[Stat.CritDamage];
 
-        public float GetEnemyChanceToInflictStatusEffect() =>
-            enemyStats[Stat.ChanceToInflictStatusEffect];
+        public float GetEnemyChanceToInflict() => enemyStats[Stat.ChanceToInflict];
 
         public float GetEnemyStatusEffectDuration() => enemyStats[Stat.StatusEffectDuration];
 
         public float GetEnemyPatrolSpeed() => enemyStats[Stat.PatrolSpeed];
 
         public float GetEnemyChaseSpeed() => enemyStats[Stat.ChaseSpeed];
+
+        public DamageType GetElementalBase() => elementalBase;
 
         [SerializeField]
         private int spawnFloor;
@@ -117,6 +107,7 @@ namespace CoED
 
         private void Start()
         {
+            dungeonDifficultySetting = DungeonManager.Instance.dungeonDifficultySetting;
             enemyUI = GetComponentInChildren<EnemyUI>();
 
             ApplyMonsterData(monsterData);
@@ -127,7 +118,9 @@ namespace CoED
             EquipmentTier = Mathf.Clamp(Mathf.FloorToInt(spawnFloor / 3) + 1, 1, 3);
 
             // 4) calculate final stats (the hybrid approach: monster base + floor scaling)
-            //CalculateMonsterScaledStats();
+            CalculateMonsterScaledStats();
+            enemyStats[Stat.HP] = enemyStats[Stat.MaxHP]; // Full health on spawn
+
             InitializeUI();
         }
 
@@ -143,7 +136,7 @@ namespace CoED
         /// <summary>
         /// Copies the monster's base stats into local fields.
         /// </summary>
-        private void ApplyMonsterData(Monster monster)
+        public void ApplyMonsterData(Monster monster)
         {
             if (monster == null)
             {
@@ -157,23 +150,39 @@ namespace CoED
             enemyStats[Stat.Attack] = monster.monsterStats[Stat.Attack];
             enemyStats[Stat.Defense] = monster.monsterStats[Stat.Defense];
             enemyStats[Stat.Dexterity] = monster.monsterStats[Stat.Dexterity];
-            enemyStats[Stat.ElementalDamage] = monster.monsterStats[Stat.ElementalDamage];
             enemyStats[Stat.AttackRange] = monster.monsterStats[Stat.AttackRange];
             enemyStats[Stat.ProjectileRange] = monster.monsterStats[Stat.ProjectileRange];
-            enemyStats[Stat.ChanceToInflictStatusEffect] = monster.statusInflictionChance;
+            enemyStats[Stat.ChanceToInflict] = monster.statusInflictionChance;
             enemyStats[Stat.Speed] = monster.monsterStats[Stat.Speed];
             enemyStats[Stat.Intelligence] = monster.monsterStats[Stat.Intelligence];
-            enemyStats[Stat.Evasion] = monster.monsterStats[Stat.Evasion];
             enemyStats[Stat.CritChance] = monster.monsterStats[Stat.CritChance];
             enemyStats[Stat.CritDamage] = monster.monsterStats[Stat.CritDamage];
             enemyStats[Stat.FireRate] = monster.monsterStats[Stat.FireRate];
             enemyStats[Stat.Shield] = monster.monsterStats[Stat.Shield];
-            enemyStats[Stat.Accuracy] = monster.monsterStats[Stat.Accuracy];
             enemyStats[Stat.StatusEffectDuration] = monster.monsterStats[Stat.StatusEffectDuration];
             enemyStats[Stat.PatrolSpeed] = monster.monsterStats[Stat.PatrolSpeed];
             enemyStats[Stat.ChaseSpeed] = monster.monsterStats[Stat.ChaseSpeed];
 
             monsterData.inflictedStatusEffect = monster.inflictedStatusEffect;
+        }
+
+        /// <summary>
+        /// Multiplies each enemy stat by the difficulty multiplier.
+        /// </summary>
+        private void CalculateMonsterScaledStats()
+        {
+            float difficultyScale = 0.1f;
+            int diffLevel = dungeonDifficultySetting;
+            float difficultyMultiplier = 1 + (diffLevel - 1 + monsterData.level) * difficultyScale;
+            ScaledFactor = difficultyMultiplier;
+
+            // Multiply every enemy stat by the difficulty multiplier.
+            // (We create a list of keys because we can’t modify the dictionary while iterating directly.)
+            List<Stat> keys = enemyStats.Keys.ToList();
+            foreach (Stat s in keys)
+            {
+                enemyStats[s] *= difficultyMultiplier;
+            }
         }
 
         #region IEntity Implementation
@@ -185,7 +194,7 @@ namespace CoED
             else
                 enemyStats[stat] = value;
 
-            Debug.Log($"[EnemyStats] {stat} modified by {value}. New Value: {enemyStats[stat]}");
+            Debug.Log($"[Enemy Stats] {stat} modified by {value}. New Value: {enemyStats[stat]}");
         }
 
         public void NullStat(Stat stat, float duration)
@@ -206,20 +215,20 @@ namespace CoED
 
             float originalValue = enemyStats[stat];
             enemyStats[stat] = 0;
-            Debug.Log($"[PlayerStats] {stat} nullified for {duration} seconds.");
+            Debug.Log($"[Enemy Stats] {stat} nullified for {duration} seconds.");
 
             yield return new WaitForSeconds(duration);
 
             enemyStats[stat] = originalValue;
             activeNullifications.Remove(stat);
-            Debug.Log($"[PlayerStats] {stat} restored to {originalValue}.");
+            Debug.Log($"[Enemy Stats] {stat} restored to {originalValue}.");
         }
 
         public void Heal(float amount)
         {
             if (amount <= 0)
             {
-                Debug.LogWarning("EnemyStats: Heal amount must be positive.");
+                Debug.LogWarning("Enemy Stats: Heal amount must be positive.");
                 return;
             }
 
@@ -311,7 +320,8 @@ namespace CoED
         public void TakeDamage(
             DamageInfo damageInfo,
             float statusChance = 0.05f,
-            bool bypassInvincible = false
+            bool bypassInvincible = false,
+            float effectDuration = 0f
         )
         {
             if (!bypassInvincible && invincible)
@@ -354,24 +364,21 @@ namespace CoED
                 0
             );
 
-            // Status effects
             foreach (var effect in damageInfo.InflictedStatusEffects)
             {
                 // If attacker has a certain chance to inflict
                 // e.g. from playerStats or the skill used
-                if (Random.value < PlayerStats.Instance.GetCurrentChanceToInflictStatusEffect())
+                if (Random.value < PlayerStats.Instance.GetCurrentChanceToInflict())
                 {
+                    Debug.Log($"Inflicting {effect} for {effectDuration} seconds.");
                     StatusEffectManager.Instance.AddStatusEffect(
                         gameObject,
                         effect,
-                        enemyStats[Stat.StatusEffectDuration]
+                        effectDuration
                     );
                 }
             }
 
-        #endregion
-            #region End of IEntity Implementation
-            #endregion
             UpdateHealthUI();
             FloatingTextManager.Instance.ShowFloatingText(
                 effectiveDamage.ToString(),
@@ -383,6 +390,51 @@ namespace CoED
             {
                 HandleDeath();
             }
+        }
+
+        public void TakeEffectDamage(DamageInfo damageInfo)
+        {
+            if (
+                monsterData.resistances.Contains(
+                    (Resistances)damageInfo.DamageAmounts.Values.First()
+                )
+            )
+            {
+                FloatingTextManager.Instance.ShowFloatingText("RESISTED", transform, Color.green);
+                enemyStats[Stat.HP] -= damageInfo.DamageAmounts.Values.Last() / 2;
+                return;
+            }
+
+            if (
+                monsterData.weaknesses.Contains((Weaknesses)damageInfo.DamageAmounts.Values.First())
+            )
+            {
+                FloatingTextManager.Instance.ShowFloatingText("WEAKNESS", transform, Color.red);
+                enemyStats[Stat.HP] -= damageInfo.DamageAmounts.Values.Last() * 1.5f;
+                return;
+            }
+
+            FloatingTextManager.Instance.ShowFloatingText(
+                damageInfo.DamageAmounts.Values.Last().ToString(),
+                transform,
+                Color.red
+            );
+            enemyStats[Stat.HP] -= damageInfo.DamageAmounts.Values.Last();
+            UpdateHealthUI();
+
+            if (enemyStats[Stat.HP] <= 0)
+            {
+                HandleDeath();
+            }
+        }
+
+        #endregion
+        #region End of IEntity Implementation
+        #endregion
+
+        public bool HasImmunity(Immunities immunity)
+        {
+            return monsterData.immunities.Contains(immunity);
         }
 
         private void HandleDeath()
@@ -403,7 +455,7 @@ namespace CoED
             {
                 TileOccupancyManager.Instance.ReleaseAllTiles(nav.occupantID);
             }
-
+            StatusEffectManager.Instance.RemoveAllStatusEffects(gameObject);
             Destroy(gameObject);
         }
 

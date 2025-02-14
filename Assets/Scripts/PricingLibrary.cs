@@ -23,7 +23,7 @@ namespace CoED
             { "ProjectileRange", 2 },
             { "AttackRange", 3 },
             { "ElementalDamage", 2 },
-            { "ChanceToInflictStatusEffect", 3 },
+            { "ChanceToInflict", 3 },
             { "StatusEffectDuration", 2 },
             { "FireRate", 2 },
             { "Shield", 2 },
@@ -105,15 +105,12 @@ namespace CoED
             totalPrice +=
                 equipment.equipmentStats[Stat.ElementalDamage] * ValuePerStat["ElementalDamage"];
             totalPrice +=
-                equipment.equipmentStats[Stat.ChanceToInflictStatusEffect]
-                * ValuePerStat["ChanceToInflictStatusEffect"];
+                equipment.equipmentStats[Stat.ChanceToInflict] * ValuePerStat["ChanceToInflict"];
             totalPrice +=
                 equipment.equipmentStats[Stat.StatusEffectDuration]
                 * ValuePerStat["StatusEffectDuration"];
             totalPrice += equipment.equipmentStats[Stat.FireRate] * ValuePerStat["FireRate"];
             totalPrice += equipment.equipmentStats[Stat.Shield] * ValuePerStat["Shield"];
-            totalPrice += equipment.equipmentStats[Stat.Accuracy] * ValuePerStat["Accuracy"];
-            totalPrice += equipment.equipmentStats[Stat.Evasion] * ValuePerStat["Evasion"];
 
             foreach (var status in equipment.inflictedStatusEffects)
             {
@@ -163,15 +160,13 @@ namespace CoED
                 (int)consumable.consumableStats[Stat.ElementalDamage]
                 * ValuePerStat["ElementalDamage"];
             totalPrice +=
-                (int)consumable.consumableStats[Stat.ChanceToInflictStatusEffect]
-                * ValuePerStat["ChanceToInflictStatusEffect"];
+                (int)consumable.consumableStats[Stat.ChanceToInflict]
+                * ValuePerStat["ChanceToInflict"];
             totalPrice +=
                 (int)consumable.consumableStats[Stat.StatusEffectDuration]
                 * ValuePerStat["StatusEffectDuration"];
             totalPrice += (int)consumable.consumableStats[Stat.FireRate] * ValuePerStat["FireRate"];
             totalPrice += (int)consumable.consumableStats[Stat.Shield] * ValuePerStat["Shield"];
-            totalPrice += (int)consumable.consumableStats[Stat.Accuracy] * ValuePerStat["Accuracy"];
-            totalPrice += (int)consumable.consumableStats[Stat.Evasion] * ValuePerStat["Evasion"];
 
             foreach (var effect in consumable.addedEffects)
             {

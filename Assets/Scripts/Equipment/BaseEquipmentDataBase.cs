@@ -16,7 +16,7 @@ public static class EquipmentDatabase
             baseSprite: Resources.Load<Sprite>("Sprites/Items/Weapons/Iron_Sword")
                 ?? Resources.Load<Sprite>("Sprites/Items/Weapons/Default"),
             isOneTimeEffect: false,
-            statOverrides: new Dictionary<Stat, float> { { Stat.Attack, 4 }, { Stat.Accuracy, 2 } }
+            statOverrides: new Dictionary<Stat, float> { { Stat.Attack, 4 } }
         )
         {
             damageModifiers = new Dictionary<DamageType, float> { { DamageType.Physical, 2 } },
@@ -136,7 +136,7 @@ public static class EquipmentDatabase
             baseSprite: Resources.Load<Sprite>("Sprites/Items/Weapons/Spear")
                 ?? Resources.Load<Sprite>("Sprites/Items/Weapons/Default"),
             isOneTimeEffect: false,
-            statOverrides: new Dictionary<Stat, float> { { Stat.Attack, 4 }, { Stat.Accuracy, 3 } }
+            statOverrides: new Dictionary<Stat, float> { { Stat.Attack, 4 } }
         ),
     };
 
@@ -152,7 +152,7 @@ public static class EquipmentDatabase
             baseSprite: Resources.Load<Sprite>("Sprites/Items/Armor/Iron_Helmet")
                 ?? Resources.Load<Sprite>("Sprites/Items/Armor/Default"),
             isOneTimeEffect: false,
-            statOverrides: new Dictionary<Stat, float> { { Stat.Defense, 5 }, { Stat.Accuracy, 1 } }
+            statOverrides: new Dictionary<Stat, float> { { Stat.Defense, 5 } }
         )
         {
             resistanceEffects = new List<Resistances> { Resistances.Physical },
@@ -307,7 +307,6 @@ public static class EquipmentDatabase
             {
                 { Stat.Defense, 3 },
                 { Stat.Intelligence, 4 },
-                { Stat.Evasion, 1 },
             }
         ),
     };
@@ -324,7 +323,7 @@ public static class EquipmentDatabase
             baseSprite: Resources.Load<Sprite>("Sprites/Items/Weapons/Steel_Sword")
                 ?? Resources.Load<Sprite>("Sprites/Items/Weapons/Default"),
             isOneTimeEffect: false,
-            statOverrides: new Dictionary<Stat, float> { { Stat.Attack, 6 }, { Stat.Accuracy, 2 } }
+            statOverrides: new Dictionary<Stat, float> { { Stat.Attack, 6 } }
         )
         {
             damageModifiers = new Dictionary<DamageType, float> { { DamageType.Physical, 2 } },
@@ -435,7 +434,7 @@ public static class EquipmentDatabase
             baseSprite: Resources.Load<Sprite>("Sprites/Items/Weapons/Golden_Spear")
                 ?? Resources.Load<Sprite>("Sprites/Items/Weapons/Default"),
             isOneTimeEffect: false,
-            statOverrides: new Dictionary<Stat, float> { { Stat.Attack, 15 }, { Stat.Accuracy, 7 } }
+            statOverrides: new Dictionary<Stat, float> { { Stat.Attack, 15 } }
         )
         {
             damageModifiers = new Dictionary<DamageType, float> { { DamageType.Holy, 3 } },
@@ -608,7 +607,6 @@ public static class EquipmentDatabase
             {
                 { Stat.Defense, 6 },
                 { Stat.Intelligence, 6 },
-                { Stat.Evasion, 2 },
             }
         ),
     };
@@ -749,11 +747,7 @@ public static class EquipmentDatabase
             baseSprite: Resources.Load<Sprite>("Sprites/Items/Weapons/Dragon_Spear")
                 ?? Resources.Load<Sprite>("Sprites/Items/Weapons/Default"),
             isOneTimeEffect: false,
-            statOverrides: new Dictionary<Stat, float>
-            {
-                { Stat.Attack, 20 },
-                { Stat.Accuracy, 10 },
-            }
+            statOverrides: new Dictionary<Stat, float> { { Stat.Attack, 20 } }
         )
         {
             damageModifiers = new Dictionary<DamageType, float> { { DamageType.Fire, 6 } },
@@ -773,7 +767,7 @@ public static class EquipmentDatabase
             baseSprite: Resources.Load<Sprite>("Sprites/Items/Armor/Titanium_Helmet")
                 ?? Resources.Load<Sprite>("Sprites/Items/Armor/Default"),
             isOneTimeEffect: false,
-            statOverrides: new Dictionary<Stat, float> { { Stat.Defense, 15 }, { Stat.Evasion, 2 } }
+            statOverrides: new Dictionary<Stat, float> { { Stat.Defense, 15 } }
         ),
         // Titanium Chestplate: superior torso armor with fire resistance.
         new Equipment(
@@ -923,7 +917,6 @@ public static class EquipmentDatabase
             {
                 { Stat.Defense, 9 },
                 { Stat.Intelligence, 9 },
-                { Stat.Evasion, 2 },
             }
         ),
     };

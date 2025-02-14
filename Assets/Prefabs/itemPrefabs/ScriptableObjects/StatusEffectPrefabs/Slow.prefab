@@ -104,11 +104,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ccc51f20c80bc948a8cd85c75e2aa47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  effectType: 1
-  interval: 0
-  amountPerInterval: 0
-  duration: 60
-  speedModifier: 2
+  effectType: 4
   effectName: Slow
-  icon: {fileID: 185213524, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   hasDuration: 1
+  duration: 60
+  hasPeriodicTick: 0
+  tickInterval: 1
+  tickDamageOrHeal: 5

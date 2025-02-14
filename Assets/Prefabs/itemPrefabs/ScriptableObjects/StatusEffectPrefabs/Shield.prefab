@@ -104,11 +104,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ccc51f20c80bc948a8cd85c75e2aa47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  effectType: 8
-  interval: 0
-  amountPerInterval: 10
-  duration: 120
-  speedModifier: 0
+  effectType: 24
   effectName: Shield
-  icon: {fileID: 391497253, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   hasDuration: 1
+  duration: 120
+  hasPeriodicTick: 0
+  tickInterval: 1
+  tickDamageOrHeal: 5

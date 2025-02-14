@@ -48,15 +48,13 @@ namespace CoED
             { Stat.ProjectileRange, 0f },
             { Stat.AttackRange, 0f },
             { Stat.ElementalDamage, 0f },
-            { Stat.ChanceToInflictStatusEffect, 0f },
+            { Stat.ChanceToInflict, 0f },
             { Stat.StatusEffectDuration, 0f },
             { Stat.FireRate, 0f },
             { Stat.Shield, 0f },
-            { Stat.Accuracy, 0f },
             { Stat.MaxHP, 0f },
             { Stat.MaxMagic, 0f },
             { Stat.MaxStamina, 0f },
-            { Stat.Evasion, 0f },
         };
 
         // Elemental damage
@@ -209,9 +207,9 @@ namespace CoED
                 }
 
                 // Add any hidden status effects
-                if (prePrefix.activeStatusEffects != null)
+                if (prePrefix.equipmentEffects != null)
                 {
-                    foreach (var effect in prePrefix.activeStatusEffects)
+                    foreach (var effect in prePrefix.equipmentEffects)
                     {
                         if (!activeStatusEffects.Contains(effect))
                             hiddenStatusEffects.Add(effect);
@@ -229,9 +227,9 @@ namespace CoED
                 MergeDamageModifiers(prefix.damageModifiers, damageModifiers);
 
                 // Add active status effects from prefix
-                if (prefix.activeStatusEffects != null)
+                if (prefix.equipmentEffects != null)
                 {
-                    foreach (var effect in prefix.activeStatusEffects)
+                    foreach (var effect in prefix.equipmentEffects)
                     {
                         if (!activeStatusEffects.Contains(effect))
                             activeStatusEffects.Add(effect);
@@ -245,9 +243,9 @@ namespace CoED
                 ApplyStats(suffix.statModifiers);
                 MergeDamageModifiers(suffix.damageModifiers, damageModifiers);
 
-                if (suffix.activeStatusEffects != null)
+                if (suffix.equipmentEffects != null)
                 {
-                    foreach (var effect in suffix.activeStatusEffects)
+                    foreach (var effect in suffix.equipmentEffects)
                     {
                         if (!activeStatusEffects.Contains(effect))
                             activeStatusEffects.Add(effect);

@@ -31,22 +31,19 @@ namespace CoED
         StealHealth,
         Charm,
         Shield,
-        DamageReflect, // Reflects a portion of incoming damage
-        DamageAbsorb, // Absorbs a portion of incoming damage
-        DamageReduction, // Reduces a portion of incoming damage
-        DamageIncrease, // Increases a portion of outgoing damage
+        DamageReflect,
+        DamageAbsorb,
+        DamageReduction,
+        DamageIncrease,
         AttackSpeedIncrease,
         MovementSpeedIncrease,
         EvasionIncrease,
         DefenseIncrease,
         AccuracyIncrease,
         #endregion
-        // Add more effects as needed
-    }
 
-    public enum ActiveWhileEquipped
-    {
-        ReviveOnce, // Triggers once to revive the player
+        // Only available from equipment or consumables
+        ReviveOnce,
     }
 
     public enum OneTimeConsumableEffect
@@ -96,5 +93,6 @@ namespace CoED
         Holy,
         Arcane,
         Nature,
+        Earth,
     }
 }

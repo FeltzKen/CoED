@@ -24,7 +24,7 @@ namespace CoED
         public float AttackRange;
         public float Speed;
         public float ElementalDamage;
-        public float ChanceToInflictStatusEffect;
+        public float ChanceToInflict;
         public float StatusEffectDuration;
         public float PatrolSpeed;
         public float ChaseSpeed;
@@ -42,10 +42,8 @@ namespace CoED
             MaxHP = enemyMonsterData.monsterStats[Stat.MaxHP];
             Attack = enemyMonsterData.monsterStats[Stat.Attack];
             Intelligence = enemyMonsterData.monsterStats[Stat.Intelligence];
-            Evasion = enemyMonsterData.monsterStats[Stat.Evasion];
             Defense = enemyMonsterData.monsterStats[Stat.Defense];
             Dexterity = enemyMonsterData.monsterStats[Stat.Dexterity];
-            Accuracy = enemyMonsterData.monsterStats[Stat.Accuracy];
             MaxMagic = enemyMonsterData.monsterStats[Stat.MaxMagic];
             MaxStamina = enemyMonsterData.monsterStats[Stat.MaxStamina];
             Shield = enemyMonsterData.monsterStats[Stat.Shield];
@@ -55,8 +53,7 @@ namespace CoED
             ProjectileRange = enemyMonsterData.monsterStats[Stat.ProjectileRange];
             AttackRange = enemyMonsterData.monsterStats[Stat.AttackRange];
             Speed = enemyMonsterData.monsterStats[Stat.Speed];
-            ElementalDamage = enemyMonsterData.monsterStats[Stat.ElementalDamage];
-            ChanceToInflictStatusEffect = enemyMonsterData.monsterStats[Stat.ChanceToInflictStatusEffect];
+            ChanceToInflict = enemyMonsterData.monsterStats[Stat.ChanceToInflict];
             StatusEffectDuration = enemyMonsterData.monsterStats[Stat.StatusEffectDuration];
             PatrolSpeed = enemyMonsterData.monsterStats[Stat.PatrolSpeed];
             ChaseSpeed = enemyMonsterData.monsterStats[Stat.ChaseSpeed];

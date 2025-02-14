@@ -4,70 +4,68 @@ namespace CoED
 {
     public static class BattleCalculations
     {
-        private const float dexterityScaleFactor = 5f;
-
         /// <summary>
-        /// Calculates success rate based on Dexterity using a logarithmic function.
-        /// Used for actions like attack accuracy, dodge chance, trap disarming, etc.
+        /// Calculates the chance to hit (in percent) based solely on the attacker’s and defender’s Dexterity.
+        /// If both values are zero, we assume a default 50% chance.
         /// </summary>
-        public static float CalculateDexteritySuccess(float dexterity)
+        public static float CalculateHitChance(float attackerDexterity, float defenderDexterity)
         {
-            return 100f * (1 - Mathf.Exp(-dexterity / dexterityScaleFactor));
+            if (attackerDexterity + defenderDexterity == 0)
+                return 50f;
+            return (attackerDexterity / (attackerDexterity + defenderDexterity)) * 100f;
         }
 
         /// <summary>
-        /// Determines hit chance based on attacker's accuracy and defender's evasion.
+        /// Returns true if the attack lands.
         /// </summary>
-        public static float CalculateHitChance(float attackerAccuracy, float defenderEvasion)
+        public static bool IsAttackSuccessful(float attackerDexterity, float defenderDexterity)
         {
-            return attackerAccuracy / (float)(attackerAccuracy + defenderEvasion) * 100f;
+            float hitChance = CalculateHitChance(attackerDexterity, defenderDexterity);
+            return Random.value * 100f < hitChance;
         }
 
         /// <summary>
-        /// Determines if an attack lands based on hit chance.
+        /// Returns true if the defender dodges the attack (the inverse chance).
         /// </summary>
-        public static bool IsAttackSuccessful(float attackerAccuracy, float defenderEvasion)
+        public static bool IsDodged(float attackerDexterity, float defenderDexterity)
         {
-            return Random.value * 100f < CalculateHitChance(attackerAccuracy, defenderEvasion);
+            float hitChance = CalculateHitChance(attackerDexterity, defenderDexterity);
+            return Random.value * 100f >= hitChance;
         }
 
         /// <summary>
-        /// Calculates the probability of a critical hit based on Dexterity.
+        /// Determines whether the attack is critical based on the attacker's CritChance stat.
         /// </summary>
-        public static bool IsCriticalHit(float dexterity)
+        public static bool IsCriticalHit(float critChance)
         {
-            float critChance = Mathf.Clamp(dexterity * 1.5f, 0, 100);
-            return Random.value * 100f < critChance;
+            return Random.value < critChance;
         }
 
         /// <summary>
-        /// Calculates standard damage with optional critical hit multiplier.
+        /// Calculates damage from an attack. If a critical hit occurs, multiplies the base damage by the crit damage multiplier.
         /// </summary>
         public static float CalculateDamage(
             float baseAttack,
             float weaponPower,
             float targetDefense,
-            bool isCritical
+            bool isCritical,
+            float critDamageMultiplier
         )
         {
             float damage = Mathf.Max(0, baseAttack + weaponPower - targetDefense);
-            return isCritical ? damage * 1.5f : damage;
+            return isCritical ? damage * critDamageMultiplier : damage;
         }
 
         /// <summary>
-        /// Determines if an attack is dodged based on defender's Dexterity.
+        /// Determines whether a status effect should be applied based on the attacker's ChanceToInflict stat and Intelligence.
         /// </summary>
-        public static bool IsDodged(float defenderDexterity)
+        public static bool ShouldApplyStatusEffect(
+            float chanceToInflict,
+            float attackerIntelligence
+        )
         {
-            return Random.value * 100f < CalculateDexteritySuccess(defenderDexterity);
-        }
-
-        /// <summary>
-        /// Determines if a status effect applies based on effect chance and attacker's floatelligence.
-        /// </summary>
-        public static bool ApplyStatusEffect(float baseChance, float attackerfloatelligence)
-        {
-            return Random.value * 100f < baseChance + (attackerfloatelligence * 0.5f);
+            float effectiveChance = chanceToInflict + (attackerIntelligence * 0.5f);
+            return Random.value * 100f < effectiveChance;
         }
     }
 }

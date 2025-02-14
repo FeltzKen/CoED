@@ -184,8 +184,8 @@ namespace CoED
                     v => equipment.equipmentStats[Stat.ElementalDamage] = v
                 },
                 {
-                    () => equipment.equipmentStats[Stat.ChanceToInflictStatusEffect],
-                    v => equipment.equipmentStats[Stat.ChanceToInflictStatusEffect] = v
+                    () => equipment.equipmentStats[Stat.ChanceToInflict],
+                    v => equipment.equipmentStats[Stat.ChanceToInflict] = v
                 },
                 {
                     () => equipment.equipmentStats[Stat.StatusEffectDuration],
@@ -198,14 +198,6 @@ namespace CoED
                 {
                     () => equipment.equipmentStats[Stat.Shield],
                     v => equipment.equipmentStats[Stat.Shield] = v
-                },
-                {
-                    () => equipment.equipmentStats[Stat.Accuracy],
-                    v => equipment.equipmentStats[Stat.Accuracy] = v
-                },
-                {
-                    () => equipment.equipmentStats[Stat.Evasion],
-                    v => equipment.equipmentStats[Stat.Evasion] = v
                 },
             };
 

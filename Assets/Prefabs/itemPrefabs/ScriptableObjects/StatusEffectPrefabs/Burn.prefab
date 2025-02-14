@@ -104,11 +104,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ccc51f20c80bc948a8cd85c75e2aa47, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  effectType: 0
-  interval: 20
-  amountPerInterval: 5
-  duration: 120
-  speedModifier: 0
+  effectType: 3
   effectName: Burn
-  icon: {fileID: -81875440, guid: 7932b75e4fbe08640ab73e8c6f71f649, type: 3}
   hasDuration: 1
+  duration: 120
+  hasPeriodicTick: 1
+  tickInterval: 20
+  tickDamageOrHeal: 30

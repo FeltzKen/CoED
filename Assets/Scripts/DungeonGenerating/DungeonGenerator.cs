@@ -58,11 +58,12 @@ namespace CoED
 
                 Debug.Log("DungeonGenerator: Floor 0 (Spawning Room) added to DungeonManager.");
             }
+            FogOfWarManager.Instance.InitializeAllFloors();
             ComputeFloorIntersections();
             PlaceStairs();
             DungeonSpawner.Instance.SpawnItemsForAllFloors();
-            DungeonSpawner.Instance.SpawnEnemiesForAllFloors();
-            UIPanelToggleManager.Instance.PauseGame();
+            //FogOfWarManager.Instance.InitializeFog(DungeonManager.Instance.floors[0]);
+            PlayerSpawner.Instance.SpawnPlayer();
         }
 
         private void CreateDungeonParent()
@@ -145,6 +146,8 @@ namespace CoED
                     floorData.AddAllFloorTiles(floorTiles, wallTiles, voidTiles);
                     DungeonManager.Instance.FloorTransforms[currentFloorNumber] =
                         floorParent.transform;
+                    // set floor inactive
+                    floorParent.SetActive(false);
                 }
                 catch (Exception ex)
                 {

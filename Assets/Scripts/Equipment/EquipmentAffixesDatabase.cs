@@ -25,12 +25,10 @@ public static class EquipmentAffixesDatabase
                 { Stat.ProjectileRange, 5 },
                 { Stat.AttackRange, 5 },
                 { Stat.ElementalDamage, 5 },
-                { Stat.ChanceToInflictStatusEffect, 5 },
+                { Stat.ChanceToInflict, 5 },
                 { Stat.StatusEffectDuration, 5 },
                 { Stat.FireRate, 5 },
                 { Stat.Shield, 5 },
-                { Stat.Accuracy, 5 },
-                { Stat.Evasion, 5 },
             },
         },
         new EquipmentPrefixData
@@ -52,14 +50,12 @@ public static class EquipmentAffixesDatabase
                 { Stat.ProjectileRange, -5 },
                 { Stat.AttackRange, -5 },
                 { Stat.ElementalDamage, -5 },
-                { Stat.ChanceToInflictStatusEffect, -5 },
+                { Stat.ChanceToInflict, -5 },
                 { Stat.StatusEffectDuration, -5 },
                 { Stat.FireRate, -5 },
                 { Stat.Shield, -5 },
-                { Stat.Accuracy, -5 },
-                { Stat.Evasion, -5 },
             },
-            activeStatusEffects = new List<StatusEffectType> { StatusEffectType.RandomDebuff },
+            equipmentEffects = new List<StatusEffectType> { StatusEffectType.RandomDebuff },
         },
     };
 
@@ -129,7 +125,7 @@ public static class EquipmentAffixesDatabase
             prefixName = "Fortified",
             description = "Increases maximum health",
             statModifiers = new Dictionary<Stat, float> { { Stat.MaxHP, 50 } },
-            activeStatusEffects = new List<StatusEffectType> { StatusEffectType.Regen },
+            equipmentEffects = new List<StatusEffectType> { StatusEffectType.Regen },
         },
     };
 
@@ -142,7 +138,7 @@ public static class EquipmentAffixesDatabase
             description = "Adds stronger fire damage and burn effect",
             statModifiers = new Dictionary<Stat, float> { { Stat.Attack, 10 } },
             damageModifiers = new Dictionary<DamageType, float> { { DamageType.Fire, 20 } },
-            inflictedStatusEffects = new List<StatusEffectType> { StatusEffectType.Burn },
+            inflictedEffectsFromEquipment = new List<StatusEffectType> { StatusEffectType.Burn },
         },
         new EquipmentPrefixData
         {
@@ -150,7 +146,7 @@ public static class EquipmentAffixesDatabase
             description = "Adds freezing ice damage and freeze effect",
             statModifiers = new Dictionary<Stat, float> { { Stat.Attack, 10 } },
             damageModifiers = new Dictionary<DamageType, float> { { DamageType.Ice, 20 } },
-            inflictedStatusEffects = new List<StatusEffectType> { StatusEffectType.Freeze },
+            inflictedEffectsFromEquipment = new List<StatusEffectType> { StatusEffectType.Freeze },
         },
         new EquipmentPrefixData
         {
@@ -158,7 +154,7 @@ public static class EquipmentAffixesDatabase
             description = "Enhances lightning damage and stuns",
             statModifiers = new Dictionary<Stat, float> { { Stat.Attack, 10 } },
             damageModifiers = new Dictionary<DamageType, float> { { DamageType.Lightning, 20 } },
-            inflictedStatusEffects = new List<StatusEffectType> { StatusEffectType.Stun },
+            inflictedEffectsFromEquipment = new List<StatusEffectType> { StatusEffectType.Stun },
         },
         new EquipmentPrefixData
         {
@@ -185,7 +181,7 @@ public static class EquipmentAffixesDatabase
             prefixName = "Guardian's",
             description = "Provides a shield",
             statModifiers = new Dictionary<Stat, float> { { Stat.Shield, 50 } },
-            activeStatusEffects = new List<StatusEffectType> { StatusEffectType.Shield },
+            equipmentEffects = new List<StatusEffectType> { StatusEffectType.Shield },
         },
     };
 
@@ -216,7 +212,7 @@ public static class EquipmentAffixesDatabase
             description = "Increases health regen",
             statModifiers = new Dictionary<Stat, float> { { Stat.MaxHP, 10 } },
 
-            activeStatusEffects = new List<StatusEffectType> { StatusEffectType.Regen },
+            equipmentEffects = new List<StatusEffectType> { StatusEffectType.Regen },
         },
         new EquipmentSuffixData
         {
@@ -245,7 +241,7 @@ public static class EquipmentAffixesDatabase
         {
             suffixName = "of the Phoenix",
             description = "Revives once, if equipped, upon death",
-            equipmentEffects = new List<ActiveWhileEquipped> { ActiveWhileEquipped.ReviveOnce },
+            equipmentEffects = new List<StatusEffectType> { StatusEffectType.ReviveOnce },
             isOneTimeEffect = true,
         },
         new EquipmentSuffixData
@@ -258,13 +254,13 @@ public static class EquipmentAffixesDatabase
         {
             suffixName = "of Thorns",
             description = "Reflects a portion of damage back to attackers",
-            activeStatusEffects = new List<StatusEffectType> { StatusEffectType.DamageReflect },
+            equipmentEffects = new List<StatusEffectType> { StatusEffectType.DamageReflect },
         },
         new EquipmentSuffixData
         {
             suffixName = "of Absorption",
             description = "Grants a damage-absorbing shield",
-            activeStatusEffects = new List<StatusEffectType> { StatusEffectType.Shield },
+            equipmentEffects = new List<StatusEffectType> { StatusEffectType.Shield },
             isOneTimeEffect = true,
         },
     };

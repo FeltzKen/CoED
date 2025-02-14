@@ -17,13 +17,11 @@ namespace CoED
         [SerializeField]
         public float collisionRadius { get; set; } = 0.5f;
 
+        private float effectDuration = 0f;
+
         private Vector3 targetPosition;
         private bool hasReachedTarget = false;
         private bool hasCollided = false;
-
-        [Header("Dynamic Damage and Status Effects")]
-        [SerializeField]
-        private Dictionary<DamageType, float> damageTypes = new Dictionary<DamageType, float>();
 
         [Header("Dynamic Damage and Status Effects")]
         private DamageInfo damageInfo; // ✅ Store the full DamageInfo object
@@ -31,10 +29,12 @@ namespace CoED
         /// <summary>
         /// Initializes the projectile with custom damage and status effects.
         /// </summary>
-        public void Initialize(DamageInfo info, Vector2 direction)
+        public void Initialize(DamageInfo info, Vector2 direction, float effectDuration)
         {
             damageInfo = info; // ✅ Store the dynamic damage and effects
             this.direction = direction;
+            this.effectDuration = effectDuration;
+            Debug.Log($"Projectile initialized {effectDuration} seconds of effects.");
         }
 
         public void SetTargetPosition(Vector3 target)
@@ -81,19 +81,14 @@ namespace CoED
                     if (enemy != null)
                     {
                         // Apply dynamic damage and effects
-                        enemy.TakeDamage(damageInfo);
-
-                        foreach (
-                            var effect in GetComponent<PlayerSpellWrapper>().InflictedStatusEffectTypes
-                        )
-                        {
-                            StatusEffectManager.Instance.AddStatusEffect(
-                                enemy.gameObject,
-                                effect,
-                                PlayerStats.Instance.GetCurrentStatusEffectDuration()
-                            );
-                        }
+                        enemy.TakeDamage(
+                            damageInfo,
+                            PlayerStats.Instance.GetCurrentChanceToInflict(),
+                            bypassInvincible: false,
+                            effectDuration
+                        );
                     }
+
                     Destroy(gameObject);
                     return;
                 }

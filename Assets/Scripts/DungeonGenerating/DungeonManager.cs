@@ -12,6 +12,8 @@ namespace CoED
         public Dictionary<(int, int), HashSet<Vector2Int>> floorIntersections =
             new Dictionary<(int, int), HashSet<Vector2Int>>();
 
+        public int dungeonDifficultySetting;
+
         [Header("Floors")]
         public Dictionary<int, FloorData> floors = new Dictionary<int, FloorData>();
         public GameObject SpawningRoomInstance { get; set; }

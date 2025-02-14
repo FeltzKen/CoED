@@ -81,24 +81,27 @@ namespace CoED
         {
             currentGridPos = (Vector2Int)floorTilemap.WorldToCell(rb.position);
 
-            // Use the pathfinder to calculate the path
+            // Get the path
             currentPath = pathfinder.FindPath(currentGridPos, targetGridPos);
+
+            // If no path was found, log a warning and set currentPath to an empty list
             if (currentPath == null || currentPath.Count == 0)
             {
                 Debug.LogWarning("PlayerNavigator: No valid path found.");
+                currentPath = new List<Vector2Int>(); // Prevents null reference in FollowPath.
             }
         }
 
         private void FollowPath()
         {
-            if (currentPath.Count == 0 || moveCooldownTimer < moveDelay)
+            if (currentPath == null || currentPath.Count == 0 || moveCooldownTimer < moveDelay)
                 return;
 
             moveCooldownTimer = 0f;
             Vector2 nextPos = floorTilemap.CellToWorld((Vector3Int)currentPath[0]);
             currentPath.RemoveAt(0);
 
-            // Update player position through PlayerMovement
+            // Update player position through PlayerMovement.
             playerMovement.UpdateCurrentTilePosition(
                 new Vector3(nextPos.x + 0.5f, nextPos.y + 0.5f, 0)
             );

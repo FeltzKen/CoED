@@ -27,8 +27,6 @@ namespace CoED
         private ConsumableItem spawningRoomPotion;
         private static int occupantIDCounter = 0;
         private Dictionary<int, Pathfinder> floorPathfinders = new Dictionary<int, Pathfinder>();
-        private Dictionary<int, List<GameObject>> enemiesByFloor;
-        public Material fireOverlayMaterial;
 
         private void Awake()
         {
@@ -48,16 +46,6 @@ namespace CoED
             dungeonSettings = FindAnyObjectByType<DungeonGenerator>()
                 ?.GetComponent<DungeonGenerator>()
                 .dungeonSettings;
-
-            enemiesByFloor = new Dictionary<int, List<GameObject>>
-            {
-                { 1, dungeonSettings.enemyPrefabsFloor_1 },
-                { 2, dungeonSettings.enemyPrefabsFloor_2 },
-                { 3, dungeonSettings.enemyPrefabsFloor_3 },
-                { 4, dungeonSettings.enemyPrefabsFloor_4 },
-                { 5, dungeonSettings.enemyPrefabsFloor_5 },
-                { 6, dungeonSettings.enemyPrefabsFloor_6 },
-            };
         }
 
         #region Player Transport
@@ -90,7 +78,10 @@ namespace CoED
 
             player.position = centeredWorldPos;
             playerRB.position = centeredWorldPos;
-
+            //MiniMapController.Instance.UpdateMiniMapPosition(centeredWorldPos);
+            //MiniMapController.Instance.AdjustMiniMapView(firstFloorData);
+            // set first floor active
+            DungeonManager.Instance.FloorTransforms[1].gameObject.SetActive(true);
             player.GetComponent<PlayerMovement>().UpdateCurrentTilePosition(centeredWorldPos);
         }
 
@@ -200,22 +191,8 @@ namespace CoED
                     continue;
                 }
 
-                // Clone the monster data.
-                Monster monsterData = new Monster(template);
-
-                // Determine the monster's level.
-                int randomLevel = Mathf.RoundToInt(floorNumber * Random.Range(0.8f, 1.6f));
-                randomLevel = Mathf.Clamp(randomLevel, 1, 30);
-                monsterData.level = randomLevel;
-
-                // Recalculate the monster's stats for this level.
-                MonsterInitializer.CalculateMonsterBaseStatsFromLevel(
-                    monsterData,
-                    monsterData.level
-                );
-
                 // Create the enemy GameObject.
-                GameObject enemyGO = new GameObject($"Enemy_{monsterData.name}");
+                GameObject enemyGO = new GameObject($"Enemy_{template.name}");
                 enemyGO.AddComponent<Rigidbody2D>();
                 RectTransform enemyRect = enemyGO.AddComponent<RectTransform>();
                 enemyRect.sizeDelta = new Vector2(1, 1);
@@ -227,9 +204,9 @@ namespace CoED
                 enemyGO.AddComponent<InspectorStatDisplay>();
                 // Attach the _EnemyStats component and assign the monster data.
                 _EnemyStats statsComp = enemyGO.AddComponent<_EnemyStats>();
-                statsComp.monsterData = monsterData;
+                statsComp.monsterData = template;
                 statsComp.spawnFloorLevel = floorNumber;
-
+                statsComp.ApplyMonsterData(template);
                 // Initialize enemy behavior, pathfinding, UI, etc.
                 MonsterInitializer.InitializeEnemy(
                     enemyGO,
@@ -416,18 +393,14 @@ namespace CoED
                 equipment.equipmentStats[Stat.CritDamage] += modifierScale;
             if (equipment.equipmentStats[Stat.ElementalDamage] > 0)
                 equipment.equipmentStats[Stat.ElementalDamage] += modifierScale;
-            if (equipment.equipmentStats[Stat.ChanceToInflictStatusEffect] > 0)
-                equipment.equipmentStats[Stat.ChanceToInflictStatusEffect] += modifierScale;
+            if (equipment.equipmentStats[Stat.ChanceToInflict] > 0)
+                equipment.equipmentStats[Stat.ChanceToInflict] += modifierScale;
             if (equipment.equipmentStats[Stat.StatusEffectDuration] > 0)
                 equipment.equipmentStats[Stat.StatusEffectDuration] += modifierScale;
             if (equipment.equipmentStats[Stat.FireRate] > 0)
                 equipment.equipmentStats[Stat.FireRate] += modifierScale;
             if (equipment.equipmentStats[Stat.Shield] > 0)
                 equipment.equipmentStats[Stat.Shield] += modifierScale;
-            if (equipment.equipmentStats[Stat.Accuracy] > 0)
-                equipment.equipmentStats[Stat.Accuracy] += modifierScale;
-            if (equipment.equipmentStats[Stat.Evasion] > 0)
-                equipment.equipmentStats[Stat.Evasion] += modifierScale;
 
             var keys = new List<DamageType>(equipment.damageModifiers.Keys);
             foreach (var key in keys)
@@ -506,8 +479,10 @@ namespace CoED
                 {
                     itemObject.AddComponent<HiddenItemController>().isHidden = true;
                 }
-                itemObject.transform.localScale = new Vector3(2f, 2f, 0f);
+                itemObject.transform.localScale = new Vector3(1f, 1f, 0f);
                 ApplyEquipmentModifiers(equipment, Random.Range(1, 3));
+                ApplyFogMaterial(itemObject, floorData);
+
                 itemObject.GetComponent<EquipmentPickup>().SetEquipment(equipment);
             }
         }
@@ -593,13 +568,18 @@ namespace CoED
                         Destroy(itemObject);
                         continue;
                     }
+                    //itemObject.transform.localScale = new Vector3(1f, 1f, 0f);
+                    RectTransform itemRect = itemObject.AddComponent<RectTransform>();
+                    itemRect.sizeDelta = new Vector2(1, 1);
                     renderer.sprite = coItem.GetSprite();
                     renderer.sortingOrder = 3;
 
                     var collider = itemObject.AddComponent<CapsuleCollider2D>();
                     collider.isTrigger = true;
-
+                    coItem.floorNumber = floorNumber;
                     var pickup = itemObject.AddComponent<ConsumablePickup>();
+                    ApplyFogMaterial(itemObject, floorData);
+
                     pickup.SetConsumable(coItem);
                 }
                 catch (System.Exception e)
@@ -661,6 +641,7 @@ namespace CoED
                         parent
                     )
                     .GetComponent<MoneyPickup>();
+                ApplyFogMaterial(moneyPickup.gameObject, floorData);
 
                 moneyPickup.Initialize(dungeonSettings.moneyPrefab.moneyData, scaledAmount);
             }
@@ -776,6 +757,37 @@ namespace CoED
             }
 
             return positions;
+        }
+
+        public void ApplyFogMaterial(GameObject obj, FloorData floorData)
+        {
+            SpriteRenderer sr = obj.GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                // Create a new instance of the fog shader material.
+                Material fogMat = new Material(Shader.Find("Custom/ObjectFogShader"));
+
+                // If the object already has a sprite, assign its texture as the main texture.
+                if (sr.sprite != null)
+                {
+                    fogMat.SetTexture("_MainTex", sr.sprite.texture);
+                }
+
+                // Set the fog mask texture from the FogOfWarManager.
+                Texture2D fogTex = FogOfWarManager.Instance.GetFogTextureForFloor(
+                    floorData.FloorNumber
+                );
+                fogMat.SetTexture("_FogMask", fogTex);
+
+                // Set fog origin (usually the bottom-left position of the floor tilemap)
+                fogMat.SetVector("_FogOrigin", floorData.FloorTilemap.transform.position);
+
+                // Set fog scale (size of the fog overlay in world units, e.g., 100)
+                fogMat.SetFloat("_FogScale", 100f);
+
+                // Finally, assign the material to the object's SpriteRenderer.
+                sr.material = fogMat;
+            }
         }
     }
 }

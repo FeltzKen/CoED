@@ -48,6 +48,8 @@ namespace CoED
 
         private void HandleCombatInput()
         {
+            if (playerStats.HasEnteredDungeon == false)
+                return;
             if (playerStats.GetCurrentHealth() > 0 && Time.time >= lastAttackTime + attackCooldown)
             {
                 if (Input.GetMouseButtonDown(0))
@@ -60,6 +62,7 @@ namespace CoED
 
         public void PerformMeleeAttack(Vector2Int targetPosition)
         {
+            // Get the enemy collider at the target grid position.
             Vector2 targetWorldPosition = new Vector2(targetPosition.x, targetPosition.y);
             Collider2D hitCollider = Physics2D.OverlapCircle(
                 targetWorldPosition,
@@ -72,10 +75,10 @@ namespace CoED
                 _EnemyStats enemyStats = hitCollider.GetComponent<_EnemyStats>();
                 if (enemyStats != null)
                 {
-                    // ✅ Calculate hit success
+                    // Use Dexterity for hit/dodge.
                     bool hitSuccess = BattleCalculations.IsAttackSuccessful(
-                        playerStats.GetCurrentAccuracy(),
-                        enemyStats.GetEnemyEvasion()
+                        playerStats.GetCurrentDexterity(),
+                        enemyStats.GetEnemyDexterity()
                     );
 
                     if (!hitSuccess)
@@ -84,20 +87,21 @@ namespace CoED
                         return;
                     }
 
-                    // ✅ Determine if attack is critical
+                    // Determine a critical hit using the player's CritChance stat.
                     bool isCritical = BattleCalculations.IsCriticalHit(
-                        playerStats.GetCurrentDexterity()
+                        playerStats.GetCurrentCritChance()
                     );
 
-                    // ✅ Calculate physical damage
+                    // Calculate the base physical damage.
                     float physicalDamage = BattleCalculations.CalculateDamage(
                         playerStats.GetCurrentAttack(),
-                        0, // No additional weapon power here (could be modified later)
+                        0, // weapon power can be added here if needed
                         enemyStats.GetEnemyDefense(),
-                        isCritical
+                        isCritical,
+                        1.5f // hradcoded crit damage multiplier might be replaced with a stat
                     );
 
-                    // ✅ Calculate elemental damage separately
+                    // Calculate elemental damage (example uses player's elemental damage bonuses).
                     Dictionary<DamageType, float> damageDealt = new Dictionary<DamageType, float>
                     {
                         { DamageType.Physical, physicalDamage },
@@ -111,32 +115,42 @@ namespace CoED
                         { DamageType.Bleed, playerStats.GetCurrentBleedDamage() },
                     };
 
-                    // ✅ Apply status effects based on chance
+                    // Decide which status effects (if any) should be applied.
                     List<StatusEffectType> successfulEffects = new List<StatusEffectType>();
-                    foreach (var statusEffect in playerStats.inflictableStatusEffects)
+                    foreach (var effect in playerStats.inflictableStatusEffects)
                     {
                         if (
-                            BattleCalculations.ApplyStatusEffect(
-                                PlayerStats.Instance.GetCurrentChanceToInflictStatusEffect(),
+                            BattleCalculations.ShouldApplyStatusEffect(
+                                playerStats.GetCurrentChanceToInflict(),
                                 playerStats.GetCurrentIntelligence()
                             )
                         )
                         {
-                            successfulEffects.Add(statusEffect.Key);
+                            successfulEffects.Add(effect);
                         }
                     }
-
-                    // ✅ Send damage and effects to enemy
+                    // (Optionally, include additional status effects from equipped items.)
+                    foreach (var effect in playerStats.EquipmentEffects)
+                    {
+                        if (
+                            BattleCalculations.ShouldApplyStatusEffect(
+                                playerStats.GetCurrentChanceToInflict(),
+                                playerStats.GetCurrentIntelligence()
+                            )
+                        )
+                        {
+                            successfulEffects.Add(effect);
+                        }
+                    }
+                    // Package damage and status effects together.
                     DamageInfo damageInfo = new DamageInfo(damageDealt, successfulEffects);
+
+                    // Apply the damage to the enemy.
                     enemyStats.TakeDamage(damageInfo);
 
-                    // ✅ Reset enemy attack flags after being hit
+                    // Reset enemy attack flags and update the last attack time.
                     ResetEnemyAttackFlags();
                     lastAttackTime = Time.time;
-
-                    Debug.Log(
-                        $"Player dealt {physicalDamage} damage to {enemyStats.name} {(isCritical ? "(Critical Hit!)" : "")}."
-                    );
                 }
             }
         }

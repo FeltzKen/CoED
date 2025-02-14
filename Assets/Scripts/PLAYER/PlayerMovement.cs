@@ -264,6 +264,14 @@ namespace CoED
             transform.position = position;
             PlayerCombat.Instance.ResetEnemyAttackFlags();
             PlayerStats.Instance.AddStep();
+
+            if (PlayerStats.Instance.currentFloor > 0)
+            {
+                FogOfWarManager.Instance.UpdateFog(
+                    transform.position,
+                    DungeonManager.Instance.GetFloorData(PlayerStats.Instance.currentFloor)
+                );
+            }
             UpdatePlayerTile();
         }
 

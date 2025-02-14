@@ -49,7 +49,7 @@ public class ConsumablePickup : MonoBehaviour
     private float elementalDamageBoost;
 
     [SerializeField]
-    private float chanceToInflictStatusEffectBoost;
+    private float ChanceToInflictBoost;
 
     [SerializeField]
     private float statusEffectDurationBoost;
@@ -90,15 +90,10 @@ public class ConsumablePickup : MonoBehaviour
         projectileRangeBoost = itemData.consumableStats[Stat.ProjectileRange];
         attackRangeBoost = itemData.consumableStats[Stat.AttackRange];
         elementalDamageBoost = itemData.consumableStats[Stat.ElementalDamage];
-        chanceToInflictStatusEffectBoost = itemData.consumableStats[
-            Stat.ChanceToInflictStatusEffect
-        ];
+        ChanceToInflictBoost = itemData.consumableStats[Stat.ChanceToInflict];
         statusEffectDurationBoost = itemData.consumableStats[Stat.StatusEffectDuration];
         fireRateBoost = itemData.consumableStats[Stat.FireRate];
         shieldBoost = itemData.consumableStats[Stat.Shield];
-        evasionBoost = itemData.consumableStats[Stat.Evasion];
-        accuracyBoost = itemData.consumableStats[Stat.Accuracy];
-
         addedEffect = itemData.addedEffects;
         removedEffect = itemData.removedEffects;
     }

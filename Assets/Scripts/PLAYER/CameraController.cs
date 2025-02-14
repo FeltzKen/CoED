@@ -160,7 +160,6 @@ namespace CoED
             Debug.Log(
                 $"Camera bounds updated for Floor {floorNumber}: Min({minBounds}), Max({maxBounds})"
             );
-            MinimapController.Instance.UpdateMinimapPosition(transform.position);
         }
     }
 }

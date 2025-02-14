@@ -7,7 +7,7 @@ namespace CoED
     {
         public static List<ConsumableItem> consumables = new List<ConsumableItem>()
         {
-            // Health Potion: restores 50 health (assumed to boost MaxHP by 50)
+            // Health Potion: restores 50 health (assumed to boost HP by 50)
             new ConsumableItem(
                 itemID: "healthPotion001",
                 itemName: "Health Potion",

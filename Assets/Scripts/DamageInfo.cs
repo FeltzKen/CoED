@@ -9,8 +9,7 @@ namespace CoED
 
         public DamageInfo(
             Dictionary<DamageType, float> damageAmounts,
-            List<StatusEffectType> statusEffects,
-            float statusEffectDuration = 15f
+            List<StatusEffectType> statusEffects
         )
         {
             DamageAmounts = damageAmounts;

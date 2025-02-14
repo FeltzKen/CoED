@@ -1,9 +1,7 @@
 using System.Collections;
 using CoED.Items;
-using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
+
 
 namespace CoED
 {

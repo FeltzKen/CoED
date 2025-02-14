@@ -33,19 +33,41 @@ namespace CoED
         [SerializeField]
         private List<StatAllocationUI> statUIElements;
 
+        [SerializeField]
+        private Image classImage;
+
+        [Header("Difficulty Settings")]
+        [SerializeField]
+        private Slider difficultySlider;
+
+        [SerializeField]
+        private TextMeshProUGUI difficultyLevelText;
+
+        // Holds the extra points allocated for each stat.
         private Dictionary<Stat, int> additionalStatPoints = new Dictionary<Stat, int>();
+
+        // Holds the base stat values (from the selected class).
         private Dictionary<Stat, float> baseStatValues = new Dictionary<Stat, float>();
+
         private int availableStatPoints = 10;
         private int selectedClassIndex = 0;
         private Stat selectedStat = Stat.None; // currently selected stat
 
         private void Start()
         {
-            Time.timeScale = 0;
-
+            // Initialize the allocation dictionary.
             foreach (StatAllocationUI statUI in statUIElements)
             {
                 additionalStatPoints[statUI.stat] = 0;
+            }
+
+            // Initialize the difficulty slider if assigned.
+            if (difficultySlider != null)
+            {
+                // Set slider value to current difficulty level.
+                difficultySlider.value = 1;
+                difficultyLevelText.text = "1";
+                difficultySlider.onValueChanged.AddListener(OnDifficultySliderChanged);
             }
 
             PopulateClassDropdown();
@@ -60,6 +82,32 @@ namespace CoED
             Debug.Log($"Total Stat UI Elements: {statUIElements.Count}");
 
             UpdateUI();
+        }
+
+        private void OnDifficultySliderChanged(float value)
+        {
+            // Round the slider value to an integer (1 to 10)
+            int newDifficulty = Mathf.RoundToInt(value);
+
+            // Update the dungeon difficulty setting.
+            DungeonManager.Instance.dungeonDifficultySetting = newDifficulty;
+
+            // Update the difficulty text value.
+            if (difficultyLevelText != null)
+            {
+                difficultyLevelText.text = newDifficulty.ToString();
+
+                // Compute an interpolation fraction:
+                // When newDifficulty == 1, fraction == 0; when newDifficulty == 10, fraction == 1.
+                float fraction = (newDifficulty - 1) / 9f;
+
+                // Interpolate from white (1,1,1) to red (1,0,0)
+                // The red channel remains 1, while green and blue decrease from 1 to 0.
+                Color newColor = new Color(1f, 1f - fraction, 1f - fraction);
+
+                // Apply the new color.
+                difficultyLevelText.color = newColor;
+            }
         }
 
         private void SetupStatUI()
@@ -86,14 +134,13 @@ namespace CoED
             selectedClassIndex = index;
             ResetStatAllocations();
 
-            // Ensure that the selectedStat is reset to prevent issues
+            // Reset selected stat when a new class is chosen.
             selectedStat = Stat.None;
 
             Debug.Log(
                 $"Class changed to {CharacterClasses.Classes[selectedClassIndex].ClassName}, UI updating."
             );
-
-            UpdateUI(); // ✅ Ensures the stat panel and description panel update immediately
+            UpdateUI(); // Immediately update the UI
         }
 
         private void ResetStatAllocations()
@@ -101,14 +148,11 @@ namespace CoED
             availableStatPoints = 10;
             selectedStat = Stat.None;
 
-            // ✅ Clear additional stat points
-            additionalStatPoints.Clear();
-
-            // ✅ Reset base stat values to prevent old values from persisting
-            baseStatValues.Clear();
-
+            // Reset each stat’s extra allocation to 0 and update the base values.
             foreach (StatAllocationUI statUI in statUIElements)
             {
+                additionalStatPoints[statUI.stat] = 0;
+
                 float baseValue = CharacterClasses
                     .Classes[selectedClassIndex]
                     .BaseStats.ContainsKey(statUI.stat)
@@ -129,6 +173,13 @@ namespace CoED
             classDescriptionText.text = GetClassDescription(selectedClass);
             availablePointsText.text = availableStatPoints.ToString();
 
+            // Update the class image.
+            classImage.sprite = selectedClass.CharacterSprite;
+            Color color = classImage.color;
+            color.a = 1;
+            classImage.color = color;
+
+            // Update each stat UI element without resetting the extra points.
             foreach (StatAllocationUI statUI in statUIElements)
             {
                 float baseValue = selectedClass.BaseStats.ContainsKey(statUI.stat)
@@ -136,11 +187,11 @@ namespace CoED
                     : 0;
 
                 baseStatValues[statUI.stat] = baseValue;
+                int allocated = additionalStatPoints.ContainsKey(statUI.stat)
+                    ? additionalStatPoints[statUI.stat]
+                    : 0;
 
-                // ✅ Reset allocated points before updating UI
-                additionalStatPoints[statUI.stat] = 0;
-
-                statUI.SetStatValue(baseValue, 0);
+                statUI.SetStatValue(baseValue, allocated);
                 statUI.SetSelected(statUI.stat == selectedStat);
             }
         }
@@ -158,7 +209,7 @@ namespace CoED
                 statUI.SetSelected(statUI.stat == selectedStat);
             }
 
-            UpdateUI(); // ✅ Ensures UI reflects the new selection immediately
+            UpdateUI(); // Refresh the UI to show the new selection
         }
 
         /// <summary>
@@ -178,6 +229,7 @@ namespace CoED
                 return;
             }
 
+            // For both normal and percentage stats, we simply add one point.
             additionalStatPoints[selectedStat]++;
             availableStatPoints--;
 
@@ -236,24 +288,50 @@ namespace CoED
                 BaseStats = new Dictionary<Stat, float>(selectedClass.BaseStats),
             };
 
+            // Apply additional stat points.
             foreach (KeyValuePair<Stat, int> kvp in additionalStatPoints)
             {
-                if (finalClass.BaseStats.ContainsKey(kvp.Key))
+                float addition;
+                if (kvp.Key == Stat.CritChance || kvp.Key == Stat.ChanceToInflict)
                 {
-                    finalClass.BaseStats[kvp.Key] += kvp.Value;
+                    // Percentage-based: each point adds 0.01.
+                    addition = kvp.Value * 0.01f;
+                }
+                else if (
+                    kvp.Key == Stat.MaxHP
+                    || kvp.Key == Stat.MaxStamina
+                    || kvp.Key == Stat.MaxMagic
+                )
+                {
+                    // For these stats, each pool point adds 20.
+                    addition = kvp.Value * 10f;
                 }
                 else
                 {
-                    finalClass.BaseStats[kvp.Key] = kvp.Value;
+                    addition = kvp.Value;
+                }
+
+                if (finalClass.BaseStats.ContainsKey(kvp.Key))
+                {
+                    finalClass.BaseStats[kvp.Key] += addition;
+                }
+                else
+                {
+                    finalClass.BaseStats[kvp.Key] = addition;
                 }
             }
 
+            finalClass.LevelToLearnSpells = selectedClass.LevelToLearnSpells;
             GameManager.SelectedClass = finalClass;
-            Debug.Log($"Player selected class: {finalClass.ClassName}");
+            GameManager.Instance.playerTransform.GetComponent<SpriteRenderer>().sprite =
+                finalClass.CharacterSprite;
+            PlayerStats.Instance.baseStats = finalClass.BaseStats;
+            PlayerStats.Instance.CopyBaseToPlayerStats();
+            PlayerStats.Instance.CalculateStats();
+            Debug.Log($"Player selected class: {GameManager.SelectedClass.ClassName}");
 
-            GameManager.Instance.SpawnPlayer();
             gameObject.SetActive(false);
-            UIPanelToggleManager.Instance.UnpauseGame();
+            DungeonSpawner.Instance.SpawnEnemiesForAllFloors();
         }
     }
 }

@@ -7,7 +7,7 @@ using Random = UnityEngine.Random;
 
 namespace CoED
 {
-    public class PlayerStats : MonoBehaviour, IEntityStats
+    public class PlayerStats : MonoBehaviour, IEntityStats, IHasImmunities
     {
         public static PlayerStats Instance { get; private set; }
         private PlayerUI playerUI;
@@ -30,7 +30,7 @@ namespace CoED
         #region Base Stats & Equipment Modifiers
         // These dictionaries hold the unmodified base stats, the bonuses from equipment, and the final computed stats.
         // It is assumed that baseStats never change once set (except on level-up) while equipmentStats is recalculated when gear is equipped/unequipped.
-        private Dictionary<Stat, float> baseStats = new Dictionary<Stat, float>();
+        public Dictionary<Stat, float> baseStats = new Dictionary<Stat, float>();
 
         // Equipment contributions are summed here.
         private Dictionary<Stat, float> equipmentStats = new Dictionary<Stat, float>()
@@ -40,12 +40,10 @@ namespace CoED
             { Stat.MaxHP, 0f },
             { Stat.Attack, 0f },
             { Stat.Intelligence, 0f },
-            { Stat.Evasion, 0f },
             { Stat.Defense, 0f },
             { Stat.Dexterity, 0f },
             { Stat.Magic, 0f },
             { Stat.MaxMagic, 0f },
-            { Stat.Accuracy, 0f },
             { Stat.FireRate, 0f },
             { Stat.ProjectileRange, 0f },
             { Stat.AttackRange, 0f },
@@ -56,7 +54,7 @@ namespace CoED
             { Stat.ElementalDamage, 0f },
             { Stat.CritChance, 0f },
             { Stat.CritDamage, 0f },
-            { Stat.ChanceToInflictStatusEffect, 0f },
+            { Stat.ChanceToInflict, 0f },
         };
 
         // Final computed stats = baseStats + level bonuses + equipmentStats.
@@ -85,9 +83,8 @@ namespace CoED
         #region Resistances, Weaknesses, Immunities & Status Effects
         [Header("Elemental Attributes & Statuses")]
         public List<StatusEffectType> activeStatusEffects = new List<StatusEffectType>();
-        public List<ActiveWhileEquipped> EquipmentEffects = new List<ActiveWhileEquipped>();
-        public Dictionary<StatusEffectType, float> inflictableStatusEffects =
-            new Dictionary<StatusEffectType, float>();
+        public List<StatusEffectType> EquipmentEffects = new List<StatusEffectType>();
+        public List<StatusEffectType> inflictableStatusEffects = new List<StatusEffectType>();
         public List<Weaknesses> activeWeaknesses = new List<Weaknesses>();
         public List<Resistances> activeResistances = new List<Resistances>();
         public List<Immunities> activeImmunities = new List<Immunities>();
@@ -126,8 +123,8 @@ namespace CoED
             }
 
             // Then, continue with the normal initialization.
-            CopyBaseToPlayerStats();
-            CalculateStats(refillResources: true);
+            //CopyBaseToPlayerStats();
+            //CalculateStats(refillResources: true);
         }
 
         #endregion
@@ -140,10 +137,6 @@ namespace CoED
         public float GetCurrentMagic() => playerStats[Stat.Magic];
 
         public float GetCurrentMaxMagic() => playerStats[Stat.MaxMagic];
-
-        public float GetCurrentAccuracy() => playerStats[Stat.Accuracy];
-
-        public float GetCurrentEvasion() => playerStats[Stat.Evasion];
 
         public float GetCurrentStamina() => playerStats[Stat.Stamina];
 
@@ -167,8 +160,7 @@ namespace CoED
 
         public float GetCurrentAttackRange() => playerStats[Stat.AttackRange];
 
-        public float GetCurrentChanceToInflictStatusEffect() =>
-            playerStats[Stat.ChanceToInflictStatusEffect];
+        public float GetCurrentChanceToInflict() => playerStats[Stat.ChanceToInflict];
 
         public float GetCurrentBurnDamage() => equipmentElementalDamage[DamageType.Fire];
 
@@ -240,7 +232,7 @@ namespace CoED
         /// <summary>
         /// Copies baseStats into playerStats (for re-calculation).
         /// </summary>
-        private void CopyBaseToPlayerStats()
+        public void CopyBaseToPlayerStats()
         {
             playerStats = new Dictionary<Stat, float>(baseStats);
         }
@@ -249,7 +241,7 @@ namespace CoED
         /// Recalculates final player stats by combining baseStats, level-based scaling, and equipmentStats.
         /// If refillResources is true, fills HP, Magic, and Stamina to their maximums.
         /// </summary>
-        public void CalculateStats(bool refillResources = true)
+        public void CalculateStats(bool refillResources = false)
         {
             // Start with a fresh copy of base stats.
             CopyBaseToPlayerStats();
@@ -265,7 +257,7 @@ namespace CoED
             playerStats[Stat.Dexterity] += level * 0.1f;
             playerStats[Stat.Intelligence] += level * 0.1f;
             playerStats[Stat.CritChance] += level * 0.1f;
-            playerStats[Stat.ChanceToInflictStatusEffect] += level * 0.05f;
+            playerStats[Stat.ChanceToInflict] += level * 0.05f;
 
             // Add equipment bonuses
             foreach (var stat in equipmentStats)
@@ -276,8 +268,12 @@ namespace CoED
                     playerStats[stat.Key] = stat.Value;
             }
 
-            // For this example, let HP equal MaxHP after calculation.
-            playerStats[Stat.HP] = playerStats[Stat.MaxHP];
+            if (refillResources)
+            {
+                playerStats[Stat.HP] = playerStats[Stat.MaxHP];
+                playerStats[Stat.Magic] = playerStats[Stat.MaxMagic];
+                playerStats[Stat.Stamina] = playerStats[Stat.MaxStamina];
+            }
 
             // Update UI elements.
             InitializeUI();
@@ -409,13 +405,10 @@ namespace CoED
 
         public void AddInflictableStatusEffect(StatusEffectType status)
         {
-            foreach (var effect in inflictableStatusEffects)
-            {
-                if (!inflictableStatusEffects.ContainsKey(status))
-                    inflictableStatusEffects.Add(status, 0.05f);
+            if (!inflictableStatusEffects.Contains(status))
+                inflictableStatusEffects.Add(status);
 
-                return;
-            }
+            return;
         }
 
         public void RemoveInflictableStatusEffect(StatusEffectType status)
@@ -470,7 +463,8 @@ namespace CoED
         public void TakeDamage(
             DamageInfo damageInfo,
             float statusChance = 0.05f,
-            bool bypassInvincible = false
+            bool bypassInvincible = false,
+            float effectDuration = 0f
         )
         {
             if (!bypassInvincible && invincible)
@@ -540,9 +534,34 @@ namespace CoED
                 HandleDeath();
         }
 
+        public void TakeEffectDamage(DamageInfo damageInfo)
+        {
+            if (activeResistances.Contains((Resistances)damageInfo.DamageAmounts.Values.First()))
+            {
+                FloatingTextManager.Instance.ShowFloatingText("RESISTED", transform, Color.green);
+                playerStats[Stat.HP] -= damageInfo.DamageAmounts.Values.Last() / 2;
+                return;
+            }
+
+            if (activeWeaknesses.Contains((Weaknesses)damageInfo.DamageAmounts.Keys.First()))
+            {
+                FloatingTextManager.Instance.ShowFloatingText("WEAKNESS", transform, Color.red);
+                playerStats[Stat.HP] -= damageInfo.DamageAmounts.Values.Last() * 2;
+                return;
+            }
+
+            playerStats[Stat.HP] -= damageInfo.DamageAmounts.Values.Last();
+
+            if (playerStats[Stat.HP] <= 0)
+                HandleDeath();
+        }
+
         #endregion
 
-
+        public bool HasImmunity(Immunities immunity)
+        {
+            return activeImmunities.Contains(immunity);
+        }
 
         #region XP & Leveling
         public void GainExperience(int amount)
@@ -563,21 +582,35 @@ namespace CoED
         private void LevelUp()
         {
             level++;
+
+            CharacterClass playerClass = GameManager.SelectedClass;
+            // Check if the player's class has any spell-learning levels defined.
+            Debug.Log($"Player class: {playerClass.ClassName}");
+            Debug.Log($"Player level: {level}");
+            Debug.Log(
+                $"Player can learn spells at levels: {string.Join(", ", playerClass.LevelToLearnSpells)}"
+            );
+            Debug.Log(
+                $"Can learn spells at this level: {playerClass.LevelToLearnSpells.Contains(level)}"
+            );
+            if (playerClass.LevelToLearnSpells.Contains(level))
+            {
+                // Prompt the player to choose a new spell.
+                PlayerSpellCaster.Instance.PromptSpellLearning();
+                Debug.Log("Choose a new spell!");
+            }
+
+            // Level up any known spells (existing logic)
             LevelUpSpells();
 
-            if (playerUI == null)
-                playerUI = FindAnyObjectByType<PlayerUI>();
-
-            if (playerUI != null)
-            {
-                expToNextLevel = Mathf.CeilToInt(expToNextLevel * 1.25f);
-                UpdateHealthUI();
-                UpdateExperienceUI();
-                UpdateMagicUI();
-                UpdateStaminaUI();
-                CalculateStats(refillResources: true);
-                playerUI.UpdateLevelDisplay();
-            }
+            // Continue with updating stats, experience, UI, etc.
+            expToNextLevel = Mathf.CeilToInt(expToNextLevel * 1.25f);
+            UpdateHealthUI();
+            UpdateExperienceUI();
+            UpdateMagicUI();
+            UpdateStaminaUI();
+            CalculateStats(refillResources: true);
+            PlayerUI.Instance.UpdateLevelDisplay();
 
             Debug.Log($"Leveled up to {level}! Next level at {expToNextLevel} EXP.");
         }
@@ -636,12 +669,21 @@ namespace CoED
         private void HandleDeath()
         {
             // Check for ReviveOnce effect.
-            if (EquipmentEffects.Contains(ActiveWhileEquipped.ReviveOnce))
+            if (EquipmentEffects.Contains(StatusEffectType.ReviveOnce))
             {
-                StatusEffectManager.Instance.RemoveEquipmentEffects(ActiveWhileEquipped.ReviveOnce);
+                StatusEffectManager.Instance.RemoveEquipmentEffects(gameObject, EquipmentEffects);
                 playerStats[Stat.HP] = Mathf.RoundToInt(playerStats[Stat.MaxHP] * 0.25f);
                 Debug.Log("ReviveOnce triggered! Player revived at 25% HP.");
                 FloatingTextManager.Instance.ShowFloatingText("Revived!", transform, Color.green);
+                UpdateHealthUI();
+                StatusEffectManager.Instance.RemoveAllStatusEffects(gameObject);
+                StatusEffectManager.Instance.AddStatusEffect(
+                    gameObject,
+                    StatusEffectType.Invincible,
+                    5f
+                );
+
+                StatusEffectManager.Instance.RemoveAllStatusEffects(gameObject);
                 return;
             }
 

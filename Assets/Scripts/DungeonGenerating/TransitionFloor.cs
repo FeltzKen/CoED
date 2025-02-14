@@ -1,6 +1,4 @@
-using System;
 using System.Linq;
-using CoED.Pathfinding;
 using UnityEngine;
 
 namespace CoED
@@ -10,15 +8,6 @@ namespace CoED
         public int floorChangeValue; // +1 for down, -1 for up
 
         private Transform player;
-
-        private PlayerNavigator playerNavigator;
-        private PlayerMovement playerMovement;
-
-        private void Start()
-        {
-            playerNavigator = PlayerStats.Instance.GetComponent<PlayerNavigator>();
-            playerMovement = PlayerStats.Instance.GetComponent<PlayerMovement>();
-        }
 
         private void OnTriggerEnter2D(Collider2D other)
         {
@@ -32,7 +21,6 @@ namespace CoED
             PlayerStats.Instance.currentFloor = newFloor;
 
             FloorData floorData = DungeonManager.Instance.GetFloorData(newFloor);
-            player.GetComponent<PlayerNavigator>().SetTilemap(floorData.FloorTilemap);
             if (floorData == null)
             {
                 Debug.LogError($"No FloorData found for Floor {newFloor}");
@@ -51,9 +39,7 @@ namespace CoED
                 triggeringStairsLocalPosition + targetFloorTransform.position;
 
             Vector3Int targetCellPosition = floorData.FloorTilemap.WorldToCell(targetWorldPosition);
-
             Vector3Int adjacentTile = FindAdjacentWalkableTile(floorData, targetCellPosition);
-
             Vector3 adjacentWorldPosition =
                 floorData.FloorTilemap.CellToWorld(adjacentTile) + new Vector3(0.5f, 0.5f, 0);
 
@@ -63,6 +49,21 @@ namespace CoED
             if (cameraController != null)
             {
                 cameraController.UpdateBounds(PlayerStats.Instance.currentFloor);
+            }
+
+            //MiniMapController.Instance.UpdateMiniMapPosition(adjacentWorldPosition);
+            //MiniMapController.Instance.AdjustMiniMapView(floorData);
+
+            // **New Addition: Activate only the current floor**
+            ActivateCurrentFloor(newFloor);
+        }
+
+        private void ActivateCurrentFloor(int activeFloor)
+        {
+            foreach (var floor in DungeonManager.Instance.FloorTransforms)
+            {
+                bool isActive = floor.Key == activeFloor;
+                floor.Value.gameObject.SetActive(isActive);
             }
         }
 

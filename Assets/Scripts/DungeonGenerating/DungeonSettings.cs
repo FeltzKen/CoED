@@ -47,15 +47,6 @@ namespace CoED
         [SerializeField]
         public GameObject spawnEffectPrefab;
 
-        [Header("Enemy Settings")]
-        [Tooltip("List of enemy prefabs to use in the dungeon.")]
-        public List<GameObject> enemyPrefabsFloor_1 = new List<GameObject>();
-        public List<GameObject> enemyPrefabsFloor_2 = new List<GameObject>();
-        public List<GameObject> enemyPrefabsFloor_3 = new List<GameObject>();
-        public List<GameObject> enemyPrefabsFloor_4 = new List<GameObject>();
-        public List<GameObject> enemyPrefabsFloor_5 = new List<GameObject>();
-        public List<GameObject> enemyPrefabsFloor_6 = new List<GameObject>();
-
         [Header("UI Elements")]
         [SerializeField]
         public GameObject healthBarPrefab;

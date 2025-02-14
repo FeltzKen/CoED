@@ -21,27 +21,34 @@ namespace CoED
         None,
         HP,
         MaxHP,
-        Attack,
-        Intelligence,
-        Evasion,
-        Defense,
-        Dexterity,
-        Accuracy,
         Magic,
         MaxMagic,
         Stamina,
         MaxStamina,
+        Attack,
+        Defense,
+        Speed,
+        Intelligence,
+        Dexterity,
         Shield,
         FireRate,
         CritChance,
         CritDamage,
         ProjectileRange,
         AttackRange,
-        Speed,
         ElementalDamage,
-        ChanceToInflictStatusEffect,
+        ChanceToInflict,
         StatusEffectDuration,
+
+        // Enemies only
         PatrolSpeed,
         ChaseSpeed,
+    }
+
+    public enum FogStatus
+    {
+        Unexplored, // The cell has never been seen.
+        Explored, // The cell was seen in the past, but is not currently visible.
+        Visible, // The cell is in the player’s current vision.
     }
 }
